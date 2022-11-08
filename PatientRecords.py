@@ -118,6 +118,7 @@ class Patient:
         def set_current_appointments(self, x):
             self.current_appointments = x
 
+#GUI driven with tkinter
 def runGui(person):
     root = tk.Tk()
 
@@ -179,6 +180,7 @@ def runGui(person):
     
     root.mainloop()
 
+#Initial entry
 def initialize(passed_id_number):
     with open("users.csv", 'r') as csvfile:
         csvreader = csv.reader(csvfile)

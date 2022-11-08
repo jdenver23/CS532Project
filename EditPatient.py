@@ -4,6 +4,7 @@ import PatientRecords
 import pandas as pd
 from tkinter import *
 
+#GUI for edit records using tkinter
 def runGui(id_number):
     top = tk.Tk()
 
@@ -23,6 +24,7 @@ def runGui(id_number):
     phone_var=tk.StringVar()
     address_var=tk.StringVar()
 
+    #Once needed, can submit changes and writes to csv
     def submit():
         df = pd.read_csv('users.csv')
         for r in df.index:
@@ -67,6 +69,7 @@ def runGui(id_number):
 
     top.mainloop()
 
+#Main entry to GUI
 def enter_prog(passed_id_number):
     with open("users.csv", 'r') as csvfile:
         csvreader = csv.reader(csvfile)
