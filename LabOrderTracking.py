@@ -25,41 +25,68 @@ class LabOrderTracking:
     if(decision == 1):
         print("We will store information now....")
 
-        #We will now ask the user for all the info and then store it into the database
+        decision2 = int(input("Please enter 3 if you want to add to the Main Lab Order Tracking System or 4 if you want to add to the Type of Test Tracking System \n"))
+
+        if(decision2 == 3):
+
+
+        #We will now ask the user for all the info and then store it into the database FOR THE MAIN LAB ORDER TRACKING SYSTEM 
         #numberofinputs= int("Please enter how many rows of information you will add to the Lab Order Tracking System \n")
 
-        date_labtest = input("Please enter the Date the Lab Test was Performed. Ex. 2022-01-17 \n")
-        order_id = input("Please enter the Order ID. Ex. 1234 \n")
-        physician_name = input("Please enter the Physician's Name \n").upper()
-        patient_name = input("Please enter the Patient's Name \n").upper()
-        lab_technician = input("Please enter the Lab Technician's Name \n").upper()
-        type_labtest = input("Please enter the Type of Lab Test. Ex. Sugar, Cholesterol, or Both \n").upper()
-        results_labtest = input("Please enter the Result of the Lab Test. Ex. Good, Okay, or Urgent \n").upper()
-        date_ordered = input("Please enter the Date the Test is Ordered Ex. 2022-01-17 \n")
+            date_labtest = input("Please enter the Date the Lab Test was Performed. Ex. 2022-01-17 \n")
+            order_id = input("Please enter the Order ID. Ex. 1234 \n")
+            physician_name = input("Please enter the Physician's Name \n").upper()
+            patient_name = input("Please enter the Patient's Name \n").upper()
+            lab_technician = input("Please enter the Lab Technician's Name \n").upper()
+            type_labtest = input("Please enter the Type of Lab Test. Ex. Sugar, Cholesterol, or Both \n").upper()
+            results_labtest = input("Please enter the Result of the Lab Test. Ex. Good, Okay, or Urgent \n").upper()
+            date_ordered = input("Please enter the Date the Test is Ordered Ex. 2022-01-17 \n")
 
-        information_list = [date_labtest,order_id,physician_name,patient_name,lab_technician,type_labtest,results_labtest,date_ordered ] #This list is used to store the information before we input it into the .CSV file.
-        print (information_list)
+            information_list = [date_labtest,order_id,physician_name,patient_name,lab_technician,type_labtest,results_labtest,date_ordered ] #This list is used to store the information before we input it into the .CSV file.
+            print (information_list)
         
         
-        #This is for Testing Purposes. 
-        #print(order_id)
-        #print(patient_name)
-        #print(physician_name)
-        #print(type_labtest)
-        #print(date_labtest)
-        #print(lab_technician)
-        #print(results_labtest)
-        #print(date_ordered)
-        #Now we write to the CSV file to store the information. 
+            #This is for Testing Purposes. 
+            #print(order_id)
+            #print(patient_name)
+            #print(physician_name)
+            #print(type_labtest)
+            #print(date_labtest)
+            #print(lab_technician)
+            #print(results_labtest)
+            #print(date_ordered)
+            #Now we write to the CSV file to store the information. 
         
-        field_names = ["Date of Lab Test","Order ID","Physician Name","Patient Name","Lab Technician","Type of Lab Test", "Result", "Date Test is Ordered"]
+            field_names = ["Date of Lab Test","Order ID","Physician Name","Patient Name","Lab Technician","Type of Lab Test", "Result", "Date Test is Ordered"]
  
 
-        #This is to store information now. 
-        file2 = open('Lab.csv', 'a', newline='') #We put newline so we don't skip a line. We put 'a' so we can keep adding to the CSV without overwriting it. 
-        writer2 = csv.writer(file2) 
-        writer2.writerow(information_list) #This stores a row of information
-        file2.close()
+            #This is to store information now. 
+            file2 = open('Lab.csv', 'a', newline='') #We put newline so we don't skip a line. We put 'a' so we can keep adding to the CSV without overwriting it. 
+            writer2 = csv.writer(file2) 
+            writer2.writerow(information_list) #This stores a row of information
+            file2.close()
+        
+        elif(decision2 == 4): #This handles if we want to add to the Type of Test Tracking System.
+            lab_test_type_id = input("Please enter the Lab Test Type ID. Ex.1234 \n")
+            lab_test_type_name = input("Please enter the Lab Test Type Name Ex. Sugar,Cholesterol, or Both \n").upper()
+            range_normal_result_values = input("Please enter the Range of Normal Result Values. Ex.[0-100] \n")
+            range_result_values_requiring_immediate_attentionOrUrgentCare = input("Please enter the Range Result Values Requiring Immediate Attention or Urgent Care \n")
+            
+
+            information_list2 = [lab_test_type_id,lab_test_type_name, range_normal_result_values,range_result_values_requiring_immediate_attentionOrUrgentCare] #This list is used to store the information before we input it into the .CSV file.
+            print (information_list2)
+
+            #Now we store our information in the Type of Test Tracking System. 
+
+            file3 = open('TypeTest.csv', 'a', newline='') #We put newline so we don't skip a line. We put 'a' so we can keep adding to the CSV without overwriting it. 
+            writer3 = csv.writer(file3) 
+            writer3.writerow(information_list2) #This stores a row of information
+            file3.close()
+
+
+        
+
+
         
 
 
