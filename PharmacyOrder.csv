@@ -1,7 +1,7 @@
 Prescription ID,PATIENT NAME,Physician Name,PRESCRIBED MEDICATION,Medication ID,Dosage,Frequency,Date Ordered,Date Filled,Pharmacist
 32,JON LEE,dr. guzman,TYLENOL,2442,250 mg,twice every 8 hours,10/13/2022,10/15/2022,Dr. Hwang
 22,JAR JAR,Dr. Banner,KRYPTONITE,2765,400 mg,once a day,10/15/2022,10/17/2022,Dr. Casetti
-34,JON LEE,dr. guzman,SUDAFED,2440,250 mg,once every 12 hours,10/15/2022,,
+34,JON LEE,dr. guzman,SUDAFED,2440,250 mg,once every 12 hours,10/15/2022,11/5/22,Dr. Casetti
 35,JON LEE,dr. guzman,VITAMIN C,2566,350 mg,once a day,10/01/2022,10/03/2022,Dr. Casetti
 73,MIKE WINKDER,dr. guzman,VITAMIN C,2566,350mg,once a day,09/04/2022,10/25/2022,Dr. Casetti
 46,TREVOR DOSNER,dr. guzman,VITAMIN C,2566,350mg,once a day,09/04/2022,11/01/2022,Dr. Casetti

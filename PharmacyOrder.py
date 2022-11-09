@@ -15,6 +15,8 @@
 #            https://www.geeksforgeeks.org/reading-rows-from-a-csv-file-in-python/
 #            https://www.programiz.com/python-programming/datetime/strptime
 #            https://www.geeksforgeeks.org/how-to-delete-only-one-row-in-csv-with-python/
+#            https://thispointer.com/edit-cell-values-in-csv-files-using-pandas-in-python/
+#            https://www.machinelearningplus.com/pandas/pandas-reset-index/
 #-----------------------------------------------------
 from calendar import calendar
 import csv
@@ -323,25 +325,21 @@ class PharmacyOrder:
 
 
     # Function to complete a prescription. Need to provide prescripion ID, pharmacist name, and date filled.
+    # NOTE: p_ID must be an integer value.
     def complete_order(self, p_ID, pharmacist_name, date_filled):
-        # with open(PharmacyOrder.csv_filename, mode = "a", newline = "") as f:
-        #     writer = csv.DictWriter(f, fieldnames=PharmacyOrder.field_names)
-
-        #     for row in writer:
-        #         if row["Prescription ID"] == p_ID:
-        #             row["Date Filled"] = date_filled
-        #             row["Pharmacist"] = pharmacist_name
-        #             return ""
-            
-        #     print("ERROR: failed to update information of filled prescription " + str(p_ID))
-        try:
-            pharm_order_df = pd.read_csv(PharmacyOrder.csv_filename)
-            pharm_order_df.set_index("Prescription ID", inplace=False).loc[p_ID, "Date Filled"] = date_filled
-            pharm_order_df.set_index("Prescription ID", inplace=False).loc[p_ID, "Pharmacist"] = pharmacist_name
-        except KeyError:
-            print("Error") 
+        pharm_order_df = pd.read_csv(PharmacyOrder.csv_filename, index_col="Prescription ID")
+        if pd.isna(pharm_order_df.loc[p_ID, "Pharmacist"]) and pd.isna(pharm_order_df.loc[p_ID, "Date Filled"]):
+            pharm_order_df.loc[p_ID, "Pharmacist"] = pharmacist_name
+            pharm_order_df.loc[p_ID, "Date Filled"] = date_filled
+            # reset index so that prescription ID is added back to the dataFrame
+            pharm_order_df = pharm_order_df.reset_index()
+            pharm_order_df.to_csv(PharmacyOrder.csv_filename, index=False)
+        else:
+            print("Pharmacy Order " + str(p_ID) + " has already been completed.")
+            return
+                       
         
-        print("Success")
+        print("Successfully Completed Presctiption Order " + str(p_ID))
 
 #-----------Testing---------------
 #first row of descriptions add TODO: maybe move this to init.
@@ -410,4 +408,4 @@ invalid_med = "MOTRIN"
 # pharm_order.delete_pharmacy_order(46)
 
 # TEST 8 for complete pharmacy order
-# pharm_order.complete_order("34", "Dr. Casetti", "11/5/22")
+pharm_order.complete_order(34, "Dr. Casetti", "11/5/22")
