@@ -67,13 +67,14 @@ class LabOrderTracking:
             file2.close()
         
         elif(decision2 == 4): #This handles if we want to add to the Type of Test Tracking System.
+            order_id2 = input("Please enter the Order ID. Ex. 1234 \n")
             lab_test_type_id = input("Please enter the Lab Test Type ID. Ex.1234 \n")
             lab_test_type_name = input("Please enter the Lab Test Type Name Ex. Sugar,Cholesterol, or Both \n").upper()
             range_normal_result_values = input("Please enter the Range of Normal Result Values. Ex.[0-100] \n")
             range_result_values_requiring_immediate_attentionOrUrgentCare = input("Please enter the Range Result Values Requiring Immediate Attention or Urgent Care \n")
             
 
-            information_list2 = [lab_test_type_id,lab_test_type_name, range_normal_result_values,range_result_values_requiring_immediate_attentionOrUrgentCare] #This list is used to store the information before we input it into the .CSV file.
+            information_list2 = [order_id2, lab_test_type_id,lab_test_type_name, range_normal_result_values,range_result_values_requiring_immediate_attentionOrUrgentCare] #This list is used to store the information before we input it into the .CSV file.
             print (information_list2)
 
             #Now we store our information in the Type of Test Tracking System. 
@@ -97,34 +98,49 @@ class LabOrderTracking:
         searchingPreference = input("Please enter how you want to acesss the lab orders. Ex. Patient Name, By Date Ordered, By Date Performed, Ordering Physician \n").upper() #Add upper since when comparing strings its case sensitive.
 
 
-        df = pd.read_csv("Lab.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
-        print(df)
+        df1 = pd.read_csv("Lab.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
+        print(df1)
         print("\n")
 
+        df2 = pd.read_csv("TypeTest.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
+        print(df2)
 
         if(searchingPreference == "PATIENT NAME"): #We will be sorting by the Patient Name in Alphabetical Order Now. 
             print("ORDERED BY PATIENT NAME!!!")
 
-            dfSortByPatientName = df.sort_values("Patient Name",ascending = True) #We set ascending to be True so that we increase from A-Z. WORKS!!!!
-            print(dfSortByPatientName)
+
+            inner_join_dfPatientName = pd.merge(df1,df2, on = 'Order ID', how = 'inner') #We do an inner join since both tables have same "Order ID". 
+
+            inner_join_dfPatientName = inner_join_dfPatientName.sort_values("Patient Name",ascending = True) #We set ascending to be True so that we increase from A-Z. WORKS!!!!
+            inner_join_dfPatientName = inner_join_dfPatientName.dropna() #Everytime we add sometimes it doesn't add right below that row so there's NaN values. 
+            print(inner_join_dfPatientName)
 
         elif (searchingPreference =="BY DATE ORDERED"): #We will be sorting by Date Ordered in Sequential Order Now. WORKS!!!!
             print("ORDERED BY DATE ORDERED!!!")
 
-            dfSortByDateOrdered = df.sort_values("Date Ordered",ascending = True)
-            print(dfSortByDateOrdered)
+            inner_join_dfByDateOrdered = pd.merge(df1,df2, on = 'Order ID', how = 'inner') #We do an inner join since both tables have same "Order ID".
+
+            inner_join_dfByDateOrdered = inner_join_dfByDateOrdered.sort_values("Date Ordered",ascending = True)
+            inner_join_dfByDateOrdered = inner_join_dfByDateOrdered.dropna()
+            print(inner_join_dfByDateOrdered)
 
         elif(searchingPreference =="BY DATE PERFORMED"): #Will be sorting by Date Performed in Sequential Order Now. WORKS!!!!
             print("ORDERED BY DATE PERFORMED!!!")
 
-            dfSortByDatePerformed = df.sort_values("Date of Lab Test",ascending = True)
-            print(dfSortByDatePerformed)
+            inner_join_dfByDatePerformed = pd.merge(df1,df2, on = 'Order ID', how = 'inner') #We do an inner join since both tables have same "Order ID".
+
+            inner_join_dfByDatePerformed  = inner_join_dfByDatePerformed .sort_values("Date of Lab Test",ascending = True)
+            inner_join_dfByDatePerformed  = inner_join_dfByDatePerformed .dropna() 
+            print(inner_join_dfByDatePerformed)
 
         elif(searchingPreference =="ORDERING PHYSICIAN"): #Will be sorting by Ordering Physician in Alphatical Order Now. WORKS!!!!!
             print("ORDERED BY ORDERING PHYSICIAN!!!")
+
+            inner_join_dfOrderingPhysician = pd.merge(df1,df2, on = 'Order ID', how = 'inner') #We do an inner join since both tables have same "Order ID".
             
-            dfSortByOrderingPhysician = df.sort_values("Physician Name",ascending = True)
-            print(dfSortByOrderingPhysician)
+            inner_join_dfOrderingPhysician = inner_join_dfOrderingPhysician.sort_values("Physician Name",ascending = True)
+            inner_join_dfOrderingPhysician = inner_join_dfOrderingPhysician.dropna() 
+            print(inner_join_dfOrderingPhysician)
 
 
         
