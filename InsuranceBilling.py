@@ -79,7 +79,16 @@ class InsuranceService:
 #
 #
 class InsuranceBilling:
-    def __init__(self, id=None, name=None, address=None) -> None:
+    """
+        ## Insurance Billing Class
+        Bill patients and/or insurance carriers for services provided by the medical clinic.
+        
+        #### Notes:
+        - When `id` is not given, a new and unique id will be generated along with its new databases.
+        - Use `commit_to_db()` in order to save local changes to the database.
+        
+    """
+    def __init__(self, id=None) -> None:
         if id is not None:
             self.id = id
         else:
@@ -126,14 +135,19 @@ class InsuranceBilling:
                                              carrier['Primary carrier'])
                 r_carrier.status = CarrierStatus(int(carrier['Insurance carrier status']))
                 self.carriers.append(r_carrier)
-                
+    
     def commit_to_db(self) -> None:
+        """
+            Commit local changes to database.
+            
+            #### Returns: None
+        """
         with open(self.service_db, 'w') as f:
             for service in self.services:
-                f.write(service.as_csv_entry())
+                f.write(service.as_csv_entry() + "\n")
         with open(self.carrier_db, 'w') as f:
             for carrier in self.carriers:
-                f.write(carrier.as_csv_entry())
+                f.write(carrier.as_csv_entry() + "\n")
     
     #---------------
     #   CARRIERS
@@ -158,13 +172,14 @@ class InsuranceBilling:
         while any(carrier.id == carrier_id for carrier in self.carriers):
             carrier_id = str(int(carrier_id) + 1)
             
-        primary_count = 0
+        has_primary = False
         for carrier in self.carriers:
             if carrier.primary:
-                primary_count += 1
+                has_primary = True
+                break
         
         # mark insurance carrier as primary if there isnt one yet
-        if primary_count == 0 and primary:
+        if not has_primary:
             primary = True
         
         if primary:
@@ -172,18 +187,10 @@ class InsuranceBilling:
             for carrier in self.carriers:
                 if carrier.primary:
                     carrier.primary = False
-            # set all other carriers' primary to False in the database
-            with open(self.carrier_db, 'w') as f:
-                for carrier in self.carriers:
-                    f.write(carrier.as_csv_entry() + "\n")
             
         n_carrier = InsuranceCarrier(carrier_id, carrier_name, carrier_address, primary)
         # add carrier to local list
-        self.carriers.insert(0 if primary else len(self.carriers), n_carrier)
-        
-        # add carrier to db
-        with open(self.carrier_db, 'a') as f:
-            f.write(n_carrier.as_csv_entry() + "\n")
+        self.carriers.append(n_carrier)
         
         return carrier_id
     
@@ -202,39 +209,25 @@ class InsuranceBilling:
             - `True` if row successfully removed. 
             - `False` otherwise.
         """
-        if Path(self.carrier_db + ".tmp").is_file(): 
-            os.remove(self.carrier_db + ".tmp")
-        
         carrier_id = str(carrier_id)
-        found_idx = None
-        count = 0
-        with open(self.carrier_db, 'r') as inp, open(self.carrier_db + ".tmp", 'w', newline='') as out:
-            writer = csv.DictWriter(out, fieldnames=IB_DB_FIELDS['IC'], delimiter=IB_DB_DELIMITER)
-            for row in csv.DictReader(inp, fieldnames=IB_DB_FIELDS['IC'], delimiter=IB_DB_DELIMITER):
-                if row['Insurance carrier ID'] != carrier_id:
-                    writer.writerow(row)
-                else:
+        found = False
+        with open(self.carrier_db, 'r') as f:
+            for row in csv.DictReader(f, fieldnames=IB_DB_FIELDS['IC'], delimiter=IB_DB_DELIMITER):
+                if row['Insurance carrier ID'] == carrier_id:
                     is_primary = row['Primary carrier']
-                    found_idx = count
-                count += 1
+                    found = True
+                    break
         
-        if found_idx is not None:
-            # print(f"found {found_idx} {'carrier' if found_idx == 1 else 'carriers'}")
-            os.remove(self.carrier_db)
-            os.rename(self.carrier_db + ".tmp", self.carrier_db)
+        if found:
             for carrier in self.carriers:
                 if carrier.id == carrier_id:
                     self.carriers.remove(carrier)
                     break
-                
             # mark the most recent carrier as primary if a primary carrier is being removed
             if is_primary:
-                self.carrier[-1].primary = True
+                self.carriers[-1].primary = True
             return True
         
-        # remove tmp file if no carrier found
-        # print(f"Insurance carrier ID not found")
-        os.remove(self.carrier_db + ".tmp")
         return False
     
     #---------------
@@ -255,9 +248,6 @@ class InsuranceBilling:
             service_id = str(int(service_id) + 1)
         
         n_service = InsuranceService(service_id, service_description, service_cost)
-        # add service to db
-        with open(self.service_db, 'a') as f:
-            f.write(n_service.as_csv_entry() + "\n")
         
         # add service to local list
         self.services.append(n_service)
@@ -274,31 +264,20 @@ class InsuranceBilling:
             - `True` if row successfully removed. 
             - `False` otherwise.
         """
-        if Path(self.service_db + ".tmp").is_file(): 
-            os.remove(self.service_db + ".tmp")
-        
         service_id = str(service_id)
-        found_idx = None
-        count = 0
-        with open(self.service_db, 'r') as inp, open(self.service_db + ".tmp", 'w', newline='') as out:
-            writer = csv.DictWriter(out, fieldnames=IB_DB_FIELDS['IS'], delimiter=IB_DB_DELIMITER)
-            for row in csv.DictReader(inp, fieldnames=IB_DB_FIELDS['IS'], delimiter=IB_DB_DELIMITER):
-                if row['Service ID'] != service_id:
-                    writer.writerow(row)
-                else:
-                    found_idx = count
-                count += 1
-        
-        if found_idx is not None:
-            # print(f"found {found_idx} {'service' if found_idx == 1 else 'services'}")
-            os.remove(self.service_db)
-            os.rename(self.service_db + ".tmp", self.service_db)
-            self.services = self.services[:found_idx] + self.services[found_idx+1:]
+        found = False
+        with open(self.service_db, 'r') as f:
+            for row in csv.DictReader(f, fieldnames=IB_DB_FIELDS['IS'], delimiter=IB_DB_DELIMITER):
+                if row['Service ID'] == service_id:
+                    found = True
+                    break
+        if found:
+            for service in self.services:
+                if service.id == service_id:
+                    self.services.remove(service)
+                    break
             return True
         
-        # remove tmp file if no service found
-        # print(f"Service ID not found")
-        os.remove(self.service_db + ".tmp")
         return False
         
         
@@ -336,27 +315,27 @@ class InsuranceBilling:
 def service_tests(bill):
     bill.print_all_services(True)
     if bill.remove_service(1): 
-        print("\n<<< removed service with id=1")
+        print("<<< removed service with id=1")
         bill.print_all_services(True)
 
-    print("\n>>> add new service: ear piecing with the cost of $1000 id =", bill.new_service("ear piercing", "$1000"))
+    print(">>> add new service: ear piecing with the cost of $1000 id =", bill.new_service("ear piercing", "$1000"))
     bill.print_all_services(True)
-    print("\n>>> add new service: gym membership with the cost of $10 id =", bill.new_service("gym membership", "$10"))
+    print(">>> add new service: gym membership with the cost of $10 id =", bill.new_service("gym membership", "$10"))
     bill.print_all_services(True)
     
 def carrier_tests(bill):
     bill.print_all_carriers(True)
-    print("\n>>> add new carrier: PRIMARY Medical @111 1st st id =", bill.new_carrier('Medical', '111 1st st', True))
+    print(">>> add new carrier: PRIMARY Medical @111 1st st id =", bill.new_carrier('Medical', '111 1st st', True))
     bill.print_all_carriers(True)
-    print("\n>>> add new carrier: PRIMARY Care @222 2nd st id =", bill.new_carrier('Care', '222 2nd st', True))
+    print(">>> add new carrier: PRIMARY Care @222 2nd st id =", bill.new_carrier('Care', '222 2nd st', True))
     
     bill.print_all_carriers(True)
     
     if bill.remove_carrier(0): 
-        print("\n<<< removed carrier with id=0")
+        print("<<< removed carrier with id=0")
         bill.print_all_carriers(True)
     
-    print("\n>>> add new carrier: non-primary SupCare @333 3rd st with id =", bill.new_carrier('SupCare', '333 3rd st', False))
+    print(">>> add new carrier: non-primary SupCare @333 3rd st with id =", bill.new_carrier('SupCare', '333 3rd st', False))
     bill.print_all_carriers(True)
     
 #
@@ -364,10 +343,12 @@ def carrier_tests(bill):
 # IB Tests
 #
 #
-bill = InsuranceBilling()
+bill = InsuranceBilling(0)
 
 # service tests
 # service_tests(bill)
 
 # carrier tests
 # carrier_tests(bill)
+
+bill.commit_to_db()
