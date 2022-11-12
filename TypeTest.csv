@@ -1,4 +1,4 @@
-Order ID,Lab Test Type ID,Lab Test Type Name,Range of Normal Result Values,Range of Result Values Requiring Immediate Attention/Urgent Care
-1234,5323,SUGAR,70,50
-4567,9204,CHOLESTEROL,90,40
-7890,7532,BOTH,90,30
+Order ID,Lab Test Type ID,Lab Test Type Name,Range of Normal Result Values,Range of Result Values Requiring Immediate Attention/Urgent Care,Actual Results Value
+1234,5323,SUGAR,70,50,50
+4567,9204,CHOLESTEROL,90,40,90
+7890,7532,BOTH,90,30,30

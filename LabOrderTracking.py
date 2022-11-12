@@ -8,6 +8,8 @@ import pandas as pd #For Data Manipulation/Data Access
 
 
 class LabOrderTracking:
+
+    
     
     #These are the attributes to take care. These are the sample default values for now until they are changed. 
 
@@ -20,7 +22,7 @@ class LabOrderTracking:
     results_labtest = "Good" #Can be good, okay, or urgent
 
     #Now we get user input if we want to store info in the .CSV file so they can be accessed later
-    decision = int(input("Please enter 1 for adding information to the Lab Order Tracking System and 2 for retrieving information from the Lab Order Tracking System \n")) #If user input == 1, store. If user input == 2, we retrieve. 
+    decision = int(input("Please enter 1 for adding information to the Lab Order Tracking System or 2 for retrieving information from the Lab Order Tracking System \n")) #If user input == 1, store. If user input == 2, we retrieve. 
 
     if(decision == 1):
         print("We will store information now....")
@@ -72,9 +74,10 @@ class LabOrderTracking:
             lab_test_type_name = input("Please enter the Lab Test Type Name Ex. Sugar,Cholesterol, or Both \n").upper()
             range_normal_result_values = input("Please enter the Range of Normal Result Values. Ex.[0-100] \n")
             range_result_values_requiring_immediate_attentionOrUrgentCare = input("Please enter the Range Result Values Requiring Immediate Attention or Urgent Care \n")
+            actual_results = input("Please enter the actual results of the lab test \n")
             
 
-            information_list2 = [order_id2, lab_test_type_id,lab_test_type_name, range_normal_result_values,range_result_values_requiring_immediate_attentionOrUrgentCare] #This list is used to store the information before we input it into the .CSV file.
+            information_list2 = [order_id2, lab_test_type_id,lab_test_type_name, range_normal_result_values,range_result_values_requiring_immediate_attentionOrUrgentCare, actual_results] #This list is used to store the information before we input it into the .CSV file.
             print (information_list2)
 
             #Now we store our information in the Type of Test Tracking System. 
@@ -87,23 +90,39 @@ class LabOrderTracking:
 
         
 
-
+    
         
 
 
-    else: #This will handle retrieving information from the database now. 
+    elif(decision== 2): #This will handle retrieving information from the database now. 
         print("We will retrieve information now....")
 
-        #Ask User if they want to access lab order by "Patient Name", "By Date Ordered", "By Date Performed", or "By Ordering Physician"
-        searchingPreference = input("Please enter how you want to acesss the lab orders. Ex. Patient Name, By Date Ordered, By Date Performed, Ordering Physician \n").upper() #Add upper since when comparing strings its case sensitive.
-
+        #Ask User if they want to access lab order sorted by "Patient Name", "By Date Ordered", "By Date Performed", or "By Ordering Physician"
+        searchingPreference = input("Please enter how you want to acesss the lab orders sorted by. Ex. Normal, Patient Name, By Date Ordered, By Date Performed, Ordering Physician \n").upper() #Add upper since when comparing strings its case sensitive.
 
         df1 = pd.read_csv("Lab.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
-        print(df1)
-        print("\n")
-
         df2 = pd.read_csv("TypeTest.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
-        print(df2)
+
+        if(searchingPreference == "NORMAL"): #If the user just wants the data as is. 
+            inner_joindfNormal = pd.merge(df1,df2, on = 'Order ID', how = 'inner') #We do an inner join since both tables have same "Order ID".
+            print(inner_joindfNormal)
+            print("\n")
+
+            #Now we try to find the Urgent Patients to notify the Physicians. 
+            print("THIS IS THE LAB TESTS THAT HAVE URGENT RESULTS!!!")
+            urgentPatients0 = inner_joindfNormal.query("Result == 'URGENT'")
+            print(urgentPatients0)
+            print("\n")
+            #Now we print out the series/column of those Physicians that are associated with Lab Tests with Urgent in them. 
+            print("PLEASE NOTIFY THE FOLLOWING PHYSICIANS!!!")
+            print(urgentPatients0['Physician Name'].to_frame().to_string(index=False))
+
+        #df1 = pd.read_csv("Lab.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
+        #print(df1)
+        #print("\n")
+
+        #df2 = pd.read_csv("TypeTest.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
+        #print(df2)
 
         if(searchingPreference == "PATIENT NAME"): #We will be sorting by the Patient Name in Alphabetical Order Now. 
             print("ORDERED BY PATIENT NAME!!!")
@@ -114,6 +133,17 @@ class LabOrderTracking:
             inner_join_dfPatientName = inner_join_dfPatientName.sort_values("Patient Name",ascending = True) #We set ascending to be True so that we increase from A-Z. WORKS!!!!
             inner_join_dfPatientName = inner_join_dfPatientName.dropna() #Everytime we add sometimes it doesn't add right below that row so there's NaN values. 
             print(inner_join_dfPatientName)
+            print("\n")
+            
+            #Now we try to find the Urgent Patients to notify the Physicians. 
+            print("THIS IS THE LAB TESTS THAT HAVE URGENT RESULTS!!!")
+            urgentPatients1 = inner_join_dfPatientName.query("Result == 'URGENT'")
+            print(urgentPatients1)
+            print("\n")
+            #Now we print out the series/column of those Physicians that are associated with Lab Tests with Urgent in them. 
+            print("PLEASE NOTIFY THE FOLLOWING PHYSICIANS!!!")
+            print(urgentPatients1['Physician Name'].to_frame().to_string(index=False))
+            
 
         elif (searchingPreference =="BY DATE ORDERED"): #We will be sorting by Date Ordered in Sequential Order Now. WORKS!!!!
             print("ORDERED BY DATE ORDERED!!!")
@@ -123,6 +153,17 @@ class LabOrderTracking:
             inner_join_dfByDateOrdered = inner_join_dfByDateOrdered.sort_values("Date Ordered",ascending = True)
             inner_join_dfByDateOrdered = inner_join_dfByDateOrdered.dropna()
             print(inner_join_dfByDateOrdered)
+            print("\n")
+
+            #Now we try to find the Urgent Patients to notify the Physicians. 
+            print("THIS IS THE LAB TESTS THAT HAVE URGENT RESULTS!!!")
+            urgentPatients2 = inner_join_dfByDateOrdered.query("Result == 'URGENT'")
+            print(urgentPatients2)
+
+            print("\n")
+            #Now we print out the series/column of those Physicians that are associated with Lab Tests with Urgent in them. 
+            print("PLEASE NOTIFY THE FOLLOWING PHYSICIANS!!!")
+            print(urgentPatients2['Physician Name'].to_frame().to_string(index=False))
 
         elif(searchingPreference =="BY DATE PERFORMED"): #Will be sorting by Date Performed in Sequential Order Now. WORKS!!!!
             print("ORDERED BY DATE PERFORMED!!!")
@@ -132,6 +173,19 @@ class LabOrderTracking:
             inner_join_dfByDatePerformed  = inner_join_dfByDatePerformed .sort_values("Date of Lab Test",ascending = True)
             inner_join_dfByDatePerformed  = inner_join_dfByDatePerformed .dropna() 
             print(inner_join_dfByDatePerformed)
+            print("\n")
+
+            #Now we try to find the Urgent Patients to notify the Physicians. 
+            print("THIS IS THE LAB TESTS THAT HAVE URGENT RESULTS!!!")
+            urgentPatients3 = inner_join_dfByDatePerformed.query("Result == 'URGENT'")
+            print(urgentPatients3)
+
+            print("\n")
+            #Now we print out the series/column of those Physicians that are associated with Lab Tests with Urgent in them. 
+            print("PLEASE NOTIFY THE FOLLOWING PHYSICIANS!!!")
+            print(urgentPatients3['Physician Name'].to_frame().to_string(index=False))
+
+
 
         elif(searchingPreference =="ORDERING PHYSICIAN"): #Will be sorting by Ordering Physician in Alphatical Order Now. WORKS!!!!!
             print("ORDERED BY ORDERING PHYSICIAN!!!")
@@ -141,6 +195,21 @@ class LabOrderTracking:
             inner_join_dfOrderingPhysician = inner_join_dfOrderingPhysician.sort_values("Physician Name",ascending = True)
             inner_join_dfOrderingPhysician = inner_join_dfOrderingPhysician.dropna() 
             print(inner_join_dfOrderingPhysician)
+            print("\n")
+
+            #Now we try to find the Urgent Patients to notify the Physicians. 
+            print("THIS IS THE LAB TESTS THAT HAVE URGENT RESULTS!!!")
+            urgentPatients4 = inner_join_dfOrderingPhysician.query("Result == 'URGENT'")
+            print(urgentPatients4)
+
+            print("\n")
+            #Now we print out the series/column of those Physicians that are associated with Lab Tests with Urgent in them. 
+            print("PLEASE NOTIFY THE FOLLOWING PHYSICIANS!!!")
+            print(urgentPatients4['Physician Name'].to_frame().to_string(index=False))
+    
+    
+    
+        
 
 
         
