@@ -6,6 +6,7 @@ from tkinter import ttk
 from tkinter.ttk import *
 from tkinter import messagebox
 import datetime
+from homepage import home_gui
 
 root = Tk()
 
@@ -312,7 +313,7 @@ def check_phone_num(phone_num_entered):
 # function to check for a valid dob (mm/dd/yyyy format)
 def check_dob(dob_entered):
     try:
-        date_of_birth = datetime.datetime.strptime(dob_entered, "%m/%d/%Y")
+        datetime.datetime.strptime(dob_entered, "%m/%d/%Y")
         return True
     except:
         messagebox.showwarning('Register', 'Please enter your date of birth in MM/DD/YYYY format.')
@@ -324,17 +325,22 @@ register_button['command'] = register
 def validate_login():
     email_in = email_entry.get().strip()
     password_in = password_entry.get().strip()
+    print(email_in)
+    print(password_in)
     with open("users.csv", mode = "r") as f:
         reader = csv.reader(f, delimiter = ",")
         # checks for email/password combo in database
         for row in reader:
-            if(row[3] == email_in, row[4] == password_in):
+            if row[3] == email_in and row[4] == password_in:
+                # get id from row here
+                id = row[0]
                 messagebox.showinfo('Login', 'Login successful.')
-                # take to homepage
-            else:
+                # take to homepage here
+                loginframe.forget()
+                home_gui(id)
+            elif row[3] is None and row[4] is None:
                 messagebox.showinfo('Login', 'Incorrect email/password, please try again.')
 
 login_button['command'] = validate_login
-
 
 root.mainloop()
