@@ -312,7 +312,7 @@ def check_phone_num(phone_num_entered):
 # function to check for a valid dob (mm/dd/yyyy format)
 def check_dob(dob_entered):
     try:
-        date_of_birth = datetime.datetime.strptime(dob_entered, "%d/%m/%Y")
+        date_of_birth = datetime.datetime.strptime(dob_entered, "%m/%d/%Y")
         return True
     except:
         messagebox.showwarning('Register', 'Please enter your date of birth in MM/DD/YYYY format.')
