@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import *
-from tkinter import messagebox
 
 def home_gui(user_id):
     user_id = int(user_id)
@@ -36,6 +35,7 @@ def home_gui(user_id):
 
     # closing the window
     def close_window():
+        headerframe.forget()
         root.destroy()
 
     close_button['command'] = close_window

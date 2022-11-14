@@ -91,8 +91,6 @@ login_button = tk.Button(login_contentframe, text = 'Login', font = ('Verdana', 
 # go to register frame if user doesn't have an account already
 go_register_label = tk.Label(login_contentframe, text = "Don't have an account? Register here", font = ('Verdana', 10), bg = 'grey', fg = '#063970')
 
-#mainframe.pack(fill = 'both', expand = 1)
-#loginframe.pack(fill = 'both', expand = 1)
 login_contentframe.pack(fill = 'both', expand = 1)
 
 # setting up grid for labels, entry boxes, and buttons
@@ -150,8 +148,6 @@ register_button = tk.Button(register_contentframe, text = 'Register', font = ('V
 # takes user to login page if user already has an account set up
 go_login_label = tk.Label(register_contentframe, text = "Already have an account? Login here", font = ('Verdana', 10), bg = 'grey', fg = '#063970')
 
-#mainframe.pack(fill = 'both', expand = 1)
-#registerframe.pack(fill = 'both', expand = 1)
 register_contentframe.pack(fill = 'both', expand = 1)
 
 # setting up grid for labels, entry boxes, and buttons
@@ -205,14 +201,14 @@ go_login_label.bind("<Button-1>", lambda page: go_to_login())
 #------ REGISTER FUNCTION ------#
 def register():
     # saving entries to local variables
-    fname = fname_entry_rg.get().strip() # removes white space
-    lname = lname_entry_rg.get().strip()
-    email = email_entry_rg.get().strip()
+    fname = fname_entry_rg.get().strip().upper() # removes white space
+    lname = lname_entry_rg.get().strip().upper()
+    email = email_entry_rg.get().strip().lower()
     password = password_entry_rg.get().strip()
     confirm_password = confirm_password_entry_rg.get().strip()
     phone = phone_entry_rg.get().strip()
-    address = address_entry_rg.get().strip()
-    insurance_carrier = insurance_carrier_entry_rg.get().strip()
+    address = address_entry_rg.get().strip().upper()
+    insurance_carrier = insurance_carrier_entry_rg.get().strip().upper()
     dob = dob_entry_rg.get().strip()
     gdr = gender.get()
     account = account_type.get()
@@ -323,23 +319,27 @@ register_button['command'] = register
 
 #------ LOGIN FUNCTION ------#
 def validate_login():
-    email_in = email_entry.get().strip()
+    email_in = email_entry.get().strip().lower()
     password_in = password_entry.get().strip()
-    print(email_in)
-    print(password_in)
-    with open("users.csv", mode = "r") as f:
-        reader = csv.reader(f, delimiter = ",")
-        # checks for email/password combo in database
-        for row in reader:
-            if row[3] == email_in and row[4] == password_in:
-                # get id from row here
-                id = row[0]
-                messagebox.showinfo('Login', 'Login successful.')
-                # take to homepage here
-                loginframe.forget()
-                home_gui(id)
-            elif row[3] is None and row[4] is None:
-                messagebox.showinfo('Login', 'Incorrect email/password, please try again.')
+    if len(email_in) > 0 and len(password_in) > 0:
+        with open("users.csv", mode = "r") as f:
+            reader = csv.reader(f, delimiter = ",")
+            # checks for email/password combo in database
+            for row in reader:
+                if row[3] == email_in and row[4] == password_in:
+                    # get id from row here
+                    id = row[0]
+                    messagebox.showinfo('Login', 'Login successful.')
+                    # take to homepage after logging in
+                    loginframe.forget()
+                    home_gui(id)
+                elif row[3] == email_in and row[4] != password_in:
+                    messagebox.showinfo('Login', 'Incorrect password, please try again.')
+                elif row[3] is None and row[4] is None:
+                    messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
+                    go_to_register()
+    else:
+        messagebox.showwarning('Login', 'Please fill all fields.')
 
 login_button['command'] = validate_login
 
