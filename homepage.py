@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import *
 import PatientRecords
+from PatientRecords import initialize
 
 def home_gui(user_id):
     user_id = int(user_id)
@@ -68,6 +69,6 @@ def home_gui(user_id):
     if user_id >= 30000000 and user_id < 40000000:
         equipment_button.grid(row = 5, column = 0, columnspan = 2, pady = 5)
 
-    epr_button['command'] = PatientRecords.initialize(user_id)
+    epr_button['command'] = initialize(user_id)
 
     root.mainloop()
