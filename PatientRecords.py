@@ -157,7 +157,11 @@ def runGui(person):
     listbox.insert(17, "Appointments: " + person.current_appointments)
     listbox.pack()
 
-    home_button = ttk.Button(root, text='Home')
+    def return_home():
+        root.destroy()
+        return
+
+    home_button = ttk.Button(root, text='Home', command = return_home)
     home_button.pack(in_=top, side=LEFT)
 
     def edit_entry():

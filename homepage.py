@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import *
-import PatientRecords
 from PatientRecords import initialize
 
 def home_gui(user_id):
@@ -45,11 +44,16 @@ def home_gui(user_id):
 
     mainframe = tk.Frame(root, width = w, height = h)
 
+    def enter_patient_records():
+        root.destroy()
+        initialize(str(user_id))
+        home_gui(str(user_id))
+
     #------ ALL BUTTONS -------#
     homeframe  = tk.Frame(mainframe, width = w, height = h)
     home_contentframe = tk.Frame(homeframe, padx = 30, pady = 15, bg = 'grey')
 
-    epr_button = tk.Button(home_contentframe, text = 'Patient Record', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
+    epr_button = tk.Button(home_contentframe, text = 'Patient Record', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25, command = enter_patient_records)
     sched_button = tk.Button(home_contentframe, text = 'Physician Schedules', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
     lab_button = tk.Button(home_contentframe, text = 'Lab Order Tracking', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
     pharm_button = tk.Button(home_contentframe, text = 'Pharmacy Order Tracking', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
@@ -68,7 +72,5 @@ def home_gui(user_id):
     
     if user_id >= 30000000 and user_id < 40000000:
         equipment_button.grid(row = 5, column = 0, columnspan = 2, pady = 5)
-
-    epr_button['command'] = initialize(user_id)
 
     root.mainloop()

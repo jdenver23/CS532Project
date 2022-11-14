@@ -331,7 +331,7 @@ def validate_login():
                     id = row[0]
                     messagebox.showinfo('Login', 'Login successful.')
                     # take to homepage after logging in
-                    loginframe.forget()
+                    root.destroy()
                     home_gui(id)
                 elif row[3] == email_in and row[4] != password_in:
                     messagebox.showinfo('Login', 'Incorrect password, please try again.')
