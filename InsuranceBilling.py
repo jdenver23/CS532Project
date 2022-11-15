@@ -56,6 +56,7 @@ def dollar_to_float(amount) -> float:
         amount = amount.replace(r, '')
     return float(amount)
 
+
 #
 #
 #   Insurance Classes
@@ -65,17 +66,8 @@ def dollar_to_float(amount) -> float:
 
 class PaymentStatus(Enum):
     """
-        Payments status of an Insurance Carrier, a Service, or an Invoice.
-
+        Payments status of an Insurance Carrier, a Service, or an Invoice.\n
         This Enum inherited class was created for better representation of data stored in the database.
-
-        #### Available enums:
-        - `PAID`
-        - `UNPAID`
-        - `ONTIME`
-        - `LATE`
-        - `DIFFICULT`
-        - `DELINQUENT`
     """
     PAID = 0
     UNPAID = 1
@@ -238,6 +230,7 @@ class InsuranceInvoice:
     def __repr__(self) -> str:
         return self.id
 
+
 #
 #
 #   Main Class
@@ -248,29 +241,29 @@ class InsuranceInvoice:
 class InsuranceBilling:
     """
         ### Insurance Billing Class
-        Store patients' bills of insurance carriers for services provided by the medical clinic.
+        Store patients' information of insurance carriers and services provided by the medical clinic.\n
+        Generate monthly invoices as well as reports on delinquent invoices made by patient or carrier.
 
         #### Notes:
-        - `id` can mean `user_id` or `patient_id` as it will use the same id to get data from database.
-        - When `id` is not given, a new and unique id will be generated along with its new databases.
+        - `id` can mean `user_id` or `patient_id` as it will use this id to retrieve data from other databases.
         - Use `commit_to_db()` in order to save local changes to the database.
     """
 
     def __init__(self, id=None) -> None:
-        if id is not None:
-            self.id = id
-        else:
-            # generate new id by retrieving all used ids from database folder
-            used_ids = []
-            for file in os.listdir(IB_DB_DIR):
-                if file.endswith(".csv"):
-                    used_id = file.split("_")[0].split("id")[1]
-                    if used_id.isnumeric():
-                        used_ids.append(int(used_id))
+        self.id = id
+        assert self.id is not None
+        # if id is None:
+        #     # generate new id by retrieving all used ids from database folder
+        #     used_ids = []
+        #     for file in os.listdir(IB_DB_DIR):
+        #         if file.endswith(".csv"):
+        #             used_id = file.split("_")[0].split("id")[1]
+        #             if used_id.isnumeric():
+        #                 used_ids.append(int(used_id))
 
-            self.id = 0
-            while any(self.id == used_id for used_id in used_ids):
-                self.id += 1
+        #     self.id = 0
+        #     while any(self.id == used_id for used_id in used_ids):
+        #         self.id += 1
 
         # retrieve data of `id` from the database
         self.retrieve_data()
@@ -404,8 +397,7 @@ class InsuranceBilling:
 
     def sort_local_db(self, sort_by_id=False, sort_by_name=False, sort_by_cost=False, reversed=False) -> None:
         """
-            Sort the local database according to the argument.
-
+            Sort the local database according to the argument.\n
             Note: only one `sort_by_[]` can be used at a time.
 
             #### Parameters:
@@ -427,10 +419,8 @@ class InsuranceBilling:
     # ---------------
     def new_carrier(self, carrier_name, carrier_address, primary=False) -> str:
         """ 
-            Add a row of new Insurance Carrier to the local database.
-
-            If `primary` is `True`, set all other carriers' `primary` key to `False`.
-
+            Add a row of new Insurance Carrier to the local database.\n
+            If `primary` is `True`, set all other carriers' `primary` key to `False`.\n
             Note: use `commit_to_db()` in order to save local changes to the database.
 
             #### Parameters:
@@ -506,14 +496,13 @@ class InsuranceBilling:
                 carrier.primary = primary
                 return True
         return False
+    
     # ---------------
     #   SERVICES
     # ---------------
-
     def new_service(self, service_description, service_cost, date=datetime.now(), fillin_id=True) -> str:
         """ 
-            Add a row of new Service to the local database.
-
+            Add a row of new Service to the local database.\n
             Note: use `commit_to_db()` in order to save local changes to the database.
 
             #### Parameters:
@@ -538,8 +527,7 @@ class InsuranceBilling:
 
     def remove_service(self, service_id) -> bool:
         """ 
-            Remove the row of where `service_id` is found in the local database.
-
+            Remove the row of where `service_id` is found in the local database.\n
             Note: use `commit_to_db()` in order to save local changes to the database.
 
             #### Parameters:
@@ -633,6 +621,8 @@ class InsuranceBilling:
             \t\t + Cost: `cost`
             \----------------\n
             Amount due: `amt`\t\tTotal cost: `cost`
+            
+            :func:`InsuranceBilling`
         """
         if invoice_id is None and len(self.invoices) > 0:
             invoice_id = self.invoices[-1].id
@@ -645,7 +635,7 @@ class InsuranceBilling:
         return ""
 
     def pay_for_invoice(self, invoice_id, amount="$0", pay_in_full=False) -> bool:
-        """ 
+        """
             Make a payment to `invoice_id` with specified `amount`.
 
             #### Parameters:
@@ -715,6 +705,7 @@ class InsuranceBilling:
                         delinquent_reports += self.invoice_info(invoice.id) + "\n"
 
         return delinquent_reports
+
 
 #
 #
@@ -814,9 +805,9 @@ def invoice_tests(bill, month=datetime.now().month, pay=True, deq=False):
 
 def clean_up():
     count = 0
-    if Path(USER_FILE).is_file():
+    if Path(IB_DB_DIR + '\ib-test-users.csv').is_file():
         count += 1
-        os.remove(USER_FILE)
+        os.remove(IB_DB_DIR + '\ib-test-users.csv')
 
     # remove used csv files in `IB_DB_DIR` directory
     if Path(IB_DB_DIR).is_dir():
@@ -864,7 +855,7 @@ if __name__ == "__main__":
     # only import time package for testing
     import time
     uid = 1111
-    USER_FILE = IB_DB_DIR + '\ib-test-users'
+    USER_FILE = IB_DB_DIR + '\ib-test-users.csv'
     clean_up()
     with open(USER_FILE, mode='w') as f:
         writer = csv.writer(f, delimiter=",")
