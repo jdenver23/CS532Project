@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='utf-8'?>
+<interface version="1.3">
+  <object class="tk.Frame" id="user_info_container_" named="True">
+    <property name="borderwidth">0</property>
+    <layout manager="grid">
+      <property name="column">0</property>
+      <property name="row">0</property>
+    </layout>
+    <child>
+      <object class="tk.Frame" id="user_info_container" named="True">
+        <property name="height">30</property>
+        <property name="width">720</property>
+        <layout manager="grid">
+          <property name="column">0</property>
+          <property name="padx">10</property>
+          <property name="row">0</property>
+        </layout>
+        <containerlayout manager="grid">
+          <property name="anchor">center</property>
+          <property name="propagate">False</property>
+        </containerlayout>
+        <child>
+          <object class="tk.Frame" id="fr_user_info" named="True">
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="row">0</property>
+            </layout>
+            <child>
+              <object class="tk.Label" id="lb_user_id" named="True">
+                <property name="anchor">e</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="justify">left</property>
+                <property name="text" translatable="yes">ID:</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="padx">10</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="user_id_text" named="True">
+                <property name="background">#dadada</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="text" translatable="yes">12345678</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="expand">true</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="lb_user_name" named="True">
+                <property name="anchor">e</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="justify">left</property>
+                <property name="text" translatable="yes">Name:</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="ipadx">10</property>
+                  <property name="padx">10</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="user_name_text" named="True">
+                <property name="background">#dadada</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="justify">center</property>
+                <property name="relief">flat</property>
+                <property name="text" translatable="yes">Tree Tran</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="expand">true</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="lb_user_address" named="True">
+                <property name="anchor">e</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="justify">left</property>
+                <property name="text" translatable="yes">Address:</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="expand">false</property>
+                  <property name="ipadx">10</property>
+                  <property name="padx">10</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="user_address_text" named="True">
+                <property name="background">#dadada</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="height">1</property>
+                <property name="justify">left</property>
+                <property name="relief">flat</property>
+                <property name="state">normal</property>
+                <property name="text" translatable="yes">12345 6th Boulevard</property>
+                <property name="wraplength">120</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="expand">true</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="lb_user_dob" named="True">
+                <property name="anchor">e</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="justify">left</property>
+                <property name="text" translatable="yes">DOB:</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="expand">false</property>
+                  <property name="ipadx">10</property>
+                  <property name="padx">10</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="user_dob_text" named="True">
+                <property name="anchor">w</property>
+                <property name="background">#dadada</property>
+                <property name="font">{Verdana} 8 {}</property>
+                <property name="justify">left</property>
+                <property name="text" translatable="yes">06/27/2000</property>
+                <layout manager="pack">
+                  <property name="anchor">center</property>
+                  <property name="expand">true</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
