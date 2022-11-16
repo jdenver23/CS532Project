@@ -22,7 +22,7 @@ class LabOrderTracking:
     results_labtest = "Good" #Can be good, okay, or urgent
 
     #Now we get user input if we want to store info in the .CSV file so they can be accessed later
-    decision = int(input("Please enter 1 for adding information to the Lab Order Tracking System or 2 for retrieving information from the Lab Order Tracking System \n")) #If user input == 1, store. If user input == 2, we retrieve. 
+    decision = int(input("Please enter 1 for ADDING information to the Lab Order Tracking System, 2 for retrieving SORTED information from the Lab Order Tracking System, or 3 for retrieiving SPECIFIC information from the Lab Order Tracking System. \n")) #If user input == 1, store. If user input == 2, we retrieve. 
 
     if(decision == 1):
         print("We will store information now....")
@@ -94,8 +94,8 @@ class LabOrderTracking:
         
 
 
-    elif(decision== 2): #This will handle retrieving information from the database now. 
-        print("We will retrieve information now....")
+    elif(decision== 2): #This will handle retrieving information from the database now by sorted information.
+        print("We will retrieve information now by sorted information....")
 
         #Ask User if they want to access lab order sorted by "Patient Name", "By Date Ordered", "By Date Performed", or "By Ordering Physician"
         searchingPreference = input("Please enter how you want to acesss the lab orders sorted by. Ex. Normal, Patient Name, By Date Ordered, By Date Performed, Ordering Physician \n").upper() #Add upper since when comparing strings its case sensitive.
@@ -207,7 +207,107 @@ class LabOrderTracking:
             print("PLEASE NOTIFY THE FOLLOWING PHYSICIANS!!!")
             print(urgentPatients4['Physician Name'].to_frame().to_string(index=False))
     
-    
+    elif(decision  == 3): #This is for retrieving specific information. 
+        df3 = pd.read_csv("Lab.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
+        df4 = pd.read_csv("TypeTest.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
+
+        searchingPreference2 = input("Please enter how you want to access specific Lab Reports. Ex. Patient Name, Physician Name, Specific Type Ordered by a Specified Physician, or Specific Type Ordered by all Physicians  \n").upper() #Add upper since when comparing strings its case sensitive.
+
+        if(searchingPreference2 == "PATIENT NAME"): #This retrieves information from the database based on the Patient's Name
+            print("Retrieiving Information based on PATIENT NAME!!! \n")
+
+            
+            PatientNameSearch = input("Please enter the Patient's Name \n").upper()
+            #print(PatientNameSearch)
+
+            #Now we retrieve the information based on Patient Name. We need to form an inner join of the tables and then query the data based on that name. 
+
+            inner_join_dfPatientName2 = pd.merge(df3,df4, on = 'Order ID', how = 'inner')
+            #print(inner_join_dfPatientName2)
+            #Now we use a Boolean Series since .query() method did not work
+
+            #print("\n")
+            boolean_series = inner_join_dfPatientName2["Patient Name"] == PatientNameSearch
+            #print(boolean_series)
+
+            print(inner_join_dfPatientName2[boolean_series])
+        
+        elif(searchingPreference2 == "PHYSICIAN NAME"):
+            print("Retrieiving Information based on PHYSICIAN NAME!!! \n")
+
+            
+            PhysicianNameSearch = input("Please enter the Physician's Name \n").upper()
+            #print(PatientNameSearch)
+
+            #Now we retrieve the information based on Patient Name. We need to form an inner join of the tables and then query the data based on that name. 
+
+            inner_join_dfPhysicianName2 = pd.merge(df3,df4, on = 'Order ID', how = 'inner')
+            #print(inner_join_dfPatientName2)
+            #Now we use a Boolean Series since .query() method did not work
+
+            #print("\n")
+            boolean_series = inner_join_dfPhysicianName2["Physician Name"] == PhysicianNameSearch
+            #print(boolean_series)
+
+            print(inner_join_dfPhysicianName2[boolean_series])
+
+        elif(searchingPreference2 == "SPECIFIC TYPE ORDERED BY A SPECIFIED PHYSICIAN"):
+            print("Retrieiving Information based on SPECIFIC TYPE ORDERED BY A SPECIFIED PHYSICIAN!!! \n")
+
+            
+            TypeTestSearch = input("Please enter the specific type of test. Ex. Sugar, Cholesterol, or Both \n").upper()
+            PhysicianNameSearch = input("Please enter the Physician's Name \n").upper()
+            #print(PatientNameSearch)
+
+            #Now we retrieve the information based on Patient Name. We need to form an inner join of the tables and then query the data based on that name. 
+
+            inner_join_dfTypeTestAndPhysicianName2 = pd.merge(df3,df4, on = 'Order ID', how = 'inner')
+            #print(inner_join_dfPatientName2)
+            #Now we use a Boolean Series since .query() method did not work
+
+            #print("\n")
+            boolean_series = (inner_join_dfTypeTestAndPhysicianName2["Type of Lab Test"] == TypeTestSearch) & (inner_join_dfTypeTestAndPhysicianName2["Physician Name"] == PhysicianNameSearch)
+            #print(boolean_series)
+
+            print(inner_join_dfTypeTestAndPhysicianName2[boolean_series])
+
+        elif(searchingPreference2 == "SPECIFIC TYPE ORDERED BY ALL PHYSICIANS"):
+            print("Retrieiving Information based on SPECIFIC TYPE ORDERED BY ALL PHYSICIANS!!! \n")
+
+            
+            TypeTestSearch = input("Please enter the specific type of test. Ex. Sugar, Cholesterol, or Both \n").upper()
+            #print(PatientNameSearch)
+
+            #Now we retrieve the information based on Patient Name. We need to form an inner join of the tables and then query the data based on that name. 
+
+            inner_join_dfTypeTest2 = pd.merge(df3,df4, on = 'Order ID', how = 'inner')
+            #print(inner_join_dfPatientName2)
+            #Now we use a Boolean Series since .query() method did not work
+
+            #print("\n")
+            boolean_series = (inner_join_dfTypeTest2["Type of Lab Test"] == TypeTestSearch)
+            #print(boolean_series)
+
+            print(inner_join_dfTypeTest2[boolean_series])
+
+
+
+            
+            
+
+
+
+            
+
+            
+            
+            
+
+
+
+
+
+
     
         
 
