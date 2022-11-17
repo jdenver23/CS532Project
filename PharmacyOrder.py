@@ -259,6 +259,7 @@ class PharmacyOrder:
             print("Prescription with ID (" + str(presc_ID) + ") does not exist, so it cannot be deleted.")
 
     # function to show what prescriptions have not yet been filled. returns a list of information.
+    # user ID is a string.
     def prescriptions_to_be_filled(self, user_ID):
         not_yet_filled_list = list()
 
@@ -281,7 +282,28 @@ class PharmacyOrder:
 
         return not_yet_filled_list
             
+    # function to show what prescriptions have been filled. 
+    def prescriptions_filled(self, user_ID):
+        filled_list = list()
 
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+            # if the user is an employee
+            if int(user_ID) >= 30000000 and int(user_ID) < 40000000:
+                # allow for the user to view all prescriptions for any patient that need to be filled. 
+                for row in reader:
+                    if row["Date Filled"] != "" and row["Date Filled"] != "Date Filled":
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        filled_list.append(information_dictionary)
+            # if user is not employee
+            else:
+                # allow user to only view their prescriptions that need to be filled.
+                for row in reader:
+                    if row["Patient ID"] == user_ID and row["Date Filled"] != '':
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        filled_list.append(information_dictionary)
+        
+        return filled_list
 
     # Function to complete a prescription. Need to provide prescripion ID, pharmacist name, and date filled.
     # date_filled must be a Date object 
@@ -386,4 +408,13 @@ invalid_med = "MOTRIN"
 # print(pharm_order.prescriptions_to_be_filled("30245442"))
 # 9.2 test for user, make sure shows only unfileed for specific user
 # print(pharm_order.prescriptions_to_be_filled("50323230"))
-print(pharm_order.prescriptions_to_be_filled("40024244"))
+# 9.3 test for when userID does not exist. 
+# print(pharm_order.prescriptions_to_be_filled("40024244"))
+
+# Test 10 for displaying filled for orders. given a specificed user
+# 10.1 test for employee, make sure all filled prescriptions shown. 
+# print(pharm_order.prescriptions_filled("30245442"))
+# 10.2 test for patient, make sure to only show prescriptions for specific user.
+# print(pharm_order.prescriptions_filled("50323230"))
+# 10.3 test for when userID does not exist. 
+# print(pharm_order.prescriptions_filled("40024244"))
