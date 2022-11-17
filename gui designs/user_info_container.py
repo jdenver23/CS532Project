@@ -32,7 +32,7 @@ class UserInfoContainerWidget(tk.Frame):
             font="{Verdana} 8 {}",
             justify="center",
             relief="flat",
-            text='Tree Tran')
+            text='First Last')
         self.user_name_text.pack(anchor="center", expand="true", side="left")
         self.lb_user_address = tk.Label(self.fr_user_info)
         self.lb_user_address.configure(
@@ -76,10 +76,17 @@ class UserInfoContainerWidget(tk.Frame):
             background="#dadada",
             font="{Verdana} 8 {}",
             justify="left",
-            text='06/27/2000')
+            text='11/11/1111')
         self.user_dob_text.pack(anchor="center", expand="true", side="left")
         self.fr_user_info.grid(column=0, row=0)
         self.user_info_container.grid(column=0, padx=10, row=0)
         self.user_info_container.grid_propagate(0)
         self.user_info_container.grid_anchor("center")
         self.configure(borderwidth=0)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    widget = UserInfoContainerWidget(root)
+    widget.pack(expand=True, fill="both")
+    root.mainloop()
+
