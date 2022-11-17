@@ -29,80 +29,13 @@ import pandas as pd
 class PharmacyOrder:
     csv_filename = "PharmacyOrder.csv"
 
-    field_names = ['Prescription ID', 'Patient Name', 'Physician Name', 'Prescribed Medication', 'Medication ID', 'Dosage', 'Frequency', 'Date Ordered', 'Date Filled', 'Pharmacist']
+    field_names = ['Prescription ID', 'Patient Name', 'Patient ID', 'Physician Name', 'Prescribed Medication', 'Medication ID', 'Dosage', 'Frequency', 'Date Ordered', 'Date Filled', 'Pharmacist']
 
     # Function to create a Pharmacy Order file (if it doesn't exist and give)
     #def __init__(self, prescription_id, patient_name, physician_name, medication, dosage, medication_frequency, date_filled, pharmacist):
     def __init__(self):
-        # self.prescription_id = prescription_id
-        # self.prescription_id = prescription_id
-        # self.patient_name = patient_name
-        # self.physician_name = physician_name
-        # self.medication = medication
-        # self.dosage = dosage
-        # self.medication_frequency = medication_frequency
-        # self.date_filled = date_filled
-        # self.pharmacist = pharmacist
         pass
 
-    #======================================================================================
-    # # Getter methods for our class attributes
-    # def get_prescription_id(self):
-    #     return self.prescription_id
-    
-    # def get_patient_name(self):
-    #     return self.patient_name
-    
-    # def get_physician_name(self):
-    #     return self.physician_name
-    
-    # def get_medication(self):
-    #     return self.medication
-    
-    # def get_dosage(self):
-    #     return self.dosage
-    
-    # def get_medication_frequency(self):
-    #     return self.medication_frequency
-    
-    # def get_date_filled(self):
-    #     return self.date_filled
-    
-    # def get_pharmacist(self):
-    #     return self.pharmacist
-    
-    # # Setter methods for our class attributes
-    # def set_prescription_id(self, updated_presciption_id):
-    #     self.prescription_id = updated_presciption_id
-    
-    # def set_patient_name(self, updated_patient_name):
-    #     self.patient_name = updated_patient_name
-    
-    # def set_physician_name(self, updated_physician_name):
-    #     self.physician_name = updated_physician_name
-    
-    # def set_medication(self, updated_medication):
-    #     self.medication = updated_medication
-
-    # def set_dosage(self, updated_dosage):
-    #     self.dosage = updated_dosage
-    
-    # def set_medication_frequency(self, updated_medication_frequency):
-    #     self.medication_frequency = updated_medication_frequency
-    
-    # def set_date_filled(self, updated_date_filled):
-    #     self.date_filled = updated_date_filled
-    
-    # def set_pharmacist(self, updated_pharmacist):
-    #     self.pharmacist = updated_pharmacist
-    #======================================================================================
-
-    
-    # Add New functions
-    # TODO: delete
-    # def add_new_prescription_id(id):
-    #     with open("PharmacyOrder.csv", mode = "a", newline = "") as f:
-    #         writer = csv.writer(f, delimeter = ",")
 
     # TODO: need to check prescription ID when creating one to make sure it doesn't already exist. 
     # TODO: verification for each value is done likely somewhere else
@@ -216,7 +149,7 @@ class PharmacyOrder:
             print("In " + self.month_name(str(key[1])) + " " + str(key[2]) + ", " + key[3] + " had " + str(dict_result[key]) + " prescriptions of " + key[0] + " filled.")
 
     # Function to add an order
-    def add_order(self, prescription_id, patient_name, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
+    def add_order(self, prescription_id, patient_name, patient_id, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
         # V1: Below is one way to add to a file, but it doesn't seem very wise in allowing for editing of fields
         # with open("PharmacyOrder.csv", mode = "a", newline = "") as f:
         #     writer = csv.writer(f, delimeter = ",")
@@ -236,6 +169,7 @@ class PharmacyOrder:
             writer.writerow({
                 "Prescription ID": prescription_id, 
                 "Patient Name": patient_name.upper(),
+                "Patient ID": patient_id,
                 "Physician Name": physician_name, 
                 "Prescribed Medication": medication.upper(),
                 "Medication ID": medication_id,
@@ -253,6 +187,7 @@ class PharmacyOrder:
         info_dict = {\
             "Prescription ID": row["Prescription ID"],\
             "Patient Name": row["Patient Name"],\
+            "Patient ID": row["Patient ID"],\
             "Physician Name": row["Physician Name"],\
             "Prescribed Medication": row["Prescribed Medication"],\
             "Medication ID": row["Medication ID"],\
@@ -323,38 +258,70 @@ class PharmacyOrder:
         except KeyError:
             print("Prescription with ID (" + str(presc_ID) + ") does not exist, so it cannot be deleted.")
 
+    # function to show what prescriptions have not yet been filled. returns a list of information.
+    def prescriptions_to_be_filled(self, user_ID):
+        not_yet_filled_list = list()
+
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+            # if the user is an employee
+            if int(user_ID) >= 30000000 and int(user_ID) < 40000000:
+                # allow for the user to view all prescriptions for any patient that need to be filled. 
+                for row in reader:
+                    if row["Date Filled"] == '':
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        not_yet_filled_list.append(information_dictionary)
+            # if user is not employee
+            else:
+                # allow user to only view their prescriptions that need to be filled.
+                for row in reader:
+                    if row["Patient ID"] == user_ID and row["Date Filled"] == '':
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        not_yet_filled_list.append(information_dictionary)
+
+        return not_yet_filled_list
+            
+
 
     # Function to complete a prescription. Need to provide prescripion ID, pharmacist name, and date filled.
-    # NOTE: p_ID must be an integer value.
-    def complete_order(self, p_ID, pharmacist_name, date_filled):
+    # date_filled must be a Date object 
+    # NOTE: presc_ID must be an integer value.
+    def complete_order(self, presc_ID, pharmacist_name, date_filled):
         pharm_order_df = pd.read_csv(PharmacyOrder.csv_filename, index_col="Prescription ID")
-        if pd.isna(pharm_order_df.loc[p_ID, "Pharmacist"]) and pd.isna(pharm_order_df.loc[p_ID, "Date Filled"]):
-            pharm_order_df.loc[p_ID, "Pharmacist"] = pharmacist_name
-            pharm_order_df.loc[p_ID, "Date Filled"] = date_filled
+        if pd.isna(pharm_order_df.loc[presc_ID, "Pharmacist"]) and pd.isna(pharm_order_df.loc[presc_ID, "Date Filled"]):
+            pharm_order_df.loc[presc_ID, "Pharmacist"] = pharmacist_name
+            # check to make sure that Date filled is after date ordered. 
+            date_object_ordered = datetime.strptime(pharm_order_df.loc[presc_ID, "Date Ordered"], "%m/%d/%Y").date()
+            # if date filled is before date ordered, then print error
+            if date_filled < date_object_ordered:
+                print("ERROR: Failed to Complete Prescription Order - Date Filled is before Date Ordered.")
+                return
+            else:
+                pharm_order_df.loc[presc_ID, "Date Filled"] = date_filled
             # reset index so that prescription ID is added back to the dataFrame
             pharm_order_df = pharm_order_df.reset_index()
             pharm_order_df.to_csv(PharmacyOrder.csv_filename, index=False)
         else:
-            print("Pharmacy Order " + str(p_ID) + " has already been completed.")
+            print("Pharmacy Order " + str(presc_ID) + " has already been completed.")
             return
                        
         
-        print("Successfully Completed Presctiption Order " + str(p_ID))
+        print("Successfully Completed Presctiption Order " + str(presc_ID))
 
 #-----------Testing---------------
 #first row of descriptions add TODO: maybe move this to init.
 
 pharm_order = PharmacyOrder()
-# pharm_order.add_order('Prescription ID', 'Patient Name', 'Physician Name', 'Prescribed Medication', 'Medication ID', 'Dosage', 'Frequency', 'Date Ordered', 'Date Filled', 'Pharmacist')
+# pharm_order.add_order('Prescription ID', 'Patient Name', 'Patient ID', 'Physician Name', 'Prescribed Medication', 'Medication ID', 'Dosage', 'Frequency', 'Date Ordered', 'Date Filled', 'Pharmacist')
 
 # Test 1 for add_order
-# pharm_order.add_order("32", "jon lee", "dr. guzman", "Tylenol", "2442", "250 mg", "twice every 8 hours", "10/13/2022", "10/15/2022", "Dr. Hwang")
-# pharm_order.add_order("22", "jar jar", "Dr. Banner", "Kryptonite", "2765", "400 mg", "once a day", "10/15/2022", "10/17/2022", "Dr. Casetti")
-# pharm_order.add_order("34", "jon lee", "dr. guzman", "Sudafed", "2440", "250 mg", "once every 12 hours", "10/15/2022", "", "")
-# pharm_order.add_order("35", "jon lee", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/01/2022", "10/03/2022", "Dr. Casetti")
-# pharm_order.add_order("73", "mike winkder", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "10/25/2022", "Dr. Casetti")
-# pharm_order.add_order("46", "trevor dosner", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "11/01/2022", "Dr. Casetti")
-# pharm_order.add_order("39", "jon lee", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/22/2022", "11/01/2022", "Dr. Casetti")
+# pharm_order.add_order("32", "jon lee", "50323230", "dr. guzman", "Tylenol", "2442", "250 mg", "twice every 8 hours", "10/13/2022", "10/15/2022", "Dr. Hwang")
+# pharm_order.add_order("22", "jar jar", "60242420", "Dr. Banner", "Kryptonite", "2765", "400 mg", "once a day", "10/15/2022", "10/17/2022", "Dr. Casetti")
+# pharm_order.add_order("34", "jon lee", "50323230", "dr. guzman", "Sudafed", "2440", "250 mg", "once every 12 hours", "10/15/2022", "", "")
+# pharm_order.add_order("35", "jon lee", "50323230", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/01/2022", "10/03/2022", "Dr. Casetti")
+# pharm_order.add_order("73", "mike winkder", "52056756", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "10/25/2022", "Dr. Casetti")
+# pharm_order.add_order("46", "trevor dosner", "85882422", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "", "")
+# pharm_order.add_order("39", "jon lee", "50323230", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/22/2022", "", "")
 
 pres_id = "32"
 invalid_id = "33"   
@@ -406,6 +373,17 @@ invalid_med = "MOTRIN"
 # pharm_order.delete_pharmacy_order(35)
 # pharm_order.delete_pharmacy_order(73)
 # pharm_order.delete_pharmacy_order(46)
+# pharm_order.delete_pharmacy_order(39)
 
 # TEST 8 for complete pharmacy order
-pharm_order.complete_order(34, "Dr. Casetti", "11/5/22")
+# below test should fail because date filled is before date ordered.
+# pharm_order.complete_order(34, "Dr. Casetti", date(2022, 10, 13))
+# below test should pass because date filled is after date ordered.
+# pharm_order.complete_order(34, "Dr. Casetti", date(2022, 11, 5))
+
+# Test 9 for displaying not yet filled orders. 
+# 9.1 test for employee, make sure all unfilled prescriptions shown. 
+# print(pharm_order.prescriptions_to_be_filled("30245442"))
+# 9.2 test for user, make sure shows only unfileed for specific user
+# print(pharm_order.prescriptions_to_be_filled("50323230"))
+print(pharm_order.prescriptions_to_be_filled("40024244"))
