@@ -1,0 +1,4 @@
+# specify file/folder here to be untracked/ignored by git
+# for example cache and logs folders
+__pycache__/
+.vscode/
