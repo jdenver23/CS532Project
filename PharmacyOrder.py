@@ -260,7 +260,7 @@ class PharmacyOrder:
 
     # function to show what prescriptions have not yet been filled. returns a list of information.
     # user ID is a string.
-    def prescriptions_to_be_filled(self, user_ID):
+    def orders_to_be_filled(self, user_ID):
         not_yet_filled_list = list()
 
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
@@ -283,7 +283,7 @@ class PharmacyOrder:
         return not_yet_filled_list
             
     # function to show what prescriptions have been filled. 
-    def prescriptions_filled(self, user_ID):
+    def orders_filled(self, user_ID):
         filled_list = list()
 
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
@@ -304,6 +304,30 @@ class PharmacyOrder:
                         filled_list.append(information_dictionary)
         
         return filled_list
+
+    # Function to show all prescriptions that is allowed by userID
+    def show_prescription_orders(self, user_ID):
+        orders_list = list()
+
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+            # if the user is an employee
+            if int(user_ID) >= 30000000 and int(user_ID) < 40000000:
+                # allow for the user to view all prescriptions 
+                for row in reader:
+                    # skip the header row
+                    if row["Prescription ID"] != "Prescription ID":
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        orders_list.append(information_dictionary)
+            # if user is not employee
+            else:
+                # allow user to only view their prescriptions that need to be filled.
+                for row in reader:
+                    if row["Patient ID"] == user_ID:
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        orders_list.append(information_dictionary)
+        
+        return orders_list
 
     # Function to complete a prescription. Need to provide prescripion ID, pharmacist name, and date filled.
     # date_filled must be a Date object 
@@ -405,16 +429,24 @@ invalid_med = "MOTRIN"
 
 # Test 9 for displaying not yet filled orders. 
 # 9.1 test for employee, make sure all unfilled prescriptions shown. 
-# print(pharm_order.prescriptions_to_be_filled("30245442"))
+# print(pharm_order.orders_to_be_filled("30245442"))
 # 9.2 test for user, make sure shows only unfileed for specific user
-# print(pharm_order.prescriptions_to_be_filled("50323230"))
+# print(pharm_order.orders_to_be_filled("50323230"))
 # 9.3 test for when userID does not exist. 
-# print(pharm_order.prescriptions_to_be_filled("40024244"))
+# print(pharm_order.orders_to_be_filled("40024244"))
 
 # Test 10 for displaying filled for orders. given a specificed user
 # 10.1 test for employee, make sure all filled prescriptions shown. 
-# print(pharm_order.prescriptions_filled("30245442"))
+# print(pharm_order.orders_filled("30245442"))
 # 10.2 test for patient, make sure to only show prescriptions for specific user.
-# print(pharm_order.prescriptions_filled("50323230"))
+# print(pharm_order.orders_filled("50323230"))
 # 10.3 test for when userID does not exist. 
-# print(pharm_order.prescriptions_filled("40024244"))
+# print(pharm_order.orders_filled("40024244"))
+
+# Test 11 for displaying all orders depending on the userID
+# 11.1 test for employee ID. show all prescriptions filled or not.
+# print(pharm_order.show_prescription_orders("30245442"))
+# 11.2 test for patient ID. show all prescriptions filled or not for the give patient
+# print(pharm_order.show_prescription_orders("50323230"))
+# 11.3 test for non-existent ID
+# print(pharm_order.show_prescription_orders("40024244"))
