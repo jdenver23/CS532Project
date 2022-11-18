@@ -83,21 +83,33 @@ class PharmacyOrder:
 
     # Function to list all prescriptions FILLED for a patient for a specific period of time
     # returns a list of matching prescriptions. otherwise, returns empty list. 
-    def prescriptions_filled_for_patient(self, patient_name, start_time, end_time):
+    # NOTE: if user is already a patient, then there should be some way that there is only one option for patient_name. 
+    def prescriptions_filled_for_patient(self, user_ID, patient_name, start_time, end_time):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
             matching_prescriptions = list()
 
-            # TODO: Can Update this to make patient name NOT case-sensitive
-            for row in reader:
-                # if Date filled != "", then that means, prescription has been filled by a pharmacist.
-                if row["Patient Name"] == patient_name and row["Date Filled"] != "":
-                    # check that date is in range
-                    date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
-                    if date_object >= start_time and date_object <= end_time :
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
-                        matching_prescriptions.append(information_dictionary)
+            user_ID_int = int(user_ID)
+            # if user is an employee, then display all presciptions that match query.
+            if user_ID_int >= 30000000 and user_ID_int < 40000000:
+                for row in reader:
+                    # if Date filled != "", then that means, prescription has been filled by a pharmacist.
+                    if row["Patient Name"] == patient_name and row["Date Filled"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            matching_prescriptions.append(information_dictionary)
+            # if user is patient, then display only that user's prescriptions that match the query.
+            else:
+                for row in reader:
+                    if row["Patient ID"] == user_ID and row["Patient Name"] == patient_name and row["Date Filled"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            matching_prescriptions.append(information_dictionary)
             
             # Return the list of matching prescriptions. if no match, then list is empty. 
             return matching_prescriptions
@@ -404,14 +416,24 @@ invalid_med = "MOTRIN"
 # pharm_order.print_search_by_patient_name_and_medication(info_list, name, "VITAMIN C")
 
 # Test 3 for prescriptions_filled_by_patient()
-# s_date = date(2022, 10, 1)
-# e_date = date(2022, 10, 31)
-# presc_filled_list = pharm_order.prescriptions_filled_for_patient("jon lee", s_date, e_date)
+s_date = date(2022, 10, 1)
+e_date = date(2022, 10, 31)
+# 3.1: Test for employeeID given patient name and date range. should show matching query.
+# presc_filled_list = pharm_order.prescriptions_filled_for_patient("30245442", "JON LEE", s_date, e_date)
+# pharm_order.print_prescriptions(presc_filled_list)
+# 3.2 Test for patientID given patient name and date range. also patient id matches correct patient name. 
+# presc_filled_list = pharm_order.prescriptions_filled_for_patient("50323230", "JON LEE", s_date, e_date)
+# pharm_order.print_prescriptions(presc_filled_list)
+# 3.3 Test for patient ID where it doesn't match patient name. user patient trying to access someone else's information.
+# presc_filled_list = pharm_order.prescriptions_filled_for_patient("60242420", "JON LEE", s_date, e_date)
+# pharm_order.print_prescriptions(presc_filled_list)
+# 3.4 Test for employee ID with non-existent patient name. 
+# presc_filled_list = pharm_order.prescriptions_filled_for_patient("30245442", "JOE LEE", s_date, e_date)
 # pharm_order.print_prescriptions(presc_filled_list)
 
 # Test 4 for prescriptions_filled_by_physician()
-s_date = date(2022, 10, 1)
-e_date = date(2022, 10, 15)
+# s_date = date(2022, 10, 1)
+# e_date = date(2022, 10, 15)
 # 4.1: Test for prescription ordered by specified physician with specified date range given specified patient
 # presc_ordered_list = pharm_order.prescriptions_ordered_by_physician("60242420", "Dr. Banner", s_date, e_date)
 # pharm_order.print_prescriptions(presc_ordered_list)
