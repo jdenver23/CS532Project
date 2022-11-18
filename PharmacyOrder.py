@@ -49,22 +49,34 @@ class PharmacyOrder:
             print(presc)
 
     # Function to list all prescriptions ORDERED by a specific physician for a specific period of time 
-    def prescriptions_ordered_by_physician(self, physician_name, start_time, end_time):
+    def prescriptions_ordered_by_physician(self, user_ID, physician_name, start_time, end_time):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
             # list to store all information of a match. 
             matching_prescriptions = list()
 
-            # TODO: Can Update this to make patient name NOT case-sensitive
-            for row in reader:
-                # match with physician name and date ordered is not blank. 
-                if row["Physician Name"] == physician_name and row["Date Ordered"] != "":
-                    # check that date is in range
-                    date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
-                    if date_object >= start_time and date_object <= end_time :
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
-                        matching_prescriptions.append(information_dictionary)
+            user_ID_int = int(user_ID)
+            # if user is an employee, then display all presciptions that match query.
+            if user_ID_int >= 30000000 and user_ID_int < 40000000:
+                for row in reader:
+                    # match with physician name and date ordered is not blank. 
+                    if row["Physician Name"] == physician_name and row["Date Ordered"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            matching_prescriptions.append(information_dictionary)
+            # if user is patient then only show that patient's prescriptions that match the query                
+            else:
+                for row in reader:
+                    # match with physician name, user id, and date ordered is not blank. 
+                    if row["Patient ID"] == user_ID and row["Physician Name"] == physician_name and row["Date Ordered"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            matching_prescriptions.append(information_dictionary)
             
             # Return the list of matching prescriptions. if no match, then list is empty. 
             return matching_prescriptions
@@ -368,6 +380,7 @@ pharm_order = PharmacyOrder()
 # pharm_order.add_order("73", "mike winkder", "52056756", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "10/25/2022", "Dr. Casetti")
 # pharm_order.add_order("46", "trevor dosner", "85882422", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "", "")
 # pharm_order.add_order("39", "jon lee", "50323230", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/22/2022", "", "")
+# pharm_order.add_order("40", "jar jar", "60242420", "dr. guzman", "Vitamin D", "2586", "350 mg", "once a day", "10/13/2022", "", "")
 
 pres_id = "32"
 invalid_id = "33"   
@@ -397,9 +410,16 @@ invalid_med = "MOTRIN"
 # pharm_order.print_prescriptions(presc_filled_list)
 
 # Test 4 for prescriptions_filled_by_physician()
-# s_date = date(2022, 10, 1)
-# e_date = date(2022, 10, 15)
-# presc_ordered_list = pharm_order.prescriptions_ordered_by_physician("Dr. Banner", s_date, e_date)
+s_date = date(2022, 10, 1)
+e_date = date(2022, 10, 15)
+# 4.1: Test for prescription ordered by specified physician with specified date range given specified patient
+# presc_ordered_list = pharm_order.prescriptions_ordered_by_physician("60242420", "Dr. Banner", s_date, e_date)
+# pharm_order.print_prescriptions(presc_ordered_list)
+# 4.2 Test for prescription ordered by specified physician with specified date range for an employee
+# presc_ordered_list = pharm_order.prescriptions_ordered_by_physician("30323230", "dr. guzman", s_date, e_date)
+# pharm_order.print_prescriptions(presc_ordered_list)
+# 4.3 test for prescription ordered invalid patient ID
+# presc_ordered_list = pharm_order.prescriptions_ordered_by_physician("50523230", "dr. guzman", s_date, e_date)
 # pharm_order.print_prescriptions(presc_ordered_list)
 
 # Test 5 for number_of_prescriptions_report_by_medication_month_physician
