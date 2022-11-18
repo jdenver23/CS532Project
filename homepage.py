@@ -7,6 +7,7 @@ from PatientRecords import initialize
 def home_gui(user_id):
     user_id = int(user_id)
     root = Tk()
+    root.title('Homepage')
 
     # width and height
     w = 450
@@ -21,7 +22,7 @@ def home_gui(user_id):
     root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
     #------ HEADER ------#
-    headerframe = tk.Frame(root, width = w, height = 50)
+    """ headerframe = tk.Frame(root, width = w, height = 50)
     titleframe = tk.Frame(headerframe, padx = 1, pady = 1)
     title_label = tk.Label(titleframe, text = 'Home Page', padx = 20, pady = 5, font = ('Tahoma', 24))
     close_button = tk.Button(headerframe, text = 'x', borderwidth = 1, relief = 'solid', font = ('Vaerdana', 12), bg = 'red')
@@ -39,7 +40,7 @@ def home_gui(user_id):
         headerframe.forget()
         root.destroy()
 
-    close_button['command'] = close_window
+    close_button['command'] = close_window """
     #------ END HEADER ------#
 
     mainframe = tk.Frame(root, width = w, height = h)
