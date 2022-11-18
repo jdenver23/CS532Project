@@ -115,12 +115,19 @@ class PharmacyOrder:
             return matching_prescriptions
 
     # Function to provide a summary report by medication showing number of prescriptions filled by month and year filled and by physician. 
-    def number_of_prescriptions_by_medication_month_physician(self):
+    # this should only be allowed to be accessed by employee. 
+    def number_of_prescriptions_by_medication_month_physician(self, user_ID):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
             # dictionary to store number of prescriptions per medication per month and per physician.
             num_presc_dict = dict()
+
+            # make sure userID is not a patient. 
+            user_ID_int = int(user_ID)
+            # if user is a patient then return empty dictionary. 
+            if user_ID_int >= 40000000:
+                return num_presc_dict
             
             # populate num_presc_dict
             for row in reader:
@@ -416,8 +423,8 @@ invalid_med = "MOTRIN"
 # pharm_order.print_search_by_patient_name_and_medication(info_list, name, "VITAMIN C")
 
 # Test 3 for prescriptions_filled_by_patient()
-s_date = date(2022, 10, 1)
-e_date = date(2022, 10, 31)
+# s_date = date(2022, 10, 1)
+# e_date = date(2022, 10, 31)
 # 3.1: Test for employeeID given patient name and date range. should show matching query.
 # presc_filled_list = pharm_order.prescriptions_filled_for_patient("30245442", "JON LEE", s_date, e_date)
 # pharm_order.print_prescriptions(presc_filled_list)
@@ -445,8 +452,12 @@ e_date = date(2022, 10, 31)
 # pharm_order.print_prescriptions(presc_ordered_list)
 
 # Test 5 for number_of_prescriptions_report_by_medication_month_physician
-# filtered_dict = pharm_order.number_of_prescriptions_by_medication_month_physician()
+# 5.1 Test given verified employee who has access this data.
+# filtered_dict = pharm_order.number_of_prescriptions_by_medication_month_physician("30323230")
 # pharm_order.report_num_presc_by_medication_month_physician(filtered_dict)
+# 5.2: Test given patient who should not have access to this information.
+filtered_dict = pharm_order.number_of_prescriptions_by_medication_month_physician("60242420")
+pharm_order.report_num_presc_by_medication_month_physician(filtered_dict)
 
 # Test 6 for delete prescription by ID
 # test_DNE_prescription_id = 44
