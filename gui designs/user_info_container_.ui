@@ -27,9 +27,7 @@
             </layout>
             <child>
               <object class="tk.Label" id="lb_user_id" named="True">
-                <property name="anchor">e</property>
                 <property name="font">{Verdana} 8 {}</property>
-                <property name="justify">left</property>
                 <property name="text" translatable="yes">ID:</property>
                 <layout manager="pack">
                   <property name="anchor">center</property>
@@ -39,13 +37,18 @@
               </object>
             </child>
             <child>
-              <object class="tk.Label" id="user_id_text" named="True">
-                <property name="background">#dadada</property>
+              <object class="tk.Text" id="user_id" named="True">
+                <property name="background">SystemButtonFace</property>
+                <property name="borderwidth">0</property>
+                <property name="exportselection">true</property>
                 <property name="font">{Verdana} 8 {}</property>
+                <property name="height">1</property>
+                <property name="state">disabled</property>
                 <property name="text" translatable="yes">12345678</property>
+                <property name="width">8</property>
+                <property name="wrap">char</property>
                 <layout manager="pack">
                   <property name="anchor">center</property>
-                  <property name="expand">true</property>
                   <property name="side">left</property>
                 </layout>
               </object>
@@ -54,7 +57,6 @@
               <object class="tk.Label" id="lb_user_name" named="True">
                 <property name="anchor">e</property>
                 <property name="font">{Verdana} 8 {}</property>
-                <property name="justify">left</property>
                 <property name="text" translatable="yes">Name:</property>
                 <layout manager="pack">
                   <property name="anchor">center</property>
@@ -65,15 +67,17 @@
               </object>
             </child>
             <child>
-              <object class="tk.Label" id="user_name_text" named="True">
-                <property name="background">#dadada</property>
+              <object class="tk.Text" id="user_name" named="True">
+                <property name="background">SystemButtonFace</property>
+                <property name="borderwidth">0</property>
+                <property name="exportselection">true</property>
                 <property name="font">{Verdana} 8 {}</property>
-                <property name="justify">center</property>
-                <property name="relief">flat</property>
-                <property name="text" translatable="yes">Tree Tran</property>
+                <property name="height">1</property>
+                <property name="state">disabled</property>
+                <property name="text" translatable="yes">FIRST LAST</property>
+                <property name="width">10</property>
+                <property name="wrap">word</property>
                 <layout manager="pack">
-                  <property name="anchor">center</property>
-                  <property name="expand">true</property>
                   <property name="side">left</property>
                 </layout>
               </object>
@@ -82,7 +86,6 @@
               <object class="tk.Label" id="lb_user_address" named="True">
                 <property name="anchor">e</property>
                 <property name="font">{Verdana} 8 {}</property>
-                <property name="justify">left</property>
                 <property name="text" translatable="yes">Address:</property>
                 <layout manager="pack">
                   <property name="anchor">center</property>
@@ -94,18 +97,17 @@
               </object>
             </child>
             <child>
-              <object class="tk.Label" id="user_address_text" named="True">
-                <property name="background">#dadada</property>
+              <object class="tk.Text" id="user_address" named="True">
+                <property name="background">SystemButtonFace</property>
+                <property name="borderwidth">0</property>
+                <property name="exportselection">true</property>
                 <property name="font">{Verdana} 8 {}</property>
                 <property name="height">1</property>
-                <property name="justify">left</property>
-                <property name="relief">flat</property>
-                <property name="state">normal</property>
-                <property name="text" translatable="yes">12345 6th Boulevard</property>
-                <property name="wraplength">120</property>
+                <property name="state">disabled</property>
+                <property name="text" translatable="yes">12345 6TH BOULEVARD</property>
+                <property name="width">20</property>
+                <property name="wrap">word</property>
                 <layout manager="pack">
-                  <property name="anchor">center</property>
-                  <property name="expand">true</property>
                   <property name="side">left</property>
                 </layout>
               </object>
@@ -114,7 +116,6 @@
               <object class="tk.Label" id="lb_user_dob" named="True">
                 <property name="anchor">e</property>
                 <property name="font">{Verdana} 8 {}</property>
-                <property name="justify">left</property>
                 <property name="text" translatable="yes">DOB:</property>
                 <layout manager="pack">
                   <property name="anchor">center</property>
@@ -126,15 +127,17 @@
               </object>
             </child>
             <child>
-              <object class="tk.Label" id="user_dob_text" named="True">
-                <property name="anchor">w</property>
-                <property name="background">#dadada</property>
+              <object class="tk.Text" id="user_dob" named="True">
+                <property name="background">SystemButtonFace</property>
+                <property name="borderwidth">0</property>
+                <property name="exportselection">true</property>
                 <property name="font">{Verdana} 8 {}</property>
-                <property name="justify">left</property>
-                <property name="text" translatable="yes">06/27/2000</property>
+                <property name="height">1</property>
+                <property name="state">disabled</property>
+                <property name="text" translatable="yes">11/11/2011</property>
+                <property name="width">10</property>
+                <property name="wrap">word</property>
                 <layout manager="pack">
-                  <property name="anchor">center</property>
-                  <property name="expand">true</property>
                   <property name="side">left</property>
                 </layout>
               </object>

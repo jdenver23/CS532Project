@@ -5,6 +5,8 @@ from pathlib import Path
 import os
 import locale
 import csv
+import tkinter as tk
+from tkinter import messagebox
 
 
 # IB_DB key format:
@@ -267,6 +269,7 @@ class InsuranceBilling:
 
         # retrieve data of `id` from the database
         self.retrieve_data()
+        self.local_changes_made = False
 
     def retrieve_data(self) -> None:
         """
@@ -388,12 +391,20 @@ class InsuranceBilling:
             including `services`, `carriers`, and `invoices`.
         """
         with open(self.__service_db, 'w') as fs, open(self.__carrier_db, 'w') as fc, open(self.__invoice_db, 'w') as fi:
+            actions = 0
             for service in self.services:
-                fs.write(service.as_csv_entry() + "\n")
+                if service is not None:
+                    fs.write(service.as_csv_entry() + "\n")
+                    actions += 1
             for carrier in self.carriers:
-                fc.write(carrier.as_csv_entry() + "\n")
+                if carrier is not None:
+                    fc.write(carrier.as_csv_entry() + "\n")
+                    actions += 1
             for invoice in self.invoices:
-                fi.write(invoice.as_csv_entry() + "\n")
+                if invoice is not None:
+                    fi.write(invoice.as_csv_entry() + "\n")
+                    actions += 1
+            if actions > 0: self.local_changes_made = False
 
     def sort_local_db(self, sort_by_id=False, sort_by_name=False, sort_by_cost=False, reversed=False) -> None:
         """
@@ -409,10 +420,13 @@ class InsuranceBilling:
         if sort_by_id:
             self.services = sorted(self.services, key=lambda x: x.id, reverse=reversed)
             self.carriers = sorted(self.carriers, key=lambda x: x.id, reverse=reversed)
+            self.local_changes_made = True
         elif sort_by_name:
             self.carriers = sorted(self.carriers, key=lambda x: x.name, reverse=reversed)
+            self.local_changes_made = True
         elif sort_by_cost:
             self.services = sorted(self.services, key=lambda x: x.cost, reverse=reversed)
+            self.local_changes_made = True
 
     # ---------------
     #   CARRIERS
@@ -434,12 +448,12 @@ class InsuranceBilling:
         """
         carrier_id = "0"
 
-        while any(carrier.id == carrier_id for carrier in self.carriers):
+        while any(carrier.id == carrier_id for carrier in self.carriers if carrier is not None):
             carrier_id = str(int(carrier_id) + 1)
 
         has_primary = False
         for carrier in self.carriers:
-            if carrier.primary:
+            if carrier is not None and carrier.primary:
                 has_primary = True
                 break
 
@@ -450,12 +464,13 @@ class InsuranceBilling:
         if primary:
             # set all other carriers' primary to False in local list
             for carrier in self.carriers:
-                if carrier.primary:
+                if carrier is not None and carrier.primary:
                     carrier.primary = False
 
         n_carrier = InsuranceCarrier(id=carrier_id, name=carrier_name, address=carrier_address, primary=primary)
         # add carrier to local list
         self.carriers.append(n_carrier)
+        self.local_changes_made = True
 
         return carrier_id
 
@@ -478,11 +493,12 @@ class InsuranceBilling:
         """
         carrier_id = str(carrier_id)
         for carrier in self.carriers:
-            if carrier.id == carrier_id:
+            if carrier is not None and carrier.id == carrier_id:
                 # mark the most recent carrier as primary if a primary Carrier is being removed
                 if carrier.primary:
                     self.carriers[-1].primary = True
                 self.carriers.remove(carrier)
+                self.local_changes_made = True
                 return True
 
         return False
@@ -490,10 +506,12 @@ class InsuranceBilling:
     def set_primary(self, carrier_id, primary=True) -> bool:
         """ Set a carrier primary status. Return `False` if `carrier_id` is not found. """
         for carrier in self.carriers:
-            if carrier.id == carrier_id:
+            if carrier is not None and carrier.id == carrier_id:
                 for all_carrier in self.carriers:
-                    all_carrier.primary = not primary
+                    if all_carrier is not None:
+                        all_carrier.primary = not primary
                 carrier.primary = primary
+                self.local_changes_made = True
                 return True
         return False
     
@@ -515,13 +533,14 @@ class InsuranceBilling:
         """
         service_id = "0" if fillin_id else max(
             self.services, key=lambda x: x.id).id
-        while any(service.id == service_id for service in self.services):
+        while any(service.id == service_id for service in self.services if service is not None):
             service_id = str(int(service_id) + 1)
 
         n_service = InsuranceService(id=service_id, description=service_description, cost=service_cost, date=date)
 
         # add service to local list
         self.services.append(n_service)
+        self.local_changes_made = True
 
         return service_id
 
@@ -539,8 +558,9 @@ class InsuranceBilling:
         """
         service_id = str(service_id)
         for service in self.services:
-            if service.id == service_id:
+            if service is not None and service.id == service_id:
                 self.services.remove(service)
+                self.local_changes_made = True
                 return True
 
         return False
@@ -570,7 +590,7 @@ class InsuranceBilling:
         carrier_info = [self.carriers[-1].name, self.carriers[-1].address]
         if not self.carriers[-1].primary:
             for carrier in self.carriers:
-                if carrier.primary:
+                if carrier is not None and carrier.primary:
                     self.primary_carrier = carrier
                     carrier_info = [carrier.name, carrier.address]
                     break
@@ -581,7 +601,7 @@ class InsuranceBilling:
             month = datetime.now().month
 
         for service in self.services:
-            if service.date.month == month:
+            if service is not None and service.date.month == month:
                 if service.payment_status is PaymentStatus.UNPAID:
                     last_day_of_month = calendar.monthrange(service.date.year, month)[1]
                     if service.date.day <= last_day_of_month:
@@ -592,7 +612,7 @@ class InsuranceBilling:
             return '-1'
 
         invoice_id = "0"
-        while any(invoice.id == invoice_id for invoice in self.invoices):
+        while any(invoice.id == invoice_id for invoice in self.invoices if invoice is not None):
             invoice_id = str(int(invoice_id) + 1)
 
         n_invoice = InsuranceInvoice(id=invoice_id, amount_due=total_cost, patient_info=patient_info, carrier_info=carrier_info,
@@ -601,6 +621,7 @@ class InsuranceBilling:
 
         # add invoice to local list
         self.invoices.append(n_invoice)
+        self.local_changes_made = True
 
         return invoice_id
 
@@ -629,7 +650,7 @@ class InsuranceBilling:
         invoice_id = str(invoice_id)
 
         for invoice in self.invoices:
-            if invoice.id == invoice_id:
+            if invoice is not None and invoice.id == invoice_id:
                 return invoice.as_receipt()
 
         return ""
@@ -653,7 +674,7 @@ class InsuranceBilling:
 
         invoice_id = str(invoice_id)
         for invoice in self.invoices:
-            if invoice.id == invoice_id:
+            if invoice is not None and invoice.id == invoice_id:
                 diff = float(invoice.amount_due.replace("$", '')) - amount
                 if diff <= 0 or pay_in_full:
                     invoice.mark_as_paid()
@@ -666,7 +687,7 @@ class InsuranceBilling:
 
                 carrier = self.carriers[-1]
                 for _carrier in self.carriers:
-                    if _carrier.primary:
+                    if _carrier is not None and _carrier.primary:
                         carrier = _carrier
                 if datetime.now() - invoice.due_date > timedelta(days=15):
                     carrier.status = PaymentStatus.DIFFICULT
@@ -674,6 +695,7 @@ class InsuranceBilling:
                     carrier.status = PaymentStatus.LATE
                 else:
                     carrier.status = PaymentStatus.ONTIME
+                self.local_changes_made = True
                 return True
 
         return False
@@ -696,7 +718,7 @@ class InsuranceBilling:
         """
         delinquent_reports = ""
         for invoice in self.invoices:
-            if invoice.status is PaymentStatus.DELINQUENT:
+            if invoice is not None and invoice.status is PaymentStatus.DELINQUENT:
                 if patient_name is not None:
                     if invoice.patient_info[0] == patient_name:
                         delinquent_reports += self.invoice_info(invoice.id) + "\n"
@@ -709,12 +731,240 @@ class InsuranceBilling:
 
 #
 #
+#   GUI Section
+#
+#
+MAIN_FONT = ('Verdana', 14)
+MAIN_BG = 'grey'
+BTN_COLOR = '#2980b9'
+
+# TODO: this :3
+class IBGUI:
+    def __init__(self, bill: InsuranceBilling, root=None):
+        self.bill = bill
+        self.root = root
+        self.gui_w = 600
+        self.gui_h = 600
+        # build ui
+        self.ib_gui = tk.Frame(root)
+        self.ib_gui.configure(
+            background="grey",
+            borderwidth=0,
+            height=self.gui_h,
+            width=self.gui_w)
+        
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        
+        x = (screen_width/2) - (self.gui_w/2)
+        y = (screen_height/2) - (self.gui_h/2)
+        self.root.geometry('%dx%d+%d+%d' % (self.gui_w, self.gui_h, x, y))
+        
+        self.user_info_container = tk.LabelFrame(self.ib_gui)
+        self.user_info_container.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            height=50,
+            text='Info',
+            width=580)
+        self.lb_user_id = tk.Label(self.user_info_container)
+        self.lb_user_id.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            justify="left",
+            text='ID:')
+        self.lb_user_id.pack(
+            anchor="center",
+            expand="false",
+            padx=10,
+            side="left")
+        self.lb_user_name = tk.Label(self.user_info_container)
+        self.lb_user_name.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            justify="left",
+            text='Name:')
+        self.lb_user_name.pack(
+            anchor="center",
+            expand="false",
+            padx=80,
+            side="left")
+        self.lb_user_address = tk.Label(self.user_info_container)
+        self.lb_user_address.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            justify="left",
+            text='Address:')
+        self.lb_user_address.pack(
+            anchor="center",
+            expand="false",
+            padx=50,
+            side="left")
+        self.lb_user_dob = tk.Label(self.user_info_container)
+        self.lb_user_dob.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            justify="left",
+            text='DOB:')
+        self.lb_user_dob.pack(
+            anchor="center",
+            expand="false",
+            padx=60,
+            side="left")
+        self.user_info_container.grid(
+            column=0, padx=10, pady=10, row=0, sticky="nw")
+        self.user_info_container.pack_propagate(0)
+        
+        self.carrier_container = tk.LabelFrame(self.ib_gui)
+        self.carrier_container.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            height=150,
+            text='Carrier',
+            width=550)
+        
+        self.fr_carrier_info = tk.Frame(self.carrier_container)
+        self.fr_carrier_info.configure(
+            background="grey", height=200, width=200)
+        self.fr_carrier_info.grid(column=0, ipadx=10, row=0)
+        self.fr_carrier_info.grid_anchor("center")
+        
+        self.generate_carrier_info()
+        
+        self.carrier_container.grid(column=0, row=1)
+        self.carrier_container.grid_propagate(0)
+        self.carrier_container.grid_anchor("n")
+        self.service_container = tk.LabelFrame(self.ib_gui)
+        self.service_container.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            height=150,
+            text='Service',
+            width=500)
+        self.service_container.grid(column=0, row=2)
+        self.invoice_container = tk.LabelFrame(self.ib_gui)
+        self.invoice_container.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            height=150,
+            text='Invoice',
+            width=500)
+        self.invoice_container.grid(column=0, row=3)
+        self.fr_gui_control = tk.Frame(self.ib_gui)
+        self.fr_gui_control.configure(background="grey", height=50, width=500)
+        self.btn_back_to_home = tk.Button(self.fr_gui_control)
+        self.btn_back_to_home.configure(
+            background="#2980b9",
+            font="{Verdana} 12 {}",
+            foreground="white",
+            highlightbackground="black",
+            highlightcolor="blue",
+            relief="flat",
+            text='⬅ Home',
+            command=lambda: self.on_closing())
+        self.btn_back_to_home.grid(column=0, padx=20, pady=10, row=0)
+        self.btn_save_changes = tk.Button(self.fr_gui_control)
+        self.btn_save_changes.configure(
+            background="#2980b9",
+            font="{Verdana} 12 {}",
+            foreground="white",
+            relief="flat",
+            takefocus=True,
+            text='Save Changes ✓',
+            command=lambda: self.save_changes())
+        self.btn_save_changes.grid(column=1, padx=20, pady=10, row=0)
+        self.fr_gui_control.grid(column=0, pady=15, row=4)
+        self.ib_gui.pack(side="top")
+        self.ib_gui.grid_propagate(0)
+
+        # Main widget
+        self.mainwindow = self.ib_gui
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.local_changes_made = False
+
+    def run(self):
+        self.mainwindow.mainloop()
+
+    def generate_carrier_info(self):
+        carrier_field_names = ["Name", "Address", "Primary"]
+        for i in range(3):
+            lb_carrier_fields = tk.Label(self.fr_carrier_info)
+            lb_carrier_fields.configure(
+                background="grey",
+                font="{Verdana} 8 {}",
+                justify="center",
+                text=f'{carrier_field_names[i]}')
+            lb_carrier_fields.grid(column=i, padx=48, row=0)
+            
+        lb_carrier_fields = tk.Label(self.fr_carrier_info)
+        lb_carrier_fields.configure(
+            background="grey",
+            font="{Verdana} 8 {}",
+            justify="center",
+            text='Action')
+        lb_carrier_fields.grid(column=4, padx=2, row=0)
+        
+        self.fr_carrier_list = []
+        for r in range(len(self.bill.carriers)):
+            fr_carrier_list_item = tk.Frame(self.carrier_container)
+            fr_carrier_list_item.configure(background="grey", height=50, width=550)
+            fr_carrier_list_item.grid(column=0, row=r+1)
+            fr_carrier_list_item.grid_anchor("center")
+            for c in range(3):
+                # create carrier info using multiple entries on the same row
+                entry_carrier_info = tk.Entry(fr_carrier_list_item)
+                entry_carrier_info.configure(
+                    font="{Verdana} 8 {}",
+                    justify="center",
+                    state="readonly")
+                _text_ = ""
+                if c == 0: _text_ = f'{self.bill.carriers[r].name}'
+                if c == 1: _text_ = f'{self.bill.carriers[r].address}'
+                if c == 2: _text_ = f'{"PRIMARY" if self.bill.carriers[r].primary else "NON-PRIMARY"}'
+                entry_carrier_info["state"] = "normal"
+                entry_carrier_info.delete("0", "end")
+                entry_carrier_info.insert("0", _text_)
+                entry_carrier_info["state"] = "readonly"
+                entry_carrier_info.grid(column=c, row=r, padx=1)
+            
+            # create carrier remove btns
+            btn_remove_carrier = tk.Button(fr_carrier_list_item)
+            btn_remove_carrier.configure(
+                activeforeground="red",
+                font="{Verdana} 7 {}",
+                height=1,
+                justify="center",
+                text='X',
+                width=1)
+            btn_remove_carrier.grid(column=c+1, row=r, padx=10, ipadx=5)
+            btn_remove_carrier.configure(command=lambda idx=r: self.remove_carrier(idx))
+            self.fr_carrier_list.append(fr_carrier_list_item)
+        
+    def remove_carrier(self, idx):
+        self.fr_carrier_list[idx].destroy()
+        self.bill.carriers[idx] = None
+        self.local_changes_made = True
+
+    def save_changes(self):
+        self.bill.commit_to_db()
+        self.local_changes_made = False
+        print("changes saved to database")
+    
+    def on_closing(self):
+        if self.bill.local_changes_made or self.local_changes_made:
+            if messagebox.askokcancel("Quit", "You have unsaved changes. Are you sure you want to quit?"):
+                self.root.destroy()
+        else:
+            self.root.destroy()
+
+#
+#
 #   Test/Debug Section
 #
 #
 
 
-def service_tests(bill):
+def __service_tests__(bill):
     print(bill.services)
     if bill.remove_service(1):
         print("<<< removed service with id = 1")
@@ -734,7 +984,7 @@ def service_tests(bill):
     print(bill.services)
 
 
-def carrier_tests(bill):
+def __carrier_tests__(bill):
     print()
     print(bill.carriers)
     print(">>> add new carrier: PRIMARY Medical @111 1st st id =",
@@ -742,7 +992,6 @@ def carrier_tests(bill):
     print(bill.carriers)
     print(">>> add new carrier: PRIMARY Care @222 2nd st id =",
           bill.new_carrier('Care', '222 2nd st', primary=True))
-
     print(bill.carriers)
 
     if bill.remove_carrier(0):
@@ -754,7 +1003,7 @@ def carrier_tests(bill):
     print(bill.carriers)
 
 
-def invoice_tests(bill, month=datetime.now().month, pay=True, deq=False):
+def __invoice_tests__(bill, month=datetime.now().month, pay=True, deq=False):
     print()
     if len(bill.carriers) == 0:
         bill.new_carrier("kaiser", '@home', primary=True)
@@ -786,7 +1035,7 @@ def invoice_tests(bill, month=datetime.now().month, pay=True, deq=False):
                 print('', "-"*32, "\n>>> START delinquent test...\n", "-"*32, end='')
                 bill.new_service('deqlin', '$1234.56')
                 time.sleep(0.3)
-                invoice_tests(bill, pay=False)
+                __invoice_tests__(bill, pay=False)
                 bill.invoices[-1].status = PaymentStatus.DELINQUENT
                 print('', "-"*32, "\n>>> END delinquent test...\n", "-"*32)
                 time.sleep(0.1)
@@ -803,7 +1052,7 @@ def invoice_tests(bill, month=datetime.now().month, pay=True, deq=False):
     print(bill.generate_report(carrier=bill.carriers[-2]) or None)
 
 
-def clean_up():
+def __clean_up__():
     count = 0
     if Path(IB_DB_DIR + '\ib-test-users.csv').is_file():
         count += 1
@@ -818,27 +1067,31 @@ def clean_up():
     return count
 
 
-def run_tests() -> None:
-    bill = InsuranceBilling(uid)
+def __run_gui__(bill) -> None:
+    root = tk.Tk()
+    app = IBGUI(bill=bill, root=root)
+    app.run()
 
-    service_tests(bill)  # service tests
+
+def __run_tests__(bill) -> None:
+
+    __service_tests__(bill)  # service tests
     bill.commit_to_db()
-    carrier_tests(bill)  # carrier tests
+    __carrier_tests__(bill)  # carrier tests
     bill.commit_to_db()
-    invoice_tests(bill, pay=True, deq=True)  # invoice tests
+    __invoice_tests__(bill, pay=True, deq=True)  # invoice tests
     bill.commit_to_db()
 
     print(f"\n{bcolors.BOLD + bcolors.OKGREEN}All tests completed!{bcolors.ENDC}")
     try:
-        for sec in range(4, 0, -1):
+        for sec in range(5, 0, -1):
             print(f"Cleaning up after {sec}s...", end='\r')
             time.sleep(1)
-        print(f"Cleaning up after 0s... {bcolors.BOLD}removed {clean_up()} test files!{bcolors.ENDC}")
     except KeyboardInterrupt:
         print(f"Cleaning up after {sec}s... {bcolors.FAIL}cancelled.{bcolors.ENDC}")
-        exit(-1)
+        exit(0)
 
-    exit(0)
+    print(f"Cleaning up after 0s... {bcolors.BOLD}removed {__clean_up__()} test files!{bcolors.ENDC}")
 
 
 if __name__ == "__main__":
@@ -854,11 +1107,29 @@ if __name__ == "__main__":
         UNDERLINE = '\033[4m'
     # only import time package for testing
     import time
+    
     uid = 1111
     USER_FILE = IB_DB_DIR + '\ib-test-users.csv'
-    clean_up()
+    __clean_up__()
     with open(USER_FILE, mode='w') as f:
         writer = csv.writer(f, delimiter=",")
         writer.writerow([uid, "TRI", "TRAN", "tree@test.com", "123456",
                         "1234567890", "123@4th Ave", "CS 532", "11/11/1111", "Male"])
-    run_tests()
+    bill = InsuranceBilling(uid)
+    bill.new_carrier('Medical', '111 1st st', primary=True)
+    bill.new_carrier('Care', '222 2nd st', primary=True)
+    bill.new_carrier('SupCare', '333 3rd st', primary=False)
+    bill.commit_to_db()
+    
+    __run_gui__(bill)
+    
+    try:
+        for sec in range(3, 0, -1):
+            print(f"Running backend tests after {sec}s...", end='\r')
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print(f"Running backend tests after {sec}s... {bcolors.FAIL}cancelled.{bcolors.ENDC}")
+        exit(0)
+        
+    print(f"\n{bcolors.BOLD}Running backend tests...{bcolors.ENDC}")
+    __run_tests__(bill=bill)
