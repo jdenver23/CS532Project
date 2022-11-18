@@ -2,6 +2,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from data_display_container_carrier_add_toplvl import CarrierAddToplvlWidget
+from data_display_container_service_add_toplvl import ServiceAddToplvlWidget
 
 
 class DataDisplayContainerWidget(tk.Frame):
@@ -87,6 +88,15 @@ class DataDisplayContainerWidget(tk.Frame):
         
         self.configure(height=550, width=960)
         self.pack_propagate(0)
+        self.master.bind("<Tab>", self.toggle_treeview_tab)
+    
+    def toggle_treeview_tab(self, event=None):
+        idx = 0
+        if self.active_treeview == "Services":
+            idx = 1
+        elif self.active_treeview == "Invoices":
+            idx = 2
+        self.toggle_treeview(index=idx)
     
     def toplevel_callback(self, toplevel, data=None):
         # TODO: add data to local list
@@ -99,7 +109,7 @@ class DataDisplayContainerWidget(tk.Frame):
             # TODO: send data back to main
             self.treeview_insert_row(self.treeview_carriers, [['9'] + data])
         elif self.active_treeview == "Services":
-            pass
+            self.treeview_insert_row(self.treeview_services, [['8'] + data])
         elif self.active_treeview == "Invoices":
             pass
         
@@ -108,7 +118,8 @@ class DataDisplayContainerWidget(tk.Frame):
             CarrierAddToplvlWidget(self)
             self.master.withdraw()
         elif self.active_treeview == "Services":
-            pass
+            ServiceAddToplvlWidget(self)
+            self.master.withdraw()            
         elif self.active_treeview == "Invoices":
             pass
     
@@ -203,8 +214,8 @@ class DataDisplayContainerWidget(tk.Frame):
         else:
             treeview.pack(expand="true", fill="x", padx=10, pady=10, side="top")
         
-    def toggle_treeview(self, event: tk.Event):
-        if event.widget.cget("text") == "Carriers":
+    def toggle_treeview(self, event: tk.Event = None, index = None):
+        if index == 0 or event.widget.cget("text") == "Carriers":
             self.active_treeview = "Carriers"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
             self.treeview_services.selection_remove(*self.treeview_services.selection())
@@ -216,7 +227,7 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_services, show=False)
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=40, y=35)
-        elif event.widget.cget("text") == "Services":
+        elif index == 1 or event.widget.cget("text") == "Services":
             self.active_treeview = "Services"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
             self.treeview_services.selection_remove(*self.treeview_services.selection())
@@ -229,7 +240,7 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=120, y=35)
             self.title_invoices.place(x=180, y=0)
-        elif event.widget.cget("text") == "Invoices":
+        elif index == 2 or event.widget.cget("text") == "Invoices":
             self.active_treeview = "Invoices"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
             self.treeview_services.selection_remove(*self.treeview_services.selection())

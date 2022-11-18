@@ -1,4 +1,5 @@
 import tkinter as tk
+from utils import tk_center
 from navbar_container import NavbarContainerWidget
 from user_info_container import UserInfoContainerWidget
 from seperator_container import SeperatorContainerWidget
@@ -38,13 +39,7 @@ class Main(tk.Tk):
         r += 1
         
         gui_w, gui_h = 960, 720
-        
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        
-        x = (screen_width/2) - (gui_w/2)
-        y = (screen_height/2) - (gui_h/2)
-        self.geometry('%dx%d+%d+%d' % (gui_w, gui_h, x, y))
+        tk_center(self, gui_w, gui_h)
         
         self.data = []
         

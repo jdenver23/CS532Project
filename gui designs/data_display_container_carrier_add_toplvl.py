@@ -2,12 +2,13 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
+from utils import tk_center
 
 
 class CarrierAddToplvlWidget(tk.Toplevel):
     def __init__(self, master=None, **kw):
         super(CarrierAddToplvlWidget, self).__init__(master, **kw)
-        self.master = master        
+        self.master = master
         
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
@@ -96,17 +97,17 @@ class CarrierAddToplvlWidget(tk.Toplevel):
         self.geometry("640x260")
         self.resizable(False, False)
         self.title("Adding new carrier - Healthcare Permanente")
-        self.configure(takefocus=True)
         self.protocol("WM_DELETE_WINDOW", self.form_cancel)
         
         self.lb_warning = tk.Label(self)
         self.lb_warning.configure(font="{Verdana} 8 {bold}", fg='#ffaa00', 
                                   text="Warning: by setting this to PRIMARY will modify all other\ncarriers primary status to NON-PRIMARY.")
         
+        tk_center(self, gui_w=640, gui_h=260)
+        
     def primary_entry_upd(self, event=None):
         if self.entry_primary.get() == "PRIMARY":
             x, y = event.widget.winfo_x(), event.widget.winfo_y()
-            print(x, y)
             self.lb_warning.place(x=x*1.7, y=y+80)
         else:
             self.lb_warning.place_forget()
