@@ -329,7 +329,7 @@ def validate_login():
             reader = csv.reader(f, delimiter = ",")
             # checks for email/password combo in database
             for row in reader:
-                if row[3] == email_in and row[4] == password_in:
+                if email_in in row[3] and password_in in row[4]:
                     # get id from row here
                     id = row[0]
                     messagebox.showinfo('Login', 'Login successful.')
@@ -338,10 +338,8 @@ def validate_login():
                     home_gui(id)
                 elif row[3] == email_in and row[4] != password_in:
                     messagebox.showinfo('Login', 'Incorrect password, please try again.')
-                elif email_in not in row[3]:
-                    messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
-                    go_to_register()
-                    break
+            messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
+            go_to_register()
     else:
         messagebox.showwarning('Login', 'Please fill all fields.')
 
