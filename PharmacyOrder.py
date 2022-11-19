@@ -180,13 +180,19 @@ class PharmacyOrder:
             print("In " + self.month_name(str(key[1])) + " " + str(key[2]) + ", " + key[3] + " had " + str(dict_result[key]) + " prescriptions of " + key[0] + " filled.")
 
     # Function to add an order
-    def add_order(self, prescription_id, patient_name, patient_id, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
+    def add_order(self, user_id, prescription_id, patient_name, patient_id, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
         # V1: Below is one way to add to a file, but it doesn't seem very wise in allowing for editing of fields
         # with open("PharmacyOrder.csv", mode = "a", newline = "") as f:
         #     writer = csv.writer(f, delimeter = ",")
         #     writer.writerow([prescription_id, patient_name, physician_name, medication, dosage, medication_frequency, date_filled, pharmacist])
 
-        # TODO: need to make sure you don't add duplicate. 
+        # NOTE: if user is a patient, this operation cannot be accomplished
+        user_id_int = int(user_id)
+        if user_id_int >= 40000000:
+            print("Patients are not authorized to add a Pharmacy Order")
+            return
+
+
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
@@ -229,7 +235,6 @@ class PharmacyOrder:
             "Pharmacist": row["Pharmacist"]}
         return info_dict
 
-
     # Function to print information(either the row information or an error message) of the result of search_by_prescription_id
     def print_search_by_prescription_id(self, dict_info, p_ID):
         if len(dict_info) == 0:
@@ -239,15 +244,29 @@ class PharmacyOrder:
 
     # Function that searches based on prescription_id and returns a dictionary of the corresponding information
     # or otherwise an empty dictionary if there is no match. 
+    # If user is a patient, they can only access a prescription (via its id) IF patient ID matches userID.
+    # if user is an employee, they can access any prescription. 
     # NOTE: if you search by prescription_id, you will only get one result.
-    def search_by_prescription_id(self, prescription_id):
+    def search_by_prescription_id(self, user_ID, prescription_id):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
-            for row in reader:
-                if row["Prescription ID"] == prescription_id:
-                    information_dictionary = PharmacyOrder.get_all_row_info(row)
-                    return information_dictionary
+            user_id_int = int(user_ID)
+            # if employee, then no restrictions besides original query
+            if user_id_int >= 30000000 and user_id_int < 40000000:
+                for row in reader:
+                    if row["Prescription ID"] == prescription_id:
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        return information_dictionary
+            # if patient
+            else:
+                for row in reader:
+                    if user_ID == row["Patient ID"] and row["Prescription ID"] == prescription_id:
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        return information_dictionary
+                    # print error message if prescription id matches but patient does not. 
+                    if row["Prescription ID"] == prescription_id and user_ID != row["Patient ID"]:
+                        print("ERROR: Patients are not allowed to access another patient's prescription orders")
             
             # if no match then return empty dictionary
             return dict()
@@ -261,24 +280,45 @@ class PharmacyOrder:
  
     # Function that searches based on patient name and medication and returns a dictionary of the information
     # or otherwise an empty dictionary if there is no match. Returns a list of rows (which are of type dict())
+    # if user is patient, they should only allowed to be searching by their own medication. 
     # NOTE: if you search by patient name and medication, it is possible to have more than 1 result.
-    def search_by_patient_name_and_medication(self, patient_name, prescribed_medication):
+    def search_by_patient_name_and_medication(self, user_id, patient_name, prescribed_medication):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
             matches_list = list()
 
-            # TODO: Can Update this to make patient name NOT case-sensitive
-            for row in reader:
-                if row["Patient Name"] == patient_name and row["Prescribed Medication"] == prescribed_medication:
-                    information_dictionary = PharmacyOrder.get_all_row_info(row)
-                    matches_list.append(information_dictionary)
+            user_id_int = int(user_id)
+            # if user is an employee, then the user has full access to search by patient name and medication
+            if user_id_int >= 30000000 and user_id_int < 40000000:
+                for row in reader:
+                    if row["Patient Name"] == patient_name and row["Prescribed Medication"] == prescribed_medication:
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        matches_list.append(information_dictionary)
+            # if user is a patient, then make sure patient is only seraching their records.    
+            else:
+                for row in reader:
+                    if row["Patient Name"] == patient_name and row["Prescribed Medication"] == prescribed_medication and row["Patient ID"] == user_id:
+                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        matches_list.append(information_dictionary)
+                    
+                    # if patient name and user ID don't match, return empty list and shoot error message. 
+                    if row["Patient Name"] == patient_name and row["Patient ID"] != user_id:
+                        print("ERROR: Patients cannot access other Patient's pharmacy orders")
+                        return list()
             
             # If no match then return empty dictionary
             return matches_list
 
-    # Function to delete pharmacy order by prescription ID. presc_ID is an integer value. 
-    def delete_pharmacy_order(self, presc_ID):
+    # Function to delete pharmacy order by prescription ID. presc_ID is an integer value.
+    # if user is patient, they don't have delete capabilities
+    # if user is employee, then they have delete capabilities.  
+    def delete_pharmacy_order(self, user_ID, presc_ID):
+        # if user is patient, return with error messages and don't delete
+        user_id_int = int(user_ID)
+        if user_id_int >= 40000000:
+            print("ERROR: Patient does not have Delete Pharmacy Order Permissions")
+            return
         try:
             #  with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             pharm_order_df = pd.read_csv(PharmacyOrder.csv_filename)
@@ -361,9 +401,15 @@ class PharmacyOrder:
         return orders_list
 
     # Function to complete a prescription. Need to provide prescripion ID, pharmacist name, and date filled.
-    # date_filled must be a Date object 
+    # date_filled must be a Date object.
+    # only Employee users have permission to complete orders.
     # NOTE: presc_ID must be an integer value.
-    def complete_order(self, presc_ID, pharmacist_name, date_filled):
+    def complete_order(self, user_ID, presc_ID, pharmacist_name, date_filled):
+        user_id_int = int(user_ID)
+        if user_id_int >= 40000000: 
+            print("ERROR: Patients do not have Complete Order capabilities.")
+            return
+
         pharm_order_df = pd.read_csv(PharmacyOrder.csv_filename, index_col="Prescription ID")
         if pd.isna(pharm_order_df.loc[presc_ID, "Pharmacist"]) and pd.isna(pharm_order_df.loc[presc_ID, "Date Filled"]):
             pharm_order_df.loc[presc_ID, "Pharmacist"] = pharmacist_name
@@ -374,7 +420,9 @@ class PharmacyOrder:
                 print("ERROR: Failed to Complete Prescription Order - Date Filled is before Date Ordered.")
                 return
             else:
-                pharm_order_df.loc[presc_ID, "Date Filled"] = date_filled
+                # update date filled, but first convert it to string. 
+                pharm_order_df.loc[presc_ID, "Date Filled"] = date_filled.strftime("%m/%d/%Y")
+                print(type(pharm_order_df.loc[presc_ID, "Date Filled"]))
             # reset index so that prescription ID is added back to the dataFrame
             pharm_order_df = pharm_order_df.reset_index()
             pharm_order_df.to_csv(PharmacyOrder.csv_filename, index=False)
@@ -392,35 +440,60 @@ pharm_order = PharmacyOrder()
 # pharm_order.add_order('Prescription ID', 'Patient Name', 'Patient ID', 'Physician Name', 'Prescribed Medication', 'Medication ID', 'Dosage', 'Frequency', 'Date Ordered', 'Date Filled', 'Pharmacist')
 
 # Test 1 for add_order
-# pharm_order.add_order("32", "jon lee", "50323230", "dr. guzman", "Tylenol", "2442", "250 mg", "twice every 8 hours", "10/13/2022", "10/15/2022", "Dr. Hwang")
-# pharm_order.add_order("22", "jar jar", "60242420", "Dr. Banner", "Kryptonite", "2765", "400 mg", "once a day", "10/15/2022", "10/17/2022", "Dr. Casetti")
-# pharm_order.add_order("34", "jon lee", "50323230", "dr. guzman", "Sudafed", "2440", "250 mg", "once every 12 hours", "10/15/2022", "", "")
-# pharm_order.add_order("35", "jon lee", "50323230", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/01/2022", "10/03/2022", "Dr. Casetti")
-# pharm_order.add_order("73", "mike winkder", "52056756", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "10/25/2022", "Dr. Casetti")
-# pharm_order.add_order("46", "trevor dosner", "85882422", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "", "")
-# pharm_order.add_order("39", "jon lee", "50323230", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/22/2022", "", "")
-# pharm_order.add_order("40", "jar jar", "60242420", "dr. guzman", "Vitamin D", "2586", "350 mg", "once a day", "10/13/2022", "", "")
+# 1.1: valid inputs with valid user adding orders
+# pharm_order.add_order("30323230", "32", "jon lee", "50323230", "dr. guzman", "Tylenol", "2442", "250 mg", "twice every 8 hours", "10/13/2022", "10/15/2022", "Dr. Hwang")
+# pharm_order.add_order("30323230", "22", "jar jar", "60242420", "Dr. Banner", "Kryptonite", "2765", "400 mg", "once a day", "10/15/2022", "10/17/2022", "Dr. Casetti")
+# pharm_order.add_order("30323230", "34", "jon lee", "50323230", "dr. guzman", "Sudafed", "2440", "250 mg", "once every 12 hours", "10/15/2022", "", "")
+# pharm_order.add_order("30323230", "35", "jon lee", "50323230", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/01/2022", "10/03/2022", "Dr. Casetti")
+# pharm_order.add_order("30323230", "73", "mike winkder", "52056756", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "10/25/2022", "Dr. Casetti")
+# pharm_order.add_order("30323230", "46", "trevor dosner", "85882422", "dr. guzman", "Vitamin C", "2566", "350mg", "once a day", "09/04/2022", "", "")
+# pharm_order.add_order("30323230", "39", "jon lee", "50323230", "dr. guzman", "Vitamin C", "2566", "350 mg", "once a day", "10/22/2022", "", "")
+# pharm_order.add_order("30323230", "40", "jar jar", "60242420", "dr. guzman", "Vitamin D", "2586", "350 mg", "once a day", "10/13/2022", "10/15/22", "Dr. Hwang")
+# 1.2 Invalid user attempts adding orders
+# pharm_order.add_order("50323230", "41", "Anakin", "60477420", "dr. guzman", "Vitamin B", "2586", "350 mg", "once a day", "10/13/2022", "10/15/22", "Dr. Hwang")
 
 pres_id = "32"
 invalid_id = "33"   
+someone_else_presc_id = "22"
 name = "JON LEE"
 invalid_name = 'JOH LEE'
 presc_med = "TYLENOL"
-invalid_med = "MOTRIN"
+invalid_med = "Vitamin Z"
 # Test 2 for search by prescription ID or patient name & medication
-# info_dict = pharm_order.search_by_prescription_id(pres_id)
-# info_list = pharm_order.search_by_patient_name_and_medication(name, "VITAMIN C")
-#info_list = pharm_order.search_by_patient_name_and_medication("JAR JAR", "Kryptonite")
-# if (len(info) == 0):
-#     print("Prescription ID (" + invalid_id + ") does not exist.")
-# else:
-#     print(info)
+# 2.1 Patient User searches for their own prescription that exists.
+# info_dict = pharm_order.search_by_prescription_id("50323230", pres_id)
 # pharm_order.print_search_by_prescription_id(info_dict, pres_id)
+# 2.2 Patient User searches for their own prescription that does not exist.
+# info_dict = pharm_order.search_by_prescription_id("50323230", invalid_id)
 # pharm_order.print_search_by_prescription_id(info_dict, invalid_id)
-# pharm_order.print_search_by_patient_name_and_medication(info_list, name, presc_med)
-# pharm_order.print_search_by_patient_name_and_medication(info_list, name, invalid_med)
-# pharm_order.print_search_by_patient_name_and_medication(info_list, invalid_name, presc_med)
+# 2.3 Patient User searches for someone else's prescription that does exist.  
+# info_dict = pharm_order.search_by_prescription_id("50323230", someone_else_presc_id)
+# pharm_order.print_search_by_prescription_id(info_dict, someone_else_presc_id)
+# 2.4 Employee User searches for valid prescription id
+# info_dict = pharm_order.search_by_prescription_id("30323230", someone_else_presc_id)
+# pharm_order.print_search_by_prescription_id(info_dict, someone_else_presc_id)
+# 2.5 Employee User searches for invalid prescription id
+# info_dict = pharm_order.search_by_prescription_id("30323230", invalid_id)
+# pharm_order.print_search_by_prescription_id(info_dict, invalid_id)
+
+# 2.6 Employee user searches by patient name and medication. 
+# info_list = pharm_order.search_by_patient_name_and_medication("30323230", name, "VITAMIN C")
 # pharm_order.print_search_by_patient_name_and_medication(info_list, name, "VITAMIN C")
+# 2.7 Employee searches by invalid patient name but valid medication
+# info_list = pharm_order.search_by_patient_name_and_medication("30323230", invalid_name, "VITAMIN C")
+# pharm_order.print_search_by_patient_name_and_medication(info_list, invalid_name, "VITAMIN C")
+# 2.8 Employee searches by valid patient name but invalid medication
+# info_list = pharm_order.search_by_patient_name_and_medication("30323230", name, invalid_med)
+# pharm_order.print_search_by_patient_name_and_medication(info_list, name, invalid_med)
+# 2.9 Patient searches by their own name and medication.
+# info_list = pharm_order.search_by_patient_name_and_medication("50323230", name, "VITAMIN C")
+# pharm_order.print_search_by_patient_name_and_medication(info_list, name, "VITAMIN C")
+# 2.10 Patient user search by someone else's name and valid medication. 
+# info_list = pharm_order.search_by_patient_name_and_medication("70323230", name, "VITAMIN C")
+# pharm_order.print_search_by_patient_name_and_medication(info_list, name, "VITAMIN C")
+# 2.11 Patient User search by their own name but invalid madication. 
+# info_list = pharm_order.search_by_patient_name_and_medication("50323230", name, invalid_med)
+# pharm_order.print_search_by_patient_name_and_medication(info_list, name, invalid_med)
 
 # Test 3 for prescriptions_filled_by_patient()
 # s_date = date(2022, 10, 1)
@@ -456,29 +529,42 @@ invalid_med = "MOTRIN"
 # filtered_dict = pharm_order.number_of_prescriptions_by_medication_month_physician("30323230")
 # pharm_order.report_num_presc_by_medication_month_physician(filtered_dict)
 # 5.2: Test given patient who should not have access to this information.
-filtered_dict = pharm_order.number_of_prescriptions_by_medication_month_physician("60242420")
-pharm_order.report_num_presc_by_medication_month_physician(filtered_dict)
+# filtered_dict = pharm_order.number_of_prescriptions_by_medication_month_physician("60242420")
+# pharm_order.report_num_presc_by_medication_month_physician(filtered_dict)
 
 # Test 6 for delete prescription by ID
-# test_DNE_prescription_id = 44
-# test_valid_prescription_id = 46
-# pharm_order.delete_pharmacy_order(test_DNE_prescription_id)
-# pharm_order.delete_pharmacy_order(test_valid_prescription_id)
+# pharm_order.add_order("30323230", "42", "Grogu", "60478492", "dr. guzman", "Vitamin B", "2586", "350 mg", "once a day", "10/13/2022", "10/15/22", "Dr. Hwang")
+# test_DNE_prescription_id = 41
+# test_valid_prescription_id = 42
+# 6.1 Test for Employee User for prescription that does not exist. 
+# pharm_order.delete_pharmacy_order("30323230", test_DNE_prescription_id)
+# 6.2 Test for Employee User for prescription that does exist
+# pharm_order.delete_pharmacy_order("30323230", test_valid_prescription_id)
+# 6.3 Test for Patient User for prescription that does not exist.
+# pharm_order.delete_pharmacy_order("40000000", test_DNE_prescription_id)
+# 6.4 Test for Patient User for prescription that does exist
+# pharm_order.delete_pharmacy_order("40000000", test_valid_prescription_id)
 
 # Test 7 Delete all for reset
-# pharm_order.delete_pharmacy_order(32)
-# pharm_order.delete_pharmacy_order(22)
-# pharm_order.delete_pharmacy_order(34)
-# pharm_order.delete_pharmacy_order(35)
-# pharm_order.delete_pharmacy_order(73)
-# pharm_order.delete_pharmacy_order(46)
-# pharm_order.delete_pharmacy_order(39)
+# pharm_order.delete_pharmacy_order("30323230", 32)
+# pharm_order.delete_pharmacy_order("30323230", 22)
+# pharm_order.delete_pharmacy_order("30323230", 34)
+# pharm_order.delete_pharmacy_order("30323230", 35)
+# pharm_order.delete_pharmacy_order("30323230", 73)
+# pharm_order.delete_pharmacy_order("30323230", 46)
+# pharm_order.delete_pharmacy_order("30323230", 39)
 
 # TEST 8 for complete pharmacy order
-# below test should fail because date filled is before date ordered.
-# pharm_order.complete_order(34, "Dr. Casetti", date(2022, 10, 13))
-# below test should pass because date filled is after date ordered.
-# pharm_order.complete_order(34, "Dr. Casetti", date(2022, 11, 5))
+# pharm_order.add_order("30323230", "43", "Mando", "60413492", "dr. guzman", "Vitamin X", "2586", "350 mg", "once a day", "10/13/2022", "", "")
+# 8.1 Patient User attempts to complete order with valid date. Should Fail
+# pharm_order.complete_order("50323230", 43, "Dr. Casetti", date(2022, 10, 14))
+# 8.2 Patient User attempts to complete order with current date before date ordered. Should Fail
+# pharm_order.complete_order("50323230", 43, "Dr. Casetti", date(2022, 10, 11))
+# 8.3 Employee user attempts to complete order when date filled is before date ordered. Should Fail
+# pharm_order.complete_order("30323230", 43, "Dr. Casetti", date(2022, 10, 11))
+# 8.4 Employee user attempt sto complete order with valid date.
+# pharm_order.complete_order("30323230", 43, "Dr. Casetti", date(2022, 10, 14))
+# pharm_order.delete_pharmacy_order("30323230", 43)
 
 # Test 9 for displaying not yet filled orders. 
 # 9.1 test for employee, make sure all unfilled prescriptions shown. 
