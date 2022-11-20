@@ -132,7 +132,6 @@ class DataDisplayContainerWidget(tk.Frame):
         pass
     
     def toplevel_data_transfer_callback(self, data: dict):
-        # TODO: add data to local list
         self.master.deiconify()
         
         if any(data.values()):
@@ -146,6 +145,7 @@ class DataDisplayContainerWidget(tk.Frame):
                 n_id = self.bill.new_service(data['description'], data['cost'], data['date'])
                 self.treeview_insert_row(self.treeview_services, [[n_id] + list(data.values())])
             elif self.active_treeview == "Invoices":
+                # TODO: generate new invoice here
                 pass
             
     def treeview_add_item_window(self):
@@ -160,7 +160,6 @@ class DataDisplayContainerWidget(tk.Frame):
             pass
     
     def treeview_del_selection(self):
-        # TODO: remove data from local list
         if self.active_treeview == "Carriers":
             selections = self.treeview_carriers.selection()
             for selection in selections:

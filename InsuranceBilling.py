@@ -763,17 +763,6 @@ class InsuranceBilling:
 
 #
 #
-#   GUI Section
-#
-#
-MAIN_FONT = ('Verdana', 14)
-MAIN_BG = 'grey'
-BTN_COLOR = '#2980b9'
-
-# TODO: this :3
-
-#
-#
 #   Test/Debug Section
 #
 #
