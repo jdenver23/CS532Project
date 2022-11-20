@@ -1,6 +1,5 @@
 import tkinter as tk
 
-
 class SeperatorContainerWidget(tk.Frame):
     def __init__(self, master=None, show=True, **kw):
         super(SeperatorContainerWidget, self).__init__(master, **kw)

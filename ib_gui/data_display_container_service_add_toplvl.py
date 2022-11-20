@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 import tkinter as tk
 from tkinter import messagebox, StringVar
-from utils import tk_center
-from tkcalendar import Calendar
+from tkcalendar import Calendar # external package -> 'pip install tkcalendar' to install
+from .utils import tk_center
 
 
 class ServiceAddToplvlWidget(tk.Toplevel):

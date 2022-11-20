@@ -2,7 +2,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
-from utils import tk_center
+from .utils import tk_center
 
 
 class CarrierAddToplvlWidget(tk.Toplevel):

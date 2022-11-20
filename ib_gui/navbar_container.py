@@ -1,9 +1,5 @@
-from utils import get_icon
 import tkinter as tk
-
-#!/usr/bin/python3
-import tkinter as tk
-
+from .utils import get_icon
 
 class NavbarContainerWidget(tk.Frame):
     def __init__(self, master=None, **kw):
