@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import messagebox
 from .utils import get_icon
 import homepage
-import login
 import sys
 
 # add .. to import from above top level package
@@ -43,22 +42,23 @@ class NavbarContainerWidget(tk.Frame):
         self.btn_save_changes.bind("<Enter>", self.btn_on_mouse_enter, add="+")
         self.btn_save_changes.bind("<Leave>", self.btn_on_mouse_leave, add="+")
         
-        self.btn_undo_change = tk.Button(self)
-        self.img_undo = tk.PhotoImage(file=get_icon("undo.png"))
-        self.btn_undo_change.configure(
+        self.btn_pull_db = tk.Button(self)
+        self.img_pull = tk.PhotoImage(file=get_icon("pull.png"))
+        self.btn_pull_db.configure(
             borderwidth=0,
-            image=self.img_undo,
+            image=self.img_pull,
             justify="left",
             overrelief="flat",
-            relief="flat")
-        self.btn_undo_change.pack(
+            relief="flat",
+            command=self.pull_db)
+        self.btn_pull_db.pack(
             anchor="w",
             ipadx=2,
             padx=5,
             pady=5,
             side="left")
-        self.btn_undo_change.bind("<Enter>", self.btn_on_mouse_enter, add="+")
-        self.btn_undo_change.bind("<Leave>", self.btn_on_mouse_leave, add="+")
+        self.btn_pull_db.bind("<Enter>", self.btn_on_mouse_enter, add="+")
+        self.btn_pull_db.bind("<Leave>", self.btn_on_mouse_leave, add="+")
         
         self.seperator_1 = tk.Label(self)
         self.seperator_1.configure(relief="flat")
@@ -84,10 +84,19 @@ class NavbarContainerWidget(tk.Frame):
         
         self.tooltip_selector = tk.Label(self)
         self.tooltip_selector.configure(font="{Verdana} 8 {}")
+        
+        self.master.bind("<Control_L>s", lambda x: self.save_changes())
+    
+    def pull_db(self):
+        if messagebox.askyesno("Merge data from database", "Do you want pull data from database and cancel all changes?"):
+            ddc = self.master.calls(widget_name="ddc")
+            ddc.pull_from_db()
+            messagebox.showinfo("Save Changes", "Successful!")
     
     def save_changes(self):
         if messagebox.askyesno("Save Changes", "Do you want to commit changes to database?"):
             self.bill.commit_to_db()
+            messagebox.showinfo("Save Changes", "Successful!")
         
     def home(self):
         if messagebox.askyesno("Home", "Are you sure you want to go to home?"):
@@ -106,8 +115,8 @@ class NavbarContainerWidget(tk.Frame):
         if event.widget == self.btn_save_changes:
             _text = "Save"
             tt_dx = 0
-        elif event.widget == self.btn_undo_change:
-            _text = "Undo"
+        elif event.widget == self.btn_pull_db:
+            _text = "Pull"
             tt_dx = 0
         elif event.widget == self.btn_logout:
             _text = 'Logout'

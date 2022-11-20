@@ -77,7 +77,6 @@ class CarrierAddToplvlWidget(tk.Toplevel):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
-            relief="flat",
             takefocus=True,
             text='Done ✓')
         self.btn_done.pack(side="right")
@@ -89,7 +88,6 @@ class CarrierAddToplvlWidget(tk.Toplevel):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
-            relief="flat",
             text='× Cancel')
         self.btn_cancel.pack(padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
@@ -124,9 +122,11 @@ class CarrierAddToplvlWidget(tk.Toplevel):
             self.master.toplevel_data_transfer_callback(data)
         
     def form_cancel(self):
-        if messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
-            self.destroy()
-            self.master.toplevel_callback()
+        if self.entry_primary.get() == "NON-PRIMARY" and "" != self.entry_name.get() + self.entry_address.get():
+            if not messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
+                return
+        self.destroy()
+        self.master.toplevel_callback()
     
 if __name__ == "__main__":
     root = tk.Tk()

@@ -19,28 +19,28 @@ class MainGUI(tk.Tk):
         self.resizable(False, False)
         r = 0
 
-        sep0_widget = SeperatorContainerWidget(self, show=False)
-        sep0_widget.grid(column=0, row=r, pady=5)
+        self.sep0_widget = SeperatorContainerWidget(self, show=False)
+        self.sep0_widget.grid(column=0, row=r, pady=5)
         r += 1
         
-        navbar_widget = NavbarContainerWidget(master=self, bill=bill)
-        navbar_widget.grid(column=0, row=r)
+        self.navbar_widget = NavbarContainerWidget(master=self, bill=bill)
+        self.navbar_widget.grid(column=0, row=r)
         r += 1
         
-        user_info_widget = UserInfoContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
-        user_info_widget.grid(column=0, row=r)
+        self.user_info_widget = UserInfoContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
+        self.user_info_widget.grid(column=0, row=r)
         r += 1
         
-        sep1_widget = SeperatorContainerWidget(self)
-        sep1_widget.grid(column=0, row=r, pady=10)
+        self.sep1_widget = SeperatorContainerWidget(self)
+        self.sep1_widget.grid(column=0, row=r, pady=10)
         r += 1
         
-        data_display_container = DataDisplayContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
-        data_display_container.grid(column=0, row=r)
+        self.data_display_widget = DataDisplayContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
+        self.data_display_widget.grid(column=0, row=r)
         r += 1
         
-        sep2_widget = SeperatorContainerWidget(self, show=False)
-        sep2_widget.grid(column=0, row=r, pady=5)
+        self.sep2_widget = SeperatorContainerWidget(self, show=False)
+        self.sep2_widget.grid(column=0, row=r, pady=5)
         r += 1
         
         self.wm_protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -54,3 +54,12 @@ class MainGUI(tk.Tk):
     def on_closing(self):
         if messagebox.askyesno("Quit", "Do you want to quit?"):
             self.destroy()
+    
+    def calls(self, widget_name):
+        if widget_name == "nbc":
+            return self.navbar_widget
+        if widget_name == "uic":
+            return self.user_info_widget
+        if widget_name == "ddc":
+            return self.data_display_widget
+        

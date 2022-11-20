@@ -71,7 +71,6 @@ class DataDisplayContainerWidget(tk.Frame):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
-            relief="flat",
             state="disabled",
             takefocus=True,
             text='× Delete')
@@ -84,7 +83,6 @@ class DataDisplayContainerWidget(tk.Frame):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
-            relief="flat",
             takefocus=True,
             text='+ Add')
         self.btn_add.pack(padx=10, side="right")
@@ -99,13 +97,18 @@ class DataDisplayContainerWidget(tk.Frame):
         # "d" to move tab to right
         # "a" to move tab to left
         self.master.bind("d", lambda x: self.toggle_treeview_tab(direction="right"))
+        self.master.bind("w", lambda x: self.toggle_treeview_tab(direction="right"))
         self.master.bind("a", lambda x: self.toggle_treeview_tab(direction="left"))
+        self.master.bind("s", lambda x: self.toggle_treeview_tab(direction="left"))
     
-    def pull_from_db(self):
+    def pull_from_db(self, refresh=True):
         # remove all children from all treeviews
         self.treeview_carriers.delete(*self.treeview_carriers.get_children())
         self.treeview_services.delete(*self.treeview_services.get_children())
         self.treeview_invoices.delete(*self.treeview_invoices.get_children())
+        
+        # reset local lists from database data
+        if refresh: self.bill.retrieve_data()
         
         # get data from db then insert to treeviews
         self.treeview_insert_row(self.treeview_carriers, [carrier.as_list() for carrier in self.bill.carriers])
@@ -122,11 +125,9 @@ class DataDisplayContainerWidget(tk.Frame):
     
     def toplevel_callback(self, event=None):
         self.master.deiconify()
-        pass
     
     def toplevel_data_commit_callback(self):
         self.bill.commit_to_db()
-        pass
     
     def toplevel_data_removal_callback(self, data_id: str or int):
         pass
@@ -136,25 +137,24 @@ class DataDisplayContainerWidget(tk.Frame):
         
         if any(data.values()):
             if self.active_treeview == "Carriers":
-                n_id = self.bill.new_carrier(data['name'], data['address'], data['primary'] == "PRIMARY")
+                n_data = self.bill.new_carrier(data['name'], data['address'], data['primary'] == "PRIMARY")
                 if data['primary'] == "PRIMARY":
-                    self.pull_from_db()
+                    self.pull_from_db(refresh=False)
                 else:
-                    self.treeview_insert_row(self.treeview_carriers, [[n_id] + list(data.values())])
+                    self.treeview_insert_row(self.treeview_carriers, [n_data.as_list()])
             elif self.active_treeview == "Services":
-                n_id = self.bill.new_service(data['description'], data['cost'], data['date'])
-                self.treeview_insert_row(self.treeview_services, [[n_id] + list(data.values())])
+                n_data = self.bill.new_service(data['description'], data['cost'], data['date'])
+                self.treeview_insert_row(self.treeview_services, [n_data.as_list()])
             elif self.active_treeview == "Invoices":
                 # TODO: generate new invoice here
                 pass
             
     def treeview_add_item_window(self):
+        self.master.withdraw()
         if self.active_treeview == "Carriers":
             CarrierAddToplvlWidget(self)
-            self.master.withdraw()
         elif self.active_treeview == "Services":
-            ServiceAddToplvlWidget(self)
-            self.master.withdraw()            
+            ServiceAddToplvlWidget(self) 
         elif self.active_treeview == "Invoices":
             # TODO: invoice adding gui
             pass
@@ -242,6 +242,7 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_services, show=False)
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=40, y=35)
+            self.title_services.place(x=95, y=0)
         elif index == 1 or (event is not None and event.widget.cget("text") == "Services"):
             self.active_treeview = "Services"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -254,6 +255,7 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_services, show=True)
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=120, y=35)
+            self.title_services.place(x=94, y=0)
         elif index == 2 or (event is not None and event.widget.cget("text") == "Invoices"):
             self.active_treeview = "Invoices"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -266,6 +268,7 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_services, show=False)
             self.treeview_forced_set_state(self.treeview_invoices, show=True)
             self.line_selector.place(x=203, y=35)
+            self.title_services.place(x=95, y=0)
         
         self.selected_item_id = ""
         self.selected_row = ""

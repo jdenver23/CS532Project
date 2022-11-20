@@ -51,8 +51,9 @@ class ServiceAddToplvlWidget(tk.Toplevel):
         self.entry_description.configure(
             font="{Verdana} 9 {}", justify="left", width=50)
         self.entry_description.pack(ipady=5, side="top")
+        self.entry_description.bind("<FocusIn>", self.hide_calendar)
         
-        self.cal = Calendar(self, date_pattern="mm/dd/yyyy")
+        self.cal = Calendar(self, date_pattern="yyyy-mm-dd")
         self.bind("<<CalendarSelected>>", self.calendar_selection)
         
         self.entry_date = tk.Entry(self.entry_frame)
@@ -62,7 +63,6 @@ class ServiceAddToplvlWidget(tk.Toplevel):
             width=20)
         self.entry_date.insert(0, self.cal.get_date())
         self.entry_date.bind("<FocusIn>", self.show_calendar)
-        self.entry_date.bind("<FocusOut>", self.hide_calendar)
         self.entry_date.pack(ipady=5, pady=20, side="top")
         
         self.cost_frame = tk.Frame(self.entry_frame)
@@ -78,6 +78,7 @@ class ServiceAddToplvlWidget(tk.Toplevel):
             font="{Verdana} 9 {}",
             justify="left",
             width=10)
+        self.entry_cost.bind("<FocusIn>", self.hide_calendar)
         self.entry_cost.pack(ipady=5, side="bottom")
         self.cost_frame.pack(side="top")
         self.entry_frame.pack(padx=20, side="right")
@@ -91,7 +92,6 @@ class ServiceAddToplvlWidget(tk.Toplevel):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
-            relief="flat",
             takefocus=True,
             text='Done ✓')
         self.btn_done.pack(side="right")
@@ -103,7 +103,6 @@ class ServiceAddToplvlWidget(tk.Toplevel):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
-            relief="flat",
             text='× Cancel')
         self.btn_cancel.pack(padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
@@ -122,7 +121,7 @@ class ServiceAddToplvlWidget(tk.Toplevel):
         
     def cost_entry_upd(self, *event):
         value = self.entry_cost_value.get()
-        if value == ".": return
+        if value in [".", ""]: return
         if not value.replace(" ", 'S').replace(".,",'E').replace(",", "").replace(".","",1).isnumeric():
             x, y = self.cost_frame.winfo_x(), self.cost_frame.winfo_y()
             self.lb_warning.configure(text="Only digits (0-9) and ',.' are allowed here.")
@@ -139,6 +138,11 @@ class ServiceAddToplvlWidget(tk.Toplevel):
     def calendar_selection(self, event=None):
         self.entry_date.delete(0, tk.END)
         self.entry_date.insert(0, self.cal.get_date())
+        self.hide_calendar()
+        if not self.entry_cost.get():
+            self.entry_cost.focus()
+        else:
+            self.btn_done.focus()
 
     def show_calendar(self, event=None):
         x = max(426, self.winfo_pointerx() - self.winfo_rootx())
@@ -164,9 +168,11 @@ class ServiceAddToplvlWidget(tk.Toplevel):
             self.master.toplevel_data_transfer_callback(data)
         
     def form_cancel(self):
-        if messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
-            self.destroy()
-            self.master.toplevel_callback()
+        if "" != self.entry_description.get() + self.entry_cost.get():
+            if not messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
+                return
+        self.destroy()
+        self.master.toplevel_callback()
     
 if __name__ == "__main__":
     root = tk.Tk()
