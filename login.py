@@ -349,5 +349,7 @@ def login_gui():
 
     root.mainloop()
 
-
-login_gui()
+if __name__ == "__main__":
+    # only call login_gui() when executed as script
+    # this prevents code executions from being imported as a module
+    login_gui()

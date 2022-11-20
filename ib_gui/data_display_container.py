@@ -157,6 +157,7 @@ class DataDisplayContainerWidget(tk.Frame):
             ServiceAddToplvlWidget(self) 
         elif self.active_treeview == "Invoices":
             # TODO: invoice adding gui
+            self.master.deiconify()
             pass
     
     def treeview_del_selection(self):

@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from .utils import get_icon
 import homepage
+import login
 import sys
 
 # add .. to import from above top level package
@@ -106,26 +107,28 @@ class NavbarContainerWidget(tk.Frame):
     def logout(self):
         if messagebox.askyesno("Logout", "Are you sure you want to log out?"):
             self.master.destroy()
-            # TODO: go back to login
+            login.login_gui()
 
     def btn_on_mouse_enter(self, event=None):
         _text = "Home"
         tt_dx = -2
         tt_dy = 34
+        ls_dx = 0
         if event.widget == self.btn_save_changes:
             _text = "Save"
             tt_dx = 0
         elif event.widget == self.btn_pull_db:
             _text = "Pull"
-            tt_dx = 0
+            tt_dx = 4
         elif event.widget == self.btn_logout:
             _text = 'Logout'
             tt_dx = -5
+            ls_dx = -2
             
         self.tooltip_selector.configure(text=_text)
         self.tooltip_selector.place(x=event.widget.winfo_x()+tt_dx, y=event.widget.winfo_y()+tt_dy)
         
-        self.line_selector.place(x=event.widget.winfo_x(), y=event.widget.winfo_y()+33)
+        self.line_selector.place(x=event.widget.winfo_x()+ls_dx, y=event.widget.winfo_y()+33)
         # event.widget['background'] = '#dadada'
         
 
