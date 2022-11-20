@@ -22,7 +22,23 @@ class LabOrderTracking:
     results_labtest = "Good" #Can be good, okay, or urgent
 
     #Now we get user input if we want to store info in the .CSV file so they can be accessed later
+    user_id = input("Please enter your 8 digit USER ID to verify you are an employee.\n")
+
+    if(len(user_id) != 8):
+        print("YOU DID NOT ENTER AN 8 digit USER ID. PLEASE TRY AGAIN!!!\n")
+        exit()
+
+    first_digit = user_id[0]
+    print(first_digit) #Used to test what the first digit of the User ID is. 
+    
+    if(first_digit != "3"): #Used to make sure only employees access the lab order tracking system
+        print("ONLY EMPLOYEES HAVE ACCESS TO THE LAB ORDER TRACKING SYSTEM!!!\n")
+        exit() #To stop the program from running if it is not an employee. 
+
+    
     decision = int(input("Please enter 1 for ADDING information to the Lab Order Tracking System, 2 for retrieving SORTED information from the Lab Order Tracking System, or 3 for retrieiving SPECIFIC information from the Lab Order Tracking System. \n")) #If user input == 1, store. If user input == 2, we retrieve. 
+
+    
 
     if(decision == 1):
         print("We will store information now....")
@@ -35,14 +51,14 @@ class LabOrderTracking:
         #We will now ask the user for all the info and then store it into the database FOR THE MAIN LAB ORDER TRACKING SYSTEM 
         #numberofinputs= int("Please enter how many rows of information you will add to the Lab Order Tracking System \n")
 
-            date_labtest = input("Please enter the Date the Lab Test was Performed. Ex. 2022-01-17 \n")
+            date_labtest = input("Please enter the Date the Lab Test was Performed. Ex. 1/17/2022 \n")
             order_id = input("Please enter the Order ID. Ex. 1234 \n")
             physician_name = input("Please enter the Physician's Name \n").upper()
             patient_name = input("Please enter the Patient's Name \n").upper()
             lab_technician = input("Please enter the Lab Technician's Name \n").upper()
             type_labtest = input("Please enter the Type of Lab Test. Ex. Sugar, Cholesterol, or Both \n").upper()
             results_labtest = input("Please enter the Result of the Lab Test. Ex. Good, Okay, or Urgent \n").upper()
-            date_ordered = input("Please enter the Date the Test is Ordered Ex. 2022-01-17 \n")
+            date_ordered = input("Please enter the Date the Test is Ordered Ex. 1/17/2022 \n")
 
             information_list = [date_labtest,order_id,physician_name,patient_name,lab_technician,type_labtest,results_labtest,date_ordered ] #This list is used to store the information before we input it into the .CSV file.
             print (information_list)
@@ -212,6 +228,8 @@ class LabOrderTracking:
         df4 = pd.read_csv("TypeTest.csv") #Store the CSV as a Dataframe to perform data manipulation like to extract values or change things.
 
         searchingPreference2 = input("Please enter how you want to access specific Lab Reports. Ex. Patient Name, Physician Name, Specific Type Ordered by a Specified Physician, or Specific Type Ordered by all Physicians  \n").upper() #Add upper since when comparing strings its case sensitive.
+        #start_time = input("Please enter the start date you would like to see the Lab Orders. Ex. 1/17/2022\n")
+        #end_time = input("Please enter the end date you would like to see the Lab Orders. Ex. 1/17/2022\n")
 
         if(searchingPreference2 == "PATIENT NAME"): #This retrieves information from the database based on the Patient's Name
             print("Retrieiving Information based on PATIENT NAME!!! \n")
@@ -341,6 +359,7 @@ class LabOrderTracking:
         #For "By Date Ordered" & "By Ordering Physician"
         #self.date_ordered = date_ordered
         #self.ordering_physician = ordering_physician
+        
 
 
     #self,order_id, patient_name, physician_name, type_labtest, date_labtest,lab_technician, results_labtest,date_ordered, ordering_physician ADD THIS BACK INTO CONSTRUCTOR ARGUMENT IF NECESSARY

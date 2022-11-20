@@ -15,7 +15,7 @@ w = 450
 h = 525
 
 #------ CENTER FORM ------#
-root.overrideredirect(1) # removes border
+#root.overrideredirect(1) # removes border
 ws = root.winfo_screenwidth()
 hs = root.winfo_screenheight()
 x = (ws - w) / 2
@@ -23,7 +23,7 @@ y = (hs - h) / 2
 root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
 #------ HEADER ------#
-headerframe = tk.Frame(root, width = w, height = 50)
+""" headerframe = tk.Frame(root, width = w, height = 50)
 titleframe = tk.Frame(headerframe, padx = 1, pady = 1)
 title_label = tk.Label(titleframe, text = '', padx = 20, pady = 5, font = ('Tahoma', 24))
 close_button = tk.Button(headerframe, text = 'x', borderwidth = 1, relief = 'solid', font = ('Vaerdana', 12), bg = 'red')
@@ -34,13 +34,13 @@ title_label.pack()
 close_button.pack()
 
 titleframe.place(rely = 0.5, relx = 0.5, anchor = CENTER)
-close_button.place(x = 410, y = 10)
+close_button.place(x = 410, y = 10) """
 
 # closing the window
-def close_window():
+""" def close_window():
     root.destroy()
 
-close_button['command'] = close_window
+close_button['command'] = close_window """
 #------ END HEADER ------#
 
 mainframe = tk.Frame(root, width = w, height = h)
@@ -50,9 +50,11 @@ def go_to_register():
     userframe.forget()
     loginframe.forget()
     registerframe.pack(fill = "both", expand = 1)
-    title_label["text"] = 'Register'
+    root.title('Register')
+    # title_label["text"] = 'Register'
 
 #------ SELECT USER TYPE PAGE ------#
+root.title('Select User Type')
 userframe  = tk.Frame(mainframe, width = w, height = h)
 user_contentframe = tk.Frame(userframe, padx = 30, pady = 100, bg = 'grey')
 
@@ -61,8 +63,8 @@ message_label = tk.Label(user_contentframe, text = 'Select one of the following:
 radiosframe = tk.Frame(user_contentframe, bg= 'grey')
 account_type = StringVar()
 account_type.set('Patient')
-patient_radiobutton = tk.Radiobutton(radiosframe, text = 'Patient', font = ('Verdana', 14), bg = 'grey', variable = account_type, value = 'Patient', command = go_to_register)
-employee_radiobutton = tk.Radiobutton(radiosframe, text = 'Employee', font = ('Verdana', 14), bg = 'grey', variable = account_type, value = 'Employee', command = go_to_register)
+patient_radiobutton = tk.Radiobutton(radiosframe, text = 'Patient', font = ('Verdana', 14), bg = 'grey', cursor = 'hand2', variable = account_type, value = 'Patient', command = go_to_register)
+employee_radiobutton = tk.Radiobutton(radiosframe, text = 'Employee', font = ('Verdana', 14), bg = 'grey', cursor = 'hand2', variable = account_type, value = 'Employee', command = go_to_register)
 
 mainframe.pack(fill = 'both', expand = 1)
 userframe.pack(fill = 'both', expand = 1)
@@ -86,10 +88,10 @@ email_entry = tk.Entry(login_contentframe, font = ('Verdana', 16))
 password_entry = tk.Entry(login_contentframe, font = ('Verdana', 16), show = '*')
 
 # login button
-login_button = tk.Button(login_contentframe, text = 'Login', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
+login_button = tk.Button(login_contentframe, text = 'Login', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', cursor = 'hand2', padx = 25, pady = 10, width = 25)
 
 # go to register frame if user doesn't have an account already
-go_register_label = tk.Label(login_contentframe, text = "Don't have an account? Register here", font = ('Verdana', 10), bg = 'grey', fg = '#063970')
+go_register_label = tk.Label(login_contentframe, text = "Don't have an account? Register here", font = ('Verdana', 11, 'bold'), bg = 'grey', fg = '#063970', cursor = 'hand2')
 
 login_contentframe.pack(fill = 'both', expand = 1)
 
@@ -138,47 +140,47 @@ dob_entry_rg = tk.Entry(register_contentframe, font = ('Verdana', 14))
 radiosframe = tk.Frame(register_contentframe)
 gender = StringVar()
 gender.set('Male')
-male_radiobutton = tk.Radiobutton(radiosframe, text = 'Male', font = ('Verdana', 14), bg = 'grey', variable = gender, value = 'Male')
-female_radiobutton = tk.Radiobutton(radiosframe, text = 'Female', font = ('Verdana', 14), bg = 'grey', variable = gender, value = 'Female')
-other_radiobutton = tk.Radiobutton(radiosframe, text = 'Other', font = ('Verdana', 14), bg = 'grey', variable = gender, value = 'Other')
+male_radiobutton = tk.Radiobutton(radiosframe, text = 'Male', font = ('Verdana', 14), bg = 'grey', cursor = 'hand2', variable = gender, value = 'Male')
+female_radiobutton = tk.Radiobutton(radiosframe, text = 'Female', font = ('Verdana', 14), bg = 'grey', cursor = 'hand2', variable = gender, value = 'Female')
+other_radiobutton = tk.Radiobutton(radiosframe, text = 'Other', font = ('Verdana', 14), bg = 'grey', cursor = 'hand2', variable = gender, value = 'Other')
 
 # register button
-register_button = tk.Button(register_contentframe, text = 'Register', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
+register_button = tk.Button(register_contentframe, text = 'Register', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', cursor = 'hand2', padx = 25, pady = 10, width = 25)
 
 # takes user to login page if user already has an account set up
-go_login_label = tk.Label(register_contentframe, text = "Already have an account? Login here", font = ('Verdana', 10), bg = 'grey', fg = '#063970')
+go_login_label = tk.Label(register_contentframe, text = "Already have an account? Login here", font = ('Verdana', 11, 'bold'), bg = 'grey', fg = '#063970', cursor = 'hand2')
 
 register_contentframe.pack(fill = 'both', expand = 1)
 
 # setting up grid for labels, entry boxes, and buttons
-fname_label_rg.grid(row = 0, column = 0, pady = 2, sticky = 'e')
+fname_label_rg.grid(row = 0, column = 0, pady = 5, sticky = 'e')
 fname_entry_rg.grid(row = 0, column = 1)
 
-lname_label_rg.grid(row = 1, column = 0, pady = 2, sticky = 'e')
+lname_label_rg.grid(row = 1, column = 0, pady = 5, sticky = 'e')
 lname_entry_rg.grid(row = 1, column = 1)
 
-email_label_rg.grid(row = 2, column = 0, pady = 2, sticky = 'e')
+email_label_rg.grid(row = 2, column = 0, pady = 5, sticky = 'e')
 email_entry_rg.grid(row = 2, column = 1)
 
-password_label_rg.grid(row = 3, column = 0, pady = 2, sticky = 'e')
+password_label_rg.grid(row = 3, column = 0, pady = 5, sticky = 'e')
 password_entry_rg.grid(row = 3, column = 1)
 
-confirm_password_label_rg.grid(row = 4, column = 0, pady = 2, sticky = 'e')
+confirm_password_label_rg.grid(row = 4, column = 0, pady = 5, sticky = 'e')
 confirm_password_entry_rg.grid(row = 4, column = 1)
 
-phone_label_rg.grid(row = 5, column = 0, pady = 2, sticky = 'e')
+phone_label_rg.grid(row = 5, column = 0, pady = 5, sticky = 'e')
 phone_entry_rg.grid(row = 5, column = 1)
 
-address_label_rg.grid(row = 6, column = 0, pady = 2, sticky = 'e')
+address_label_rg.grid(row = 6, column = 0, pady = 5, sticky = 'e')
 address_entry_rg.grid(row = 6, column = 1)
 
-insurance_carrier_label_rg.grid(row = 7, column = 0, pady = 2, sticky = 'e')
+insurance_carrier_label_rg.grid(row = 7, column = 0, pady = 5, sticky = 'e')
 insurance_carrier_entry_rg.grid(row = 7, column = 1)
 
-dob_label_rg.grid(row = 8, column = 0, pady = 2, sticky = 'e')
+dob_label_rg.grid(row = 8, column = 0, pady = 5, sticky = 'e')
 dob_entry_rg.grid(row = 8, column = 1)
 
-gender_label_rg.grid(row = 9, column = 0, pady = 2, sticky = 'e')
+gender_label_rg.grid(row = 9, column = 0, pady = 5, sticky = 'e')
 radiosframe.grid(row = 9, column = 1)
 male_radiobutton.grid(row = 0, column = 0)
 female_radiobutton.grid(row = 0, column = 1)
@@ -194,7 +196,8 @@ go_login_label.grid(row = 11, column = 0, columnspan = 2, pady = 5)
 def go_to_login():
     registerframe.forget()
     loginframe.pack(fill = "both", expand = 1)
-    title_label["text"] = 'Login'
+    root.title('Login')
+    # title_label["text"] = 'Login'
 # binding the login display function to the label
 go_login_label.bind("<Button-1>", lambda page: go_to_login())
 
@@ -326,7 +329,7 @@ def validate_login():
             reader = csv.reader(f, delimiter = ",")
             # checks for email/password combo in database
             for row in reader:
-                if row[3] == email_in and row[4] == password_in:
+                if email_in in row[3] and password_in in row[4]:
                     # get id from row here
                     id = row[0]
                     messagebox.showinfo('Login', 'Login successful.')
@@ -335,9 +338,8 @@ def validate_login():
                     home_gui(id)
                 elif row[3] == email_in and row[4] != password_in:
                     messagebox.showinfo('Login', 'Incorrect password, please try again.')
-                elif row[3] is None and row[4] is None:
-                    messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
-                    go_to_register()
+            messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
+            go_to_register()
     else:
         messagebox.showwarning('Login', 'Please fill all fields.')
 
