@@ -1,9 +1,17 @@
 import tkinter as tk
+from tkinter import messagebox
 from .utils import get_icon
+from homepage import home_gui
+import sys
+
+# add .. to import from above top level package
+sys.path.append("..")
 
 class NavbarContainerWidget(tk.Frame):
-    def __init__(self, master=None, **kw):
+    def __init__(self, bill, master=None, **kw):
         super(NavbarContainerWidget, self).__init__(master, **kw)
+        self.bill = bill
+        self.master = master
         
         self.seperator_0 = tk.Label(self)
         self.seperator_0.configure(relief="flat")
@@ -26,11 +34,13 @@ class NavbarContainerWidget(tk.Frame):
             borderwidth=0,
             image=self.img_save,
             overrelief="flat",
-            relief="flat")
+            relief="flat",
+            command=self.save_changes)
         self.btn_save_changes.pack(
             anchor="w", ipadx=1, padx=10, pady=5, side="left")
         self.btn_save_changes.bind("<Enter>", self.btn_on_mouse_enter, add="+")
         self.btn_save_changes.bind("<Leave>", self.btn_on_mouse_leave, add="+")
+        
         self.btn_undo_change = tk.Button(self)
         self.img_undo = tk.PhotoImage(file=get_icon("undo.png"))
         self.btn_undo_change.configure(
@@ -59,7 +69,8 @@ class NavbarContainerWidget(tk.Frame):
             image=self.img_logout,
             justify="left",
             overrelief="flat",
-            relief="flat")
+            relief="flat",
+            command=self.logout)
         self.btn_logout.pack(anchor="e", padx=5, pady=5, side="right")
         self.btn_logout.bind("<Enter>", self.btn_on_mouse_enter, add="+")
         self.btn_logout.bind("<Leave>", self.btn_on_mouse_leave, add="+")
@@ -71,7 +82,16 @@ class NavbarContainerWidget(tk.Frame):
         
         self.tooltip_selector = tk.Label(self)
         self.tooltip_selector.configure(font="{Verdana} 8 {}")
+    
+    def save_changes(self):
+        if messagebox.askyesno("Save Changes", "Do you want to commit changes to database?"):
+            self.bill.commit_to_db()
         
+    
+    def logout(self):
+        if messagebox.askyesno("Logout", "Are you sure you want to log out?"):
+            self.master.destroy()
+            home_gui(self.bill.user['ID'])
 
     def btn_on_mouse_enter(self, event=None):
         _text = "Home"

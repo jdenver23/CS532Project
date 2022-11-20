@@ -1,8 +1,10 @@
 import tkinter as tk
 
 class UserInfoContainerWidget(tk.Frame):
-    def __init__(self, master=None, test_data=False, **kw):
+    def __init__(self, bill, master=None, test_data=False, **kw):
         super(UserInfoContainerWidget, self).__init__(master, **kw)
+        self.bill = bill
+        
         self.user_info_container = tk.Frame(self)
         self.user_info_container.configure(height=30, width=720)
         self.fr_user_info = tk.Frame(self.user_info_container)
@@ -21,7 +23,7 @@ class UserInfoContainerWidget(tk.Frame):
             state="disabled",
             width=8,
             wrap="char")
-        _text_ = '12345678' if test_data else ""
+        _text_ = '12345678' if test_data else self.bill.user['ID']
         self.user_id.configure(state="normal")
         self.user_id.insert("0.0", _text_)
         self.user_id.configure(state="disabled")
@@ -42,7 +44,7 @@ class UserInfoContainerWidget(tk.Frame):
             state="disabled",
             width=10,
             wrap="word")
-        _text_ = 'FIRST LAST' if test_data else ""
+        _text_ = 'FIRST LAST' if test_data else self.bill.user_name
         self.user_name.configure(state="normal")
         self.user_name.insert("0.0", _text_)
         self.user_name.configure(state="disabled")
@@ -68,7 +70,7 @@ class UserInfoContainerWidget(tk.Frame):
             state="disabled",
             width=20,
             wrap="word")
-        _text_ = '12345 6TH BOULEVARD' if test_data else ""
+        _text_ = '12345 6TH BOULEVARD' if test_data else self.bill.user['Address']
         self.user_address.configure(state="normal")
         self.user_address.insert("0.0", _text_)
         self.user_address.configure(state="disabled")
@@ -94,7 +96,7 @@ class UserInfoContainerWidget(tk.Frame):
             state="disabled",
             width=10,
             wrap="word")
-        _text_ = '11/11/2011' if test_data else ""
+        _text_ = '11/11/2011' if test_data else self.bill.user['Date of Birth']
         self.user_dob.configure(state="normal")
         self.user_dob.insert("0.0", _text_)
         self.user_dob.configure(state="disabled")

@@ -154,17 +154,19 @@ class ServiceAddToplvlWidget(tk.Toplevel):
         self.cal.place_forget()    
 
     def form_submit(self):
-        data = [self.entry_description.get(), self.entry_date.get(), "$" + self.entry_cost.get()]
-        if "" in data:
+        data = {'description': self.entry_description.get(), 
+                'date': self.entry_date.get(), 
+                'cost': "$" + self.entry_cost.get()}
+        if not any(data.values()):
             messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")    
         else:
             self.destroy()
-            self.master.toplevel_callback(self, data)
+            self.master.toplevel_data_transfer_callback(data)
         
     def form_cancel(self):
         if messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
             self.destroy()
-            self.master.toplevel_callback(self)
+            self.master.toplevel_callback()
     
 if __name__ == "__main__":
     root = tk.Tk()

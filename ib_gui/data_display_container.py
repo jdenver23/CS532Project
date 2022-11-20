@@ -3,10 +3,15 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from .data_display_container_carrier_add_toplvl import CarrierAddToplvlWidget
 from .data_display_container_service_add_toplvl import ServiceAddToplvlWidget
+import sys
+
+# add .. to import from above top level package
+sys.path.append("..")
+from InsuranceBilling import InsuranceBilling
 
 
 class DataDisplayContainerWidget(tk.Frame):
-    def __init__(self, bill, test_data=False, master=None, **kw):
+    def __init__(self, bill: InsuranceBilling, test_data=False, master=None, **kw):
         super(DataDisplayContainerWidget, self).__init__(master, **kw)
         self.bill = bill
         
@@ -21,7 +26,7 @@ class DataDisplayContainerWidget(tk.Frame):
         self.title_services.place(x=95, y=0)
         self.title_invoices = tk.Label(self.section_title)
         self.title_invoices.configure(font="{Verdana} 10 {}", text='Invoices')
-        self.title_invoices.place(x=175, y=0)
+        self.title_invoices.place(x=180, y=0)
         self.section_title.pack(anchor="w", padx=10, pady=10, side="top")
         self.section_title.pack_propagate(0)
         
@@ -115,22 +120,34 @@ class DataDisplayContainerWidget(tk.Frame):
             idx = 0 if direction == "right" else 1
         self.toggle_treeview(index=idx)
     
-    def toplevel_callback(self, toplevel, data=None):
+    def toplevel_callback(self, event=None):
+        self.master.deiconify()
+        pass
+    
+    def toplevel_data_commit_callback(self):
+        self.bill.commit_to_db()
+        pass
+    
+    def toplevel_data_removal_callback(self, data_id: str or int):
+        pass
+    
+    def toplevel_data_transfer_callback(self, data: dict):
         # TODO: add data to local list
         self.master.deiconify()
-        if data is not None:
-            self.treeview_add_item(data)
-            self.master.add_data(data)
         
-    def treeview_add_item(self, data):
-        if self.active_treeview == "Carriers":
-            # TODO: send data back to main
-            self.treeview_insert_row(self.treeview_carriers, [['9'] + data])
-        elif self.active_treeview == "Services":
-            self.treeview_insert_row(self.treeview_services, [['8'] + data])
-        elif self.active_treeview == "Invoices":
-            pass
-        
+        if any(data.values()):
+            if self.active_treeview == "Carriers":
+                n_id = self.bill.new_carrier(data['name'], data['address'], data['primary'] == "PRIMARY")
+                if data['primary'] == "PRIMARY":
+                    self.pull_from_db()
+                else:
+                    self.treeview_insert_row(self.treeview_carriers, [[n_id] + list(data.values())])
+            elif self.active_treeview == "Services":
+                n_id = self.bill.new_service(data['description'], data['cost'], data['date'])
+                self.treeview_insert_row(self.treeview_services, [[n_id] + list(data.values())])
+            elif self.active_treeview == "Invoices":
+                pass
+            
     def treeview_add_item_window(self):
         if self.active_treeview == "Carriers":
             CarrierAddToplvlWidget(self)
@@ -145,19 +162,28 @@ class DataDisplayContainerWidget(tk.Frame):
     def treeview_del_selection(self):
         # TODO: remove data from local list
         if self.active_treeview == "Carriers":
-            selection = self.treeview_carriers.selection()
-            selection_i = self.treeview_carriers.item(selection)
-            self.treeview_carriers.delete(*selection)
+            selections = self.treeview_carriers.selection()
+            for selection in selections:
+                id_to_remove = self.treeview_carriers.item(selection)['values'][0]
+                self.bill.remove_carrier(id_to_remove)
+                
+            self.treeview_carriers.delete(*selections)
             
         elif self.active_treeview == "Services":
-            selection = self.treeview_services.selection()
-            selection_i = self.treeview_services.item(selection)
-            self.treeview_services.delete(*selection)
+            selections = self.treeview_services.selection()
+            for selection in selections:
+                id_to_remove = self.treeview_services.item(selection)['values'][0]
+                self.bill.remove_service(id_to_remove)
+                
+            self.treeview_services.delete(*selections)
             
         elif self.active_treeview == "Invoices":
-            selection = self.treeview_invoices.selection()
-            selection_i = self.treeview_invoices.item(selection)
-            self.treeview_invoices.delete(*selection)
+            selections = self.treeview_invoices.selection()
+            for selection in selections:
+                id_to_remove = self.treeview_invoices.item(selection)['values'][0]
+                self.bill.remove_invoice(id_to_remove)
+                
+            self.treeview_invoices.delete(*selections)
             
         self.btn_delete.configure(state=tk.DISABLED)
         
@@ -229,7 +255,6 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_services, show=True)
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=120, y=35)
-            self.title_invoices.place(x=180, y=0)
         elif index == 2 or (event is not None and event.widget.cget("text") == "Invoices"):
             self.active_treeview = "Invoices"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())

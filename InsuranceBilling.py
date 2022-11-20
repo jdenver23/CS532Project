@@ -18,7 +18,7 @@ from ib_gui import ib_gui
 #   Corresponding field names
 IB_DB_DIR = "IB_DB"
 IB_DB_FIELDS = {
-    "IC": ['Insurance Carrier ID', 'Insurance Carrier name', 'Insurance Carrier Address', 'Insurance Carrier Status', 'Primary Carrier'],
+    "IC": ['Carrier ID', 'Carrier Name', 'Carrier Address', 'Carrier Status', 'Primary Carrier'],
     "IS": ['Service ID', 'Service Description', 'Service Cost', 'Service Date', 'Payment Status'],
     "II": ['Invoice ID', 'Invoice Status', 'Amount Due', 'Patient Info', 'Carrier Info', 'Invoiced Services', 'Date Invoiced', 'Due Date', 'Date Paid', 'Days Overdue'],
 }
@@ -103,10 +103,10 @@ class InsuranceCarrier:
         return f"{self.id}{delimiter}{self.name}{delimiter}{self.address}{delimiter}{self.status.name}{delimiter}{'PRIMARY' if self.primary else 'NON-PRIMARY'}"
 
     def __str__(self) -> str:
-        return f"""'Insurance Carrier ID': {self.id}\
-                    \n'Insurance Carrier name': {self.name}\
-                    \n'Insurance Carrier Address': {self.address}\
-                    \n'Insurance Carrier Status': {self.status.name}\
+        return f"""'Carrier ID': {self.id}\
+                    \n'Carrier Name': {self.name}\
+                    \n'Carrier Address': {self.address}\
+                    \n'Carrier Status': {self.status.name}\
                     \n'Primary Carrier': {'PRIMARY' if self.primary else 'NON-PRIMARY'}\
                 """
 
@@ -337,12 +337,12 @@ class InsuranceBilling:
         self.carriers = []
         with open(self.__carrier_db, 'r') as f:
             for carrier in csv.DictReader(f, fieldnames=IB_DB_FIELDS['IC'], delimiter=IB_DB_FIELD_DELIMITER):
-                r_carrier = InsuranceCarrier(id=carrier['Insurance Carrier ID'],
-                                             name=carrier['Insurance Carrier name'],
-                                             address=carrier['Insurance Carrier Address'],
+                r_carrier = InsuranceCarrier(id=carrier['Carrier ID'],
+                                             name=carrier['Carrier Name'],
+                                             address=carrier['Carrier Address'],
                                              primary=True if carrier['Primary Carrier'] == 'PRIMARY' else False)
 
-                r_carrier.status = PaymentStatus[carrier['Insurance Carrier Status']]
+                r_carrier.status = PaymentStatus[carrier['Carrier Status']]
                 self.carriers.append(r_carrier)
 
         self.primary_carrier = None
@@ -635,6 +635,27 @@ class InsuranceBilling:
         self.local_changes_made = True
 
         return invoice_id
+
+    def remove_invoice(self, invoice_id) -> bool:
+        """ 
+            Remove the row of where `invoice_id` is found in the local database.\n
+            Note: use `commit_to_db()` in order to save local changes to the database.
+
+            #### Parameters:
+            - `invoice_id` to find in database.
+
+            #### Returns:
+            - `True` if row successfully removed. 
+            - `False` otherwise.
+        """
+        invoice_id = str(invoice_id)
+        for invoice in self.invoices:
+            if invoice is not None and invoice.id == invoice_id:
+                self.invoices.remove(invoice)
+                self.local_changes_made = True
+                return True
+
+        return False
 
     def invoice_info(self, invoice_id=None) -> str:
         """ 
