@@ -7,7 +7,7 @@ import sys
 
 # add .. to import from above top level package
 sys.path.append("..")
-from InsuranceBilling import InsuranceBilling
+import InsuranceBilling
 
 
 class DataDisplayContainerWidget(tk.Frame):

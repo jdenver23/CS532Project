@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 from .utils import get_icon
-from homepage import home_gui
+import homepage
+import login
 import sys
 
 # add .. to import from above top level package
@@ -24,7 +25,8 @@ class NavbarContainerWidget(tk.Frame):
             image=self.img_home,
             justify="left",
             overrelief="flat",
-            relief="flat")
+            relief="flat",
+            command=self.home)
         self.btn_home.pack(anchor="w", padx=5, pady=5, side="left")
         self.btn_home.bind("<Enter>", self.btn_on_mouse_enter, add="+")
         self.btn_home.bind("<Leave>", self.btn_on_mouse_leave, add="+")
@@ -87,11 +89,15 @@ class NavbarContainerWidget(tk.Frame):
         if messagebox.askyesno("Save Changes", "Do you want to commit changes to database?"):
             self.bill.commit_to_db()
         
+    def home(self):
+        if messagebox.askyesno("Home", "Are you sure you want to go to home?"):
+            self.master.destroy()
+            homepage.home_gui(self.bill.user['ID'])
     
     def logout(self):
         if messagebox.askyesno("Logout", "Are you sure you want to log out?"):
             self.master.destroy()
-            home_gui(self.bill.user['ID'])
+            # TODO: go back to login
 
     def btn_on_mouse_enter(self, event=None):
         _text = "Home"

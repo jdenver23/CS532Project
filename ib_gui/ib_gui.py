@@ -6,6 +6,8 @@ from .user_info_container import UserInfoContainerWidget
 from .seperator_container import SeperatorContainerWidget
 from .data_display_container import DataDisplayContainerWidget
 
+# TODO: check uid for security
+
 class MainGUI(tk.Tk):
     def __init__(self, bill, master=None, enabled_test_data=False, **kw):
         # assert bill is not None, f"Invalid `InsuranceBilling` class instance."

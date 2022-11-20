@@ -262,9 +262,10 @@ class InsuranceBilling:
         - Use `commit_to_db()` in order to save local changes to the database.
     """
 
-    def __init__(self, id=None) -> None:
+    def __init__(self, id: str or int=None) -> None:
         self.id = id
         assert self.id is not None, f"User ID cannot be None."
+        assert str(self.id).isnumeric(), f"Invalid user ID format: {self.id}. It should only contain digits 0-9."
         # if id is None:
         #     # generate new id by retrieving all used ids from database folder
         #     used_ids = []
@@ -312,7 +313,7 @@ class InsuranceBilling:
         assert self.user is not None, f"Cannot find specified user ID in database ({self.id})."
 
         # service database file
-        self.__service_db = IB_DB_DIR + f"/id{self.id:08}" + "_services.csv"
+        self.__service_db = IB_DB_DIR + f"/id{self.id:0>8}" + "_services.csv"
         if not Path(self.__service_db).is_file():
             open(self.__service_db, "a").close()
 
@@ -329,7 +330,7 @@ class InsuranceBilling:
                 self.services.append(r_service)
 
         # carrier database file
-        self.__carrier_db = IB_DB_DIR + f"/id{self.id:08}" + "_carriers.csv"
+        self.__carrier_db = IB_DB_DIR + f"/id{self.id:0>8}" + "_carriers.csv"
         if not Path(self.__carrier_db).is_file():
             open(self.__carrier_db, "a").close()
 
@@ -355,7 +356,7 @@ class InsuranceBilling:
                         break
 
         # invoice database file
-        self.__invoice_db = IB_DB_DIR + f"/id{self.id:08}" + "_invoices.csv"
+        self.__invoice_db = IB_DB_DIR + f"/id{self.id:0>8}" + "_invoices.csv"
         if not Path(self.__invoice_db).is_file():
             open(self.__invoice_db, "a").close()
 
@@ -760,6 +761,10 @@ class InsuranceBilling:
 
         return delinquent_reports
 
+def init_gui(uid: str or int):
+    insurance_bill = InsuranceBilling(id=uid)
+    app = ib_gui.MainGUI(bill=insurance_bill)
+    app.run()
 
 #
 #
