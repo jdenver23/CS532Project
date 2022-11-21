@@ -1,15 +1,16 @@
 #!/usr/bin/python3
 import tkinter as tk
 from tkinter import messagebox, StringVar
-from tkcalendar import Calendar # external package -> 'pip install tkcalendar' to install
+# external package -> 'pip install tkcalendar' to install
+from tkcalendar import Calendar
 from .utils import tk_center
 
 
 class ServiceAddToplvlWidget(tk.Toplevel):
     def __init__(self, master=None, **kw):
-        super(ServiceAddToplvlWidget,self).__init__(master,**kw)
+        super(ServiceAddToplvlWidget, self).__init__(master, **kw)
         self.master = master
-        
+
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
         self.lb_title = tk.Label(self.section_title)
@@ -22,6 +23,7 @@ class ServiceAddToplvlWidget(tk.Toplevel):
         self.line_selector = tk.LabelFrame(self)
         self.line_selector.configure(height=2, width=140)
         self.line_selector.place(x=15, y=35)
+        
         self.form_frame = tk.Frame(self)
         self.form_frame.configure(height=200, width=200)
         self.lb_frame = tk.Frame(self.form_frame)
@@ -45,6 +47,7 @@ class ServiceAddToplvlWidget(tk.Toplevel):
             width=20)
         self.lb_cost.pack(padx=10, side="top")
         self.lb_frame.pack(side="left")
+        
         self.entry_frame = tk.Frame(self.form_frame)
         self.entry_frame.configure(height=200, width=200)
         self.entry_description = tk.Entry(self.entry_frame)
@@ -52,10 +55,10 @@ class ServiceAddToplvlWidget(tk.Toplevel):
             font="{Verdana} 9 {}", justify="left", width=50)
         self.entry_description.pack(ipady=5, side="top")
         self.entry_description.bind("<FocusIn>", self.hide_calendar)
-        
+
         self.cal = Calendar(self, date_pattern="yyyy-mm-dd")
         self.bind("<<CalendarSelected>>", self.calendar_selection)
-        
+
         self.entry_date = tk.Entry(self.entry_frame)
         self.entry_date.configure(
             font="{Verdana} 9 {}",
@@ -64,16 +67,17 @@ class ServiceAddToplvlWidget(tk.Toplevel):
         self.entry_date.insert(0, self.cal.get_date())
         self.entry_date.bind("<FocusIn>", self.show_calendar)
         self.entry_date.pack(ipady=5, pady=20, side="top")
-        
+
         self.cost_frame = tk.Frame(self.entry_frame)
         self.cost_frame.configure(height=200, width=200)
         self.lb_dollar_sign = tk.Label(self.cost_frame)
         self.lb_dollar_sign.configure(font="{Verdana} 10 {}", text='$')
         self.lb_dollar_sign.pack(anchor="e", padx=5, side="left")
-        
+
         self.entry_cost_value = StringVar()
         self.entry_cost_value.trace_add("write", self.cost_entry_upd)
-        self.entry_cost = tk.Entry(self.cost_frame, textvariable=self.entry_cost_value)
+        self.entry_cost = tk.Entry(
+            self.cost_frame, textvariable=self.entry_cost_value)
         self.entry_cost.configure(
             font="{Verdana} 9 {}",
             justify="left",
@@ -83,7 +87,7 @@ class ServiceAddToplvlWidget(tk.Toplevel):
         self.cost_frame.pack(side="top")
         self.entry_frame.pack(padx=20, side="right")
         self.form_frame.pack(anchor="w", padx=15, pady=10, side="top")
-        
+
         self.control_container = tk.Frame(self)
         self.btn_done = tk.Button(self.control_container)
         self.btn_done.configure(
@@ -112,29 +116,33 @@ class ServiceAddToplvlWidget(tk.Toplevel):
         self.resizable(False, False)
         self.title("Adding new service - Healthcare Permanente")
         self.protocol("WM_DELETE_WINDOW", self.form_cancel)
-        
+
         self.lb_warning = tk.Label(self)
-        self.lb_warning.configure(font="{Verdana} 8 {bold}", fg='#ffaa00', 
+        self.lb_warning.configure(font="{Verdana} 8 {bold}", fg='#ffaa00',
                                   text="Only digits (0-9) and ',.' are allowed here.")
-        
+
         tk_center(self, gui_w=640, gui_h=260)
-        
+        self.focus_force()
+
     def cost_entry_upd(self, *event):
         value = self.entry_cost_value.get()
-        if value in [".", ""]: return
-        if not value.replace(" ", 'S').replace(".,",'E').replace(",", "").replace(".","",1).isnumeric():
+        if value in [".", ""]:
+            return
+        if not value.replace(" ", 'S').replace(".,", 'E').replace(",", "").replace(".", "", 1).isnumeric():
             x, y = self.cost_frame.winfo_x(), self.cost_frame.winfo_y()
-            self.lb_warning.configure(text="Only digits (0-9) and ',.' are allowed here.")
+            self.lb_warning.configure(
+                text="Only digits (0-9) and ',.' are allowed here.")
             self.lb_warning.place(x=x*1.9, y=y+85)
         else:
             if "." in value:
                 if len(value[value.find(".")+1:]) > 2:
                     x, y = self.cost_frame.winfo_x(), self.cost_frame.winfo_y()
-                    self.lb_warning.configure(text="Cent part should only have at most 2 digits.")
+                    self.lb_warning.configure(
+                        text="Cent part should only have at most 2 digits.")
                     self.lb_warning.place(x=x*1.9, y=y+85)
                     return
             self.lb_warning.place_forget()
-            
+
     def calendar_selection(self, event=None):
         self.entry_date.delete(0, tk.END)
         self.entry_date.insert(0, self.cal.get_date())
@@ -147,33 +155,40 @@ class ServiceAddToplvlWidget(tk.Toplevel):
     def show_calendar(self, event=None):
         x = max(426, self.winfo_pointerx() - self.winfo_rootx())
         y = self.winfo_pointery() - self.winfo_rooty()
-        self.cal.place(x=x,y=y)
+        self.cal.place(x=x, y=y)
         if x > 380:
             self.geometry(f"{640 + x-380}x360")
         else:
             self.geometry("640x360")
-            
+
     def hide_calendar(self, event=None):
         self.geometry("640x260")
-        self.cal.place_forget()    
+        self.cal.place_forget()
 
     def form_submit(self):
-        data = {'description': self.entry_description.get(), 
-                'date': self.entry_date.get(), 
+        data = {'description': self.entry_description.get(),
+                'date': self.entry_date.get(),
                 'cost': "$" + self.entry_cost.get()}
         if not any(data.values()):
-            messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")    
+            messagebox.showwarning(
+                "Warning", "Make sure to fill out all fields before continue.")
         else:
             self.destroy()
-            self.master.toplevel_data_transfer_callback(data)
-        
+            ddc = self.master.calls(widget_name="ddc")
+            if "" == data['description'] + data['cost'][1:]:
+                ddc.toplevel_callback()
+            else:                
+                ddc.toplevel_data_transfer_callback(data)
+
     def form_cancel(self):
         if "" != self.entry_description.get() + self.entry_cost.get():
             if not messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
                 return
         self.destroy()
-        self.master.toplevel_callback()
-    
+        ddc = self.master.calls(widget_name="ddc")
+        ddc.toplevel_callback()
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     widget = ServiceAddToplvlWidget(root)

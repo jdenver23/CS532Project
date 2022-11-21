@@ -13,7 +13,6 @@ class MainGUI(tk.Tk):
         # assert bill is not None, f"Invalid `InsuranceBilling` class instance."
         super(MainGUI, self).__init__(master, **kw)
         self.bill = bill
-        self.master = master
         
         self.title("Healthcare Permanente - Insurance Billing")
         self.resizable(False, False)
