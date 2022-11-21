@@ -38,8 +38,7 @@ class NavbarContainerWidget(tk.Frame):
             overrelief="flat",
             relief="flat",
             command=self.save_changes)
-        self.btn_save_changes.pack(
-            anchor="w", ipadx=1, padx=10, pady=5, side="left")
+        self.btn_save_changes.pack(anchor="w", ipadx=1, padx=10, pady=5, side="left")
         self.btn_save_changes.bind("<Enter>", self.btn_on_mouse_enter, add="+")
         self.btn_save_changes.bind("<Leave>", self.btn_on_mouse_leave, add="+")
         

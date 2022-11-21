@@ -5,17 +5,16 @@ from tkinter import messagebox
 from .utils import tk_center
 
 
-class CarrierAddToplvlWidget(tk.Toplevel):
-    def __init__(self, master=None, **kw):
-        super(CarrierAddToplvlWidget, self).__init__(master, **kw)
+class CarrierAddEditToplvlWidget(tk.Toplevel):
+    def __init__(self, master=None, carrier=None, **kw):
+        super(CarrierAddEditToplvlWidget, self).__init__(master, **kw)
         self.master = master
+        self.c_carrier = carrier
 
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
         self.lb_title = tk.Label(self.section_title)
-        self.lb_title.configure(
-            font="{Verdana} 10 {bold}",
-            text='Adding new Carrier')
+        self.lb_title.configure(font="{Verdana} 10 {bold}", text='Add/Edit Carrier')
         self.lb_title.place(x=15)
         self.section_title.pack(anchor="w", padx=10, pady=10, side="top")
         self.section_title.pack_propagate(0)
@@ -28,44 +27,38 @@ class CarrierAddToplvlWidget(tk.Toplevel):
         self.lb_frame = tk.Frame(self.form_frame)
         self.lb_frame.configure(height=200, width=200)
         self.lb_name = tk.Label(self.lb_frame)
-        self.lb_name.configure(
-            font="{Verdana} 8 {}",
-            text='Carrier name:',
-            width=20)
+        self.lb_name.configure(font="{Verdana} 8 {}", text='Carrier name:', width=20)
         self.lb_name.pack(padx=10, side="top")
         self.lb_address = tk.Label(self.lb_frame)
-        self.lb_address.configure(
-            font="{Verdana} 8 {}",
-            text='Carrier address:',
-            width=20)
+        self.lb_address.configure(font="{Verdana} 8 {}", text='Carrier address:', width=20)
         self.lb_address.pack(padx=10, pady=30, side="top")
         self.lb_primary = tk.Label(self.lb_frame)
-        self.lb_primary.configure(
-            font="{Verdana} 8 {}",
-            text='Is this a primary carrier?',
-            width=20)
+        self.lb_primary.configure(font="{Verdana} 8 {}", text='Is this a primary carrier?', width=20)
         self.lb_primary.pack(padx=10, side="top")
         self.lb_frame.pack(side="left")
+        
         self.entry_frame = tk.Frame(self.form_frame)
         self.entry_frame.configure(height=200, width=200)
         self.entry_name = tk.Entry(self.entry_frame)
-        self.entry_name.configure(
-            font="{Verdana} 9 {}",
-            justify="left",
-            width=50)
+        self.entry_name.configure(font="{Verdana} 9 {}", justify="left", width=50)
         self.entry_name.pack(ipady=5, side="top")
         self.entry_address = tk.Entry(self.entry_frame)
-        self.entry_address.configure(
-            font="{Verdana} 9 {}", justify="left", width=50)
+        self.entry_address.configure(font="{Verdana} 9 {}", justify="left", width=50)
         self.entry_address.pack(ipady=5, pady=20, side="top")
         self.entry_primary = ttk.Combobox(self.entry_frame)
-        self.entry_primary.configure(
-            justify="center",
-            state="readonly",
-            values="PRIMARY NON-PRIMARY")
+        self.entry_primary.configure(justify="center", state="readonly", values="PRIMARY NON-PRIMARY")
         self.entry_primary.current(1)
         self.entry_primary.pack(side="top")
         self.entry_primary.bind("<<ComboboxSelected>>", self.primary_entry_upd)
+        
+        if carrier is not None:
+            self.entry_name.delete(0, tk.END)
+            self.entry_address.delete(0, tk.END)
+            self.entry_primary.delete(0, tk.END)
+            self.entry_name.insert(0, self.c_carrier.name)
+            self.entry_address.insert(0, self.c_carrier.address)
+            self.entry_primary.current(0 if self.c_carrier.primary else 1)
+            
         self.entry_frame.pack(padx=20, side="right")
         self.form_frame.pack(anchor="w", padx=15, pady=10, side="top")
 
@@ -91,8 +84,8 @@ class CarrierAddToplvlWidget(tk.Toplevel):
             text='× Cancel')
         self.btn_cancel.pack(padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
-        self.control_container.pack(
-            anchor="e", padx=30, pady=20, side="bottom")
+        self.control_container.pack(anchor="e", padx=30, pady=20, side="bottom")
+        
         self.geometry("640x260")
         self.resizable(False, False)
         self.title("Adding new carrier - Healthcare Permanente")
@@ -102,6 +95,9 @@ class CarrierAddToplvlWidget(tk.Toplevel):
         self.lb_warning.configure(font="{Verdana} 8 {bold}", fg='#ffaa00',
                                   text="Warning: by setting this to PRIMARY will modify all other\ncarriers primary status to NON-PRIMARY.")
 
+
+        self.ddc = self.master.calls(widget_name="ddc")
+        
         tk_center(self, gui_w=640, gui_h=260)
         self.focus_force()
 
@@ -116,28 +112,30 @@ class CarrierAddToplvlWidget(tk.Toplevel):
         data = {'name': self.entry_name.get(),
                 'address': self.entry_address.get(),
                 'primary': self.entry_primary.get()}
+        
         if not any(data.values()):
-            messagebox.showwarning(
-                "Warning", "Make sure to fill out all fields before continue.")
+            messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")
         else:
             self.destroy()
-            ddc = self.master.calls(widget_name="ddc")
             if data['primary'] == "NON-PRIMARY" and "" == data['address'] + data['name']: 
-                ddc.toplevel_callback()
+                self.ddc.toplevel_callback()
             else:
-                ddc.toplevel_data_transfer_callback(data)
+                if self.c_carrier is not None:
+                    self.ddc.toplevel_data_edit_callback(data)
+                else:
+                    self.ddc.toplevel_data_transfer_callback(data)
 
     def form_cancel(self):
-        if self.entry_primary.get() == "NON-PRIMARY" and "" != self.entry_name.get() + self.entry_address.get():
+        if "" != self.entry_name.get() + self.entry_address.get():
             if not messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
+                self.deiconify()
                 return
         self.destroy()
-        ddc = self.master.calls(widget_name="ddc")
-        ddc.toplevel_callback()
+        self.ddc.toplevel_callback()
 
 
 if __name__ == "__main__":
     root = tk.Tk()
-    widget = CarrierAddToplvlWidget(root)
+    widget = CarrierAddEditToplvlWidget(root)
     # widget.pack(expand=True, fill="both")
     widget.mainloop()

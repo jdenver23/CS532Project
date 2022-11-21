@@ -34,6 +34,9 @@ OUT_DELIMITER = "="
 
 DATETIME_FORMAT_F = '%Y-%m-%d %H:%M:%S.%f'
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+DATE_FORMAT = '%m-%d-%Y'
+DATE_TIME_FORMAT = '%m-%d-%Y %H:%M:%S'
+DATE_TIME_FORMAT_F = '%m-%d-%Y %H:%M:%S.%f'
 
 # set locale for currency formatting
 locale.setlocale(locale.LC_ALL, '')
@@ -59,6 +62,24 @@ def dollar_to_float(amount) -> float:
     for r in ["$", ","]:
         amount = amount.replace(r, '')
     return float(amount)
+
+
+def date_convert(_date: str, _type="date"):
+    if _date in NONE: return ""
+    _date = str(_date)
+    for format in [DATETIME_FORMAT_F, DATETIME_FORMAT, DATE_FORMAT, DATE_TIME_FORMAT, DATE_TIME_FORMAT_F]:
+        try:
+            r = datetime.strptime(_date, format)
+            if _type == "datetime":
+                return r
+            elif _type == "str":
+                return str(r)
+            else:
+                return datetime.strftime(r, DATE_FORMAT)
+        except:
+            pass
+    return ""
+            
 
 
 #
@@ -115,17 +136,18 @@ class InsuranceService:
         self.id = id
         self.description = description
         self.cost = to_dollar(cost)
-        self.date = datetime.now() if date is None else date
-        if type(date) != datetime:
-            try:
-                self.date = datetime.strptime(str(self.date), DATETIME_FORMAT_F)
-            except:
-                try:
-                    self.date = datetime.strptime(str(self.date), DATETIME_FORMAT)
-                except:
-                    self.date = datetime.strptime(str(self.date) + " 00:00:00", DATETIME_FORMAT)
+        self.set_date(date)
         self.payment_status = PaymentStatus.UNPAID
         self.set_repr(self.id)
+        
+    def set_date(self, date: datetime or str) -> None:
+        self.date = datetime.now() if date is None else date
+        if type(date) != datetime:
+            for format in [DATETIME_FORMAT_F, DATETIME_FORMAT, DATE_FORMAT, DATE_TIME_FORMAT, DATE_TIME_FORMAT_F]:
+                try:
+                    self.date = datetime.strptime(str(self.date), format)
+                except:
+                    pass
 
     def set_repr(self, repr) -> None:
         self.repr = repr
@@ -139,6 +161,9 @@ class InsuranceService:
 
     def mark_as_paid(self) -> None:
         self.payment_status = PaymentStatus.PAID
+
+    def mark_as_unpaid(self) -> None:
+        self.payment_status = PaymentStatus.UNPAID
 
     def as_csv_entry(self, delimiter=IB_DB_FIELD_DELIMITER) -> str:
         return f"{self.id}{delimiter}{self.description}{delimiter}{self.get_cost()}{delimiter}{self.date}{delimiter}{self.payment_status.name}"
@@ -520,6 +545,34 @@ class InsuranceBilling:
 
         return False
 
+    def get_carrier(self, carrier_id) -> InsuranceCarrier:
+        """ Return the instance of `InsuranceCarrier` that has the same `carrier_id`. """
+        carrier_id = str(carrier_id)
+        for carrier in self.carriers:
+            if carrier is not None and carrier.id == carrier_id:
+                return carrier
+        return None
+    
+    def edit_carrier(self, carrier_id, to_carrier: InsuranceCarrier) -> bool:
+        """ Replace an instance of `InsuranceCarrier` with a new `InsuranceCarrier`. """
+        carrier_id = str(carrier_id)
+        for i in range(len(self.carriers)):
+            if self.carriers[i] is not None and self.carriers[i].id == carrier_id:
+                self.carriers[i] = to_carrier
+                return True
+        return False
+    
+    def edit_carrier(self, carrier_id, n_name=None, n_address=None, n_primary: bool=None) -> bool:
+        """ Replace an instance of `InsuranceCarrier` with specified options. """
+        carrier_id = str(carrier_id)
+        for i in range(len(self.carriers)):
+            if self.carriers[i] is not None and self.carriers[i].id == carrier_id:
+                if n_name not in NONE: self.carriers[i].name = n_name
+                if n_address not in NONE: self.carriers[i].address = n_address
+                if n_primary not in NONE: self.carriers[i].n_primary = n_primary
+                return True
+        return False
+
     def set_primary(self, carrier_id, primary=True) -> bool:
         """ Set a carrier primary status. Return `False` if `carrier_id` is not found. """
         for carrier in self.carriers:
@@ -581,6 +634,34 @@ class InsuranceBilling:
                 self.local_changes_made = True
                 return True
 
+        return False
+
+    def get_service(self, service_id) -> InsuranceService:
+        service_id = str(service_id)
+        """ Return the instance of `InsuranceService` that has the same `service_id`. """
+        for service in self.services:
+            if service is not None and service.id == service_id:
+                return service
+        return None
+    
+    def edit_service(self, service_id, to_service: InsuranceService) -> bool:
+        """ Replace an instance of `InsuranceService` with a new `InsuranceService`. """
+        service_id = str(service_id)
+        for i in range(len(self.services)):
+            if self.services[i] is not None and self.services[i].id == service_id:
+                self.services[i] = to_service
+                return True
+        return False
+    
+    def edit_service(self, service_id, n_description=None, n_cost=None, n_date=None) -> bool:
+        """ Replace an instance of `InsuranceService` with a new `InsuranceService`. """
+        service_id = str(service_id)
+        for i in range(len(self.services)):
+            if self.services[i] is not None and self.services[i].id == service_id:
+                if n_description not in NONE: self.services[i].description = n_description
+                if n_cost not in NONE: self.services[i].cost = n_cost
+                if n_date not in NONE: self.services[i].set_date(n_date)
+                return True
         return False
 
     # ---------------
@@ -894,7 +975,6 @@ def __run_gui__(bill: InsuranceBilling) -> None:
 
 
 def __run_tests__(bill: InsuranceBilling) -> None:
-
     __service_tests__(bill)  # service tests
     bill.commit_to_db()
     __carrier_tests__(bill)  # carrier tests

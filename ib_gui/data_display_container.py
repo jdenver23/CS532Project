@@ -2,8 +2,8 @@
 import InsuranceBilling
 import tkinter as tk
 import tkinter.ttk as ttk
-from .data_display_container_carrier_add_toplvl import CarrierAddToplvlWidget
-from .data_display_container_service_add_toplvl import ServiceAddToplvlWidget
+from .data_display_container_carrier_addedit_toplvl import CarrierAddEditToplvlWidget
+from .data_display_container_service_addedit_toplvl import ServiceAddEditToplvlWidget
 import sys
 
 # add .. to import from above top level package
@@ -18,8 +18,7 @@ class DataDisplayContainerWidget(tk.Frame):
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
         self.title_carriers = tk.Label(self.section_title)
-        self.title_carriers.configure(
-            font="{Verdana} 10 {bold}", text='Carriers')
+        self.title_carriers.configure(font="{Verdana} 10 {bold}", text='Carriers')
         self.title_carriers.place(x=15)
         self.title_services = tk.Label(self.section_title)
         self.title_services.configure(font="{Verdana} 10 {}", text='Services')
@@ -53,7 +52,6 @@ class DataDisplayContainerWidget(tk.Frame):
         self.create_invoices_tv(self.treeview_fr)
         self.treeview_forced_set_state(self.treeview_carriers, show=True)
         self.active_treeview = "Carriers"
-        self.pull_from_db()
 
         if test_data:
             self.add_test_data()
@@ -76,8 +74,7 @@ class DataDisplayContainerWidget(tk.Frame):
             takefocus=True,
             text='× Delete')
         self.btn_delete.pack(side="right")
-        self.btn_delete.configure(
-            command=lambda: self.treeview_del_selection())
+        self.btn_delete.configure(command=lambda: self.treeview_del_selection())
         self.btn_add = tk.Button(self.control_container)
         self.btn_add.configure(
             background="#2980b9",
@@ -89,6 +86,29 @@ class DataDisplayContainerWidget(tk.Frame):
             text='+ Add')
         self.btn_add.pack(padx=10, side="right")
         self.btn_add.configure(command=lambda: self.treeview_add_item_window())
+        self.btn_edit = tk.Button(self.control_container)
+        self.btn_edit.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            justify="left",
+            state="disabled",
+            takefocus=True,
+            text='✏️ Edit')
+        self.btn_edit.pack(side="right")
+        self.btn_edit.configure(command=lambda: self.treeview_edit_selection())
+        self.btn_mark_as_paid = tk.Button(self.control_container)
+        self.btn_mark_as_paid.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            justify="left",
+            state="disabled",
+            takefocus=True,
+            text='✓ Mark as PAID')
+        self.btn_mark_as_paid.configure(command=lambda: self.selection_mark_as_paid())
 
         self.control_container.pack(anchor="n", padx=30, side="right")
 
@@ -98,16 +118,34 @@ class DataDisplayContainerWidget(tk.Frame):
         # hotkeys:
         # "d" to move tab to right
         # "a" to move tab to left
-        self.master.bind(
-            "d", lambda x: self.toggle_treeview_tab(direction="right"))
-        self.master.bind(
-            "w", lambda x: self.toggle_treeview_tab(direction="right"))
-        self.master.bind(
-            "a", lambda x: self.toggle_treeview_tab(direction="left"))
-        self.master.bind(
-            "s", lambda x: self.toggle_treeview_tab(direction="left"))
+        self.master.bind("d", lambda x: self.toggle_treeview_tab(direction="right"))
+        self.master.bind("w", lambda x: self.toggle_treeview_tab(direction="right"))
+        self.master.bind("a", lambda x: self.toggle_treeview_tab(direction="left"))
+        self.master.bind("s", lambda x: self.toggle_treeview_tab(direction="left"))
+        
+        self.pull_from_db()
+    
+    def selection_mark_as_paid(self):
+        if self.active_treeview != "Services":
+            return
+        
+        for selection in self.treeview_services.selection():
+            item_vals = self.treeview_services.item(selection)['values']
+            s_to_edit = self.bill.get_service(item_vals[0])
+            if item_vals[4] == "UNPAID":
+                s_to_edit.mark_as_paid()
+                self.btn_mark_as_paid.configure(text="✓ Mark as UNPAID")
+            else:
+                s_to_edit.mark_as_unpaid()
+                self.btn_mark_as_paid.configure(text="✓ Mark as PAID")
+            self.treeview_services.item(selection, values=s_to_edit.as_list())
+            
 
     def pull_from_db(self, refresh=True):
+        self.btn_delete.configure(state=tk.DISABLED)
+        self.btn_edit.configure(state=tk.DISABLED)
+        self.btn_mark_as_paid.configure(state=tk.DISABLED)
+        
         # remove all children from all treeviews
         self.treeview_carriers.delete(*self.treeview_carriers.get_children())
         self.treeview_services.delete(*self.treeview_services.get_children())
@@ -118,14 +156,12 @@ class DataDisplayContainerWidget(tk.Frame):
             self.bill.retrieve_data()
 
         # get data from db then insert to treeviews
-        self.treeview_insert_row(self.treeview_carriers, [
-                                 carrier.as_list() for carrier in self.bill.carriers])
-        self.treeview_insert_row(self.treeview_services, [
-                                 service.as_list() for service in self.bill.services])
-        self.treeview_insert_row(self.treeview_invoices, [
-                                 invoice.as_list() for invoice in self.bill.invoices])
+        self.treeview_insert_row(self.treeview_carriers, [carrier.as_list() for carrier in self.bill.carriers])
+        self.treeview_insert_row(self.treeview_services, [service.as_list() for service in self.bill.services])
+        self.treeview_insert_row(self.treeview_invoices, [invoice.as_list() for invoice in self.bill.invoices])
 
     def reset_attributes(self):
+        """Focus on master and permit mouse clicking."""
         self.master.unbind("<Button-1>", self.toplevel_force_focus_fid)
         self.master.focus_force()
         self.master.attributes("-disabled", False)
@@ -139,32 +175,43 @@ class DataDisplayContainerWidget(tk.Frame):
         self.toggle_treeview(index=idx)
 
     def toplevel_callback(self, event=None):
+        """`DDC` default call back."""
         self.reset_attributes()
 
     def toplevel_data_commit_callback(self):
+        """`DDC` commit data call back."""
         self.reset_attributes()
         self.bill.commit_to_db()
-
-    def toplevel_data_removal_callback(self, data_id: str or int):
+    
+    def toplevel_data_edit_callback(self, data: dict):
+        """`DDC` data edit call back."""
         self.reset_attributes()
-        pass
-
+        
+        if any(data.values()) and hasattr(self, "id_to_edit"):
+            if self.active_treeview == "Carriers":
+                self.bill.edit_carrier(carrier_id=self.id_to_edit, n_primary=data['primary'], n_address=data['address'], n_name=data['name'])
+                self.treeview_carriers.item(self.curr_selected, values=[self.id_to_edit] + list(data.values()))
+            elif self.active_treeview == "Services":
+                self.bill.edit_service(service_id=self.id_to_edit, n_description=data['description'], n_cost=data['cost'], n_date=data['date'])
+                self.treeview_services.item(self.curr_selected, values=[self.id_to_edit] + list(data.values()))
+            elif self.active_treeview == "Invoices":
+                # TODO: edit invoice here
+                pass
+        
     def toplevel_data_transfer_callback(self, data: dict):
+        """`DDC` data transfer (add) call back."""
         self.reset_attributes()
+        
         if any(data.values()):
             if self.active_treeview == "Carriers":
-                n_data = self.bill.new_carrier(
-                    data['name'], data['address'], data['primary'] == "PRIMARY")
+                n_data = self.bill.new_carrier(data['name'], data['address'], data['primary'] == "PRIMARY")
                 if data['primary'] == "PRIMARY":
                     self.pull_from_db(refresh=False)
                 else:
-                    self.treeview_insert_row(
-                        self.treeview_carriers, [n_data.as_list()])
+                    self.treeview_insert_row(self.treeview_carriers, [n_data.as_list()])
             elif self.active_treeview == "Services":
-                n_data = self.bill.new_service(
-                    data['description'], data['cost'], data['date'])
-                self.treeview_insert_row(
-                    self.treeview_services, [n_data.as_list()])
+                n_data = self.bill.new_service(data['description'], data['cost'], data['date'])
+                self.treeview_insert_row(self.treeview_services, [n_data.as_list()])
             elif self.active_treeview == "Invoices":
                 # TODO: generate new invoice here
                 pass
@@ -179,12 +226,33 @@ class DataDisplayContainerWidget(tk.Frame):
         self.toplevel_force_focus_fid = self.master.bind("<Button-1>", self.toplevel_force_focus)
         
         if self.active_treeview == "Carriers":
-            self.curr_toplvl = CarrierAddToplvlWidget(self.master)
+            self.curr_toplvl = CarrierAddEditToplvlWidget(self.master)
         elif self.active_treeview == "Services":
-            self.curr_toplvl = ServiceAddToplvlWidget(self.master)
+            self.curr_toplvl = ServiceAddEditToplvlWidget(self.master)
         elif self.active_treeview == "Invoices":
             # TODO: invoice adding gui
+            self.reset_attributes()
             pass
+    
+    def treeview_edit_selection(self) -> None:
+        self.master.attributes("-disabled", True)
+        self.toplevel_force_focus_fid = self.master.bind("<Button-1>", self.toplevel_force_focus)
+        
+        if self.active_treeview == "Carriers":
+            self.curr_selected = self.treeview_carriers.selection()[0]
+            self.id_to_edit = self.treeview_carriers.item(self.curr_selected)['values'][0]
+            self.curr_toplvl = CarrierAddEditToplvlWidget(master=self.master, carrier=self.bill.get_carrier(self.id_to_edit))
+
+        elif self.active_treeview == "Services":
+            self.curr_selected = self.treeview_services.selection()[0]
+            self.id_to_edit = self.treeview_services.item(self.curr_selected)['values'][0]
+            self.curr_toplvl = ServiceAddEditToplvlWidget(master=self.master, service=self.bill.get_service(self.id_to_edit))
+
+        elif self.active_treeview == "Invoices":
+            self.curr_selected = self.treeview_invoices.selection()[0]
+            self.id_to_edit = self.treeview_invoices.item(self.curr_selected)['values'][0]
+            
+            self.reset_attributes()
 
     def treeview_del_selection(self):
         if self.active_treeview == "Carriers":
@@ -212,8 +280,11 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_invoices.delete(*selections)
 
         self.btn_delete.configure(state=tk.DISABLED)
+        self.btn_edit.configure(state=tk.DISABLED)
+        self.btn_mark_as_paid.configure(state=tk.DISABLED)
 
     def treeview_sort_column(self, treeview, col, reverse=True):
+        """Sort treeview column by name."""
         l = [(treeview.set(k, col), k) for k in treeview.get_children('')]
         l.sort(key=lambda x: InsuranceBilling.dollar_to_float(x[0]) if col == 'cost' else x, reverse=reverse)
 
@@ -235,31 +306,39 @@ class DataDisplayContainerWidget(tk.Frame):
             treeview.insert("", tk.END, values=row)
 
     def treeview_click_handler(self, event):
+        # disable column resizing by disable mouse click at "separator"
         if event.widget.identify_region(event.x, event.y) == "separator":
             return "break"
+        
+        # `btn_delete` custom behaviour
         self.selected_item_id = event.widget.identify('item', event.x, event.y)
         self.selected_row = event.widget.item(self.selected_item_id)['values']
         if self.selected_item_id != "" and event.widget.exists(self.selected_item_id):
             self.btn_delete.configure(state=tk.NORMAL)
+            self.btn_edit.configure(state=tk.NORMAL)
+            self.btn_mark_as_paid.configure(state=tk.NORMAL)
+            
+            if self.active_treeview == "Services":
+                is_service_paid = self.treeview_services.item(self.selected_item_id)['values'][4] == "PAID"
+                if is_service_paid and self.btn_mark_as_paid['text'] != "✓ Mark as UNPAID":
+                    self.btn_mark_as_paid.configure(text="✓ Mark as UNPAID")
+                elif not is_service_paid and self.btn_mark_as_paid['text'] != "✓ Mark as PAID":
+                    self.btn_mark_as_paid.configure(text="✓ Mark as PAID")
         else:
-            self.treeview_carriers.selection_remove(
-                *self.treeview_carriers.selection())
-            self.treeview_services.selection_remove(
-                *self.treeview_services.selection())
-            self.treeview_invoices.selection_remove(
-                *self.treeview_invoices.selection())
+            self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
+            self.treeview_services.selection_remove(*self.treeview_services.selection())
+            self.treeview_invoices.selection_remove(*self.treeview_invoices.selection())
             self.btn_delete.configure(state=tk.DISABLED)
+            self.btn_edit.configure(state=tk.DISABLED)
+            self.btn_mark_as_paid.configure(state=tk.DISABLED)
 
     def add_test_data(self):
         self.treeview_insert_row(self.treeview_carriers, [['2', 'a', '789', 'NON-PRIMARY'],
-                                                          ['0', 'c', '123',
-                                                              'PRIMARY'],
-                                                          ['3', 'b', 'Street',
-                                                              'NON-PRIMARY'],
+                                                          ['0', 'c', '123', 'PRIMARY'],
+                                                          ['3', 'b', 'Street', 'NON-PRIMARY'],
                                                           ['1', 'd', '456', 'NON-PRIMARY'], ])
         self.treeview_insert_row(self.treeview_services, [['4', 'e', 'FDSF', '$12'],
-                                                          ['5', 'f', 'jd5r',
-                                                              '$888'],
+                                                          ['5', 'f', 'jd5r', '$888'],
                                                           ['6', 'g', 'io', '$1'],
                                                           ['7', 'h', '#$456', '$65'], ])
         self.treeview_insert_row(self.treeview_invoices, [
@@ -268,12 +347,9 @@ class DataDisplayContainerWidget(tk.Frame):
     def toggle_treeview(self, event: tk.Event = None, index=None):
         if index == 0 or (event is not None and event.widget.cget("text") == "Carriers"):
             self.active_treeview = "Carriers"
-            self.treeview_carriers.selection_remove(
-                *self.treeview_carriers.selection())
-            self.treeview_services.selection_remove(
-                *self.treeview_services.selection())
-            self.treeview_invoices.selection_remove(
-                *self.treeview_invoices.selection())
+            self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
+            self.treeview_services.selection_remove(*self.treeview_services.selection())
+            self.treeview_invoices.selection_remove(*self.treeview_invoices.selection())
             self.title_carriers.config(font="{Verdana} 10 {bold}")
             self.title_services.config(font="{Verdana} 10 {}")
             self.title_invoices.config(font="{Verdana} 10 {}")
@@ -282,14 +358,12 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=40, y=35)
             self.title_services.place(x=95, y=0)
+            self.btn_mark_as_paid.pack_forget()
         elif index == 1 or (event is not None and event.widget.cget("text") == "Services"):
             self.active_treeview = "Services"
-            self.treeview_carriers.selection_remove(
-                *self.treeview_carriers.selection())
-            self.treeview_services.selection_remove(
-                *self.treeview_services.selection())
-            self.treeview_invoices.selection_remove(
-                *self.treeview_invoices.selection())
+            self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
+            self.treeview_services.selection_remove(*self.treeview_services.selection())
+            self.treeview_invoices.selection_remove(*self.treeview_invoices.selection())
             self.title_carriers.config(font="{Verdana} 10 {}")
             self.title_services.config(font="{Verdana} 10 {bold}")
             self.title_invoices.config(font="{Verdana} 10 {}")
@@ -298,14 +372,12 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=119, y=35)
             self.title_services.place(x=93, y=0)
+            self.btn_mark_as_paid.pack(padx=10, side="right")
         elif index == 2 or (event is not None and event.widget.cget("text") == "Invoices"):
             self.active_treeview = "Invoices"
-            self.treeview_carriers.selection_remove(
-                *self.treeview_carriers.selection())
-            self.treeview_services.selection_remove(
-                *self.treeview_services.selection())
-            self.treeview_invoices.selection_remove(
-                *self.treeview_invoices.selection())
+            self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
+            self.treeview_services.selection_remove(*self.treeview_services.selection())
+            self.treeview_invoices.selection_remove(*self.treeview_invoices.selection())
             self.title_carriers.config(font="{Verdana} 10 {}")
             self.title_services.config(font="{Verdana} 10 {}")
             self.title_invoices.config(font="{Verdana} 10 {bold}")
@@ -314,93 +386,69 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=True)
             self.line_selector.place(x=202, y=35)
             self.title_services.place(x=95, y=0)
+            self.btn_mark_as_paid.pack_forget()
 
         self.selected_item_id = ""
         self.selected_row = ""
         self.btn_delete.configure(state=tk.DISABLED)
+        self.btn_edit.configure(state=tk.DISABLED)
+        self.btn_mark_as_paid.configure(state=tk.DISABLED)
 
     def create_carriers_tv(self, root):
         self.carrier_columns = ('id', 'name', 'address', 'primary')
         self.treeview_carriers = ttk.Treeview(root)
-        self.treeview_carriers.configure(
-            height=14, selectmode="extended", show="headings", columns=self.carrier_columns)
+        self.treeview_carriers.configure(height=14, selectmode="extended", show="headings", columns=self.carrier_columns)
         self.treeview_carriers.bind("<Button-1>", self.treeview_click_handler)
 
-        self.treeview_carriers.heading(
-            'id', text="ID", command=lambda: self.treeview_sort_column(self.treeview_carriers, 'id'))
+        self.treeview_carriers.heading('id', text="ID", command=lambda: self.treeview_sort_column(self.treeview_carriers, 'id'))
         self.treeview_carriers.column('id', anchor=tk.CENTER, width=50)
-        self.treeview_carriers.heading(
-            'name', text="Name", command=lambda: self.treeview_sort_column(self.treeview_carriers, 'name'))
+        self.treeview_carriers.heading('name', text="Name", command=lambda: self.treeview_sort_column(self.treeview_carriers, 'name'))
         self.treeview_carriers.column('name', anchor=tk.CENTER, width=400)
-        self.treeview_carriers.heading('address', text="Address", command=lambda: self.treeview_sort_column(
-            self.treeview_carriers, 'address'))
+        self.treeview_carriers.heading('address', text="Address", command=lambda: self.treeview_sort_column(self.treeview_carriers, 'address'))
         self.treeview_carriers.column('address', anchor=tk.CENTER, width=305)
-        self.treeview_carriers.heading('primary', text="Primary", command=lambda: self.treeview_sort_column(
-            self.treeview_carriers, 'primary'))
+        self.treeview_carriers.heading('primary', text="Primary", command=lambda: self.treeview_sort_column(self.treeview_carriers, 'primary'))
         self.treeview_carriers.column('primary', anchor=tk.CENTER, width=145)
 
     def create_services_tv(self, root):
-        self.service_columns = ('id', 'description',
-                                'date', 'cost', 'payment_status')
+        self.service_columns = ('id', 'description','date', 'cost', 'payment_status')
         self.treeview_services = ttk.Treeview(root)
-        self.treeview_services.configure(
-            height=14, selectmode="extended", show="headings", columns=self.service_columns)
+        self.treeview_services.configure(height=14, selectmode="extended", show="headings", columns=self.service_columns)
         self.treeview_services.bind("<Button-1>", self.treeview_click_handler)
 
-        self.treeview_services.heading(
-            'id', text="ID", command=lambda: self.treeview_sort_column(self.treeview_services, 'id'))
+        self.treeview_services.heading('id', text="ID", command=lambda: self.treeview_sort_column(self.treeview_services, 'id'))
         self.treeview_services.column('id', anchor=tk.CENTER, width=50)
-        self.treeview_services.heading('description', text="Description", command=lambda: self.treeview_sort_column(
-            self.treeview_services, 'description'))
-        self.treeview_services.column(
-            'description', anchor=tk.CENTER, width=440)
-        self.treeview_services.heading(
-            'date', text="Date", command=lambda: self.treeview_sort_column(self.treeview_services, 'date'))
+        self.treeview_services.heading('description', text="Description", command=lambda: self.treeview_sort_column(self.treeview_services, 'description'))
+        self.treeview_services.column('description', anchor=tk.CENTER, width=440)
+        self.treeview_services.heading('date', text="Date", command=lambda: self.treeview_sort_column(self.treeview_services, 'date'))
         self.treeview_services.column('date', anchor=tk.CENTER, width=135)
-        self.treeview_services.heading(
-            'cost', text="Cost", command=lambda: self.treeview_sort_column(self.treeview_services, 'cost'))
+        self.treeview_services.heading('cost', text="Cost", command=lambda: self.treeview_sort_column(self.treeview_services, 'cost'))
         self.treeview_services.column('cost', anchor=tk.CENTER, width=135)
-        self.treeview_services.heading('payment_status', text="Payment Status", command=lambda: self.treeview_sort_column(
-            self.treeview_services, 'payment_status'))
-        self.treeview_services.column(
-            'payment_status', anchor=tk.CENTER, width=140)
+        self.treeview_services.heading('payment_status', text="Payment Status", command=lambda: self.treeview_sort_column(self.treeview_services, 'payment_status'))
+        self.treeview_services.column('payment_status', anchor=tk.CENTER, width=140)
 
     def create_invoices_tv(self, root):
         # TODO: invoiced services will be in a different container
-        self.invoice_columns = ('id', 'invoiced_date', 'due_date', 'amt_due',
-                                'carrier_name', 'status', 'paid_date', 'days_overdue')
+        self.invoice_columns = ('id', 'invoiced_date', 'due_date', 'amt_due','carrier_name', 'status', 'paid_date', 'days_overdue')
         self.treeview_invoices = ttk.Treeview(root)
-        self.treeview_invoices.configure(
-            height=14, selectmode="extended", show="headings", columns=self.invoice_columns)
+        self.treeview_invoices.configure(height=14, selectmode="extended", show="headings", columns=self.invoice_columns)
         self.treeview_invoices.bind("<Button-1>", self.treeview_click_handler)
 
-        self.treeview_invoices.heading(
-            'id', text="ID", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'id'))
+        self.treeview_invoices.heading('id', text="ID", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'id'))
         self.treeview_invoices.column('id', anchor=tk.CENTER, width=50)
-        self.treeview_invoices.heading('invoiced_date', text="Invoiced", command=lambda: self.treeview_sort_column(
-            self.treeview_invoices, 'invoiced_date'))
-        self.treeview_invoices.column(
-            'invoiced_date', anchor=tk.CENTER, width=135)
-        self.treeview_invoices.heading('due_date', text="Due", command=lambda: self.treeview_sort_column(
-            self.treeview_invoices, 'due_date'))
+        self.treeview_invoices.heading('invoiced_date', text="Invoiced", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'invoiced_date'))
+        self.treeview_invoices.column('invoiced_date', anchor=tk.CENTER, width=135)
+        self.treeview_invoices.heading('due_date', text="Due", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'due_date'))
         self.treeview_invoices.column('due_date', anchor=tk.CENTER, width=135)
-        self.treeview_invoices.heading('amt_due', text="Amount", command=lambda: self.treeview_sort_column(
-            self.treeview_invoices, 'amt_due'))
+        self.treeview_invoices.heading('amt_due', text="Amount", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'amt_due'))
         self.treeview_invoices.column('amt_due', anchor=tk.CENTER, width=75)
-        self.treeview_invoices.heading('carrier_name', text="Carrier", command=lambda: self.treeview_sort_column(
-            self.treeview_invoices, 'carrier_name'))
-        self.treeview_invoices.column(
-            'carrier_name', anchor=tk.CENTER, width=135)
-        self.treeview_invoices.heading('status', text="Status", command=lambda: self.treeview_sort_column(
-            self.treeview_invoices, 'status'))
+        self.treeview_invoices.heading('carrier_name', text="Carrier", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'carrier_name'))
+        self.treeview_invoices.column('carrier_name', anchor=tk.CENTER, width=135)
+        self.treeview_invoices.heading('status', text="Status", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'status'))
         self.treeview_invoices.column('status', anchor=tk.CENTER, width=100)
-        self.treeview_invoices.heading('paid_date', text="Date Paid", command=lambda: self.treeview_sort_column(
-            self.treeview_invoices, 'paid_date'))
+        self.treeview_invoices.heading('paid_date', text="Date Paid", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'paid_date'))
         self.treeview_invoices.column('paid_date', anchor=tk.CENTER, width=135)
-        self.treeview_invoices.heading('days_overdue', text="Days Overdue", command=lambda: self.treeview_sort_column(
-            self.treeview_invoices, 'days_overdue'))
-        self.treeview_invoices.column(
-            'days_overdue', anchor=tk.CENTER, width=135)
+        self.treeview_invoices.heading('days_overdue', text="Days Overdue", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'days_overdue'))
+        self.treeview_invoices.column('days_overdue', anchor=tk.CENTER, width=135)
 
 
 if __name__ == "__main__":
