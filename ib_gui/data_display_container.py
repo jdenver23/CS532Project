@@ -59,54 +59,50 @@ class DataDisplayContainerWidget(tk.Frame):
         self.treeview_fr.pack(anchor="n", padx=10, pady=10, side="top")
 
         self.control_container = tk.Frame(self)
-        self.btn_delete = tk.Button(self.control_container)
-        self.btn_delete.configure(
-            background="#2980b9",
-            disabledforeground="black",
-            font="{Verdana} 10 {}",
-            foreground="white",
-            justify="left",
-            state="disabled",
-            takefocus=True,
-            text='× Delete')
-        self.btn_delete.pack(side="right")
-        self.btn_delete.configure(command=lambda: self.treeview_del_selection())
         self.btn_add = tk.Button(self.control_container)
         self.btn_add.configure(
             background="#2980b9",
             disabledforeground="black",
             font="{Verdana} 10 {}",
             foreground="white",
-            justify="left",
             takefocus=True,
             text='+ Add')
         self.btn_add.pack(padx=10, side="right")
         self.btn_add.configure(command=lambda: self.treeview_add_item_window())
+        
+        self.btn_delete = tk.Button(self.control_container)
+        self.btn_delete.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            state="disabled",
+            takefocus=True,
+            text='× Delete')
+        self.btn_delete.pack(side="left")
+        self.btn_delete.configure(command=lambda: self.treeview_del_selection())
         self.btn_edit = tk.Button(self.control_container)
         self.btn_edit.configure(
             background="#2980b9",
             disabledforeground="black",
             font="{Verdana} 10 {}",
             foreground="white",
-            justify="left",
             state="disabled",
             takefocus=True,
             text='✏️ Edit')
-        self.btn_edit.pack(side="right")
+        self.btn_edit.pack(padx=10, side="left")
         self.btn_edit.configure(command=lambda: self.treeview_edit_selection())
-        self.btn_mark_as_paid = tk.Button(self.control_container)
-        self.btn_mark_as_paid.configure(
+        self.btn_mark_as = tk.Button(self.control_container)
+        self.btn_mark_as.configure(
             background="#2980b9",
             disabledforeground="black",
             font="{Verdana} 10 {}",
             foreground="white",
-            justify="left",
             state="disabled",
-            takefocus=True,
-            text='✓ Mark as PAID')
-        self.btn_mark_as_paid.configure(command=lambda: self.selection_mark_as_paid())
+            takefocus=True)
+        self.btn_mark_as.configure(command=lambda: self.selection_mark_as())
 
-        self.control_container.pack(anchor="n", padx=30, side="right")
+        self.control_container.pack(anchor="n", padx=30, side="top", fill="x")
 
         self.configure(height=550, width=960)
         self.pack_propagate(0)
@@ -121,26 +117,62 @@ class DataDisplayContainerWidget(tk.Frame):
         
         self.pull_from_db()
     
-    def selection_mark_as_paid(self):
-        if self.active_treeview != "Services":
-            return
-        
-        for selection in self.treeview_services.selection():
-            item_vals = self.treeview_services.item(selection)['values']
-            s_to_edit = self.bill.get_service(item_vals[0])
-            if item_vals[4] == "UNPAID":
-                s_to_edit.mark_as_paid()
-                self.btn_mark_as_paid.configure(text="✓ Mark as UNPAID")
-            else:
-                s_to_edit.mark_as_unpaid()
-                self.btn_mark_as_paid.configure(text="✓ Mark as PAID")
-            self.treeview_services.item(selection, values=s_to_edit.as_list())
+    def selection_mark_as(self):
+        if self.active_treeview == "Carriers":
+            for selection in self.treeview_carriers.selection():
+                item_vals = self.treeview_carriers.item(selection)['values']
+                _id_to_edit = item_vals[0]
+                _to_edit = self.bill.get_carrier(_id_to_edit)
+                if item_vals[3] == "NON-PRIMARY":
+                    # set to primary
+                    self.bill.set_primary(_id_to_edit, True)
+                    self.btn_mark_as.configure(text="✓ Mark as NON-PRIMARY")
+                    
+                    for child in self.treeview_carriers.get_children():
+                        self.treeview_carriers.set(child, column="primary", value="NON-PRIMARY")
+                        
+                    self.treeview_carriers.set(selection, column="primary", value="PRIMARY")
+                else:
+                    # set to non-primary
+                    self.bill.set_primary(_id_to_edit, False)
+                    self.btn_mark_as.configure(text="✓ Mark as PRIMARY")
+                    
+                    last_child = self.treeview_carriers.get_children()[-1]
+                    if last_child == selection:
+                        last_child = self.treeview_carriers.get_children()[-2]
+                    self.treeview_carriers.set(last_child, column="primary", value="PRIMARY")
+                    self.treeview_carriers.set(selection, column="primary", value="NON-PRIMARY")
+                
+                
+        elif self.active_treeview == "Services":
+            for selection in self.treeview_services.selection():
+                item_vals = self.treeview_services.item(selection)['values']
+                _to_edit = self.bill.get_service(item_vals[0])
+                if item_vals[4] == "UNPAID":
+                    _to_edit.mark_as_paid()
+                    self.btn_mark_as.configure(text="✓ Mark as UNPAID")
+                else:
+                    _to_edit.mark_as_unpaid()
+                    self.btn_mark_as.configure(text="✓ Mark as PAID")
+                self.treeview_services.item(selection, values=_to_edit.as_list())
+                
+        elif self.active_treeview == "Invoices":
+            for selection in self.treeview_invoices.selection():
+                item_vals = self.treeview_invoices.item(selection)['values']
+                _to_edit = self.bill.get_invoice(item_vals[0])
+                if item_vals[5] == "UNPAID":
+                    _to_edit.mark_as_paid()
+                    self.btn_mark_as.configure(text="✓ Mark as UNPAID")
+                else:
+                    _to_edit.mark_as_unpaid()
+                    self.btn_mark_as.configure(text="✓ Mark as PAID")
+                self.treeview_invoices.item(selection, values=_to_edit.as_list())
             
 
     def pull_from_db(self, refresh=True):
         self.btn_delete.configure(state=tk.DISABLED)
         self.btn_edit.configure(state=tk.DISABLED)
-        self.btn_mark_as_paid.configure(state=tk.DISABLED)
+        self.btn_mark_as.configure(state=tk.DISABLED)
         
         # remove all children from all treeviews
         self.treeview_carriers.delete(*self.treeview_carriers.get_children())
@@ -277,7 +309,7 @@ class DataDisplayContainerWidget(tk.Frame):
 
         self.btn_delete.configure(state=tk.DISABLED)
         self.btn_edit.configure(state=tk.DISABLED)
-        self.btn_mark_as_paid.configure(state=tk.DISABLED)
+        self.btn_mark_as.configure(state=tk.DISABLED)
 
     def treeview_sort_column(self, treeview, col, reverse=True):
         """Sort treeview column by name."""
@@ -312,21 +344,38 @@ class DataDisplayContainerWidget(tk.Frame):
         if self.selected_item_id != "" and event.widget.exists(self.selected_item_id):
             self.btn_delete.configure(state=tk.NORMAL)
             self.btn_edit.configure(state=tk.NORMAL)
-            self.btn_mark_as_paid.configure(state=tk.NORMAL)
+            self.btn_mark_as.configure(state=tk.NORMAL)
             
-            if self.active_treeview == "Services":
+            if self.active_treeview == "Carriers":
+                is_carrier_primary = self.treeview_carriers.item(self.selected_item_id)['values'][3] == "PRIMARY"
+                if is_carrier_primary and self.btn_mark_as['text'] != "✓ Mark as NON-PRIMARY":
+                    self.btn_mark_as.configure(text="✓ Mark as NON-PRIMARY")
+                elif not is_carrier_primary and self.btn_mark_as['text'] != "✓ Mark as PRIMARY":
+                    self.btn_mark_as.configure(text="✓ Mark as PRIMARY")
+                    
+            elif self.active_treeview == "Services":
                 is_service_paid = self.treeview_services.item(self.selected_item_id)['values'][4] == "PAID"
-                if is_service_paid and self.btn_mark_as_paid['text'] != "✓ Mark as UNPAID":
-                    self.btn_mark_as_paid.configure(text="✓ Mark as UNPAID")
-                elif not is_service_paid and self.btn_mark_as_paid['text'] != "✓ Mark as PAID":
-                    self.btn_mark_as_paid.configure(text="✓ Mark as PAID")
+                if is_service_paid and self.btn_mark_as['text'] != "✓ Mark as UNPAID":
+                    self.btn_mark_as.configure(text="✓ Mark as UNPAID")
+                elif not is_service_paid and self.btn_mark_as['text'] != "✓ Mark as PAID":
+                    self.btn_mark_as.configure(text="✓ Mark as PAID")
+                    
+            elif self.active_treeview == "Invoices":
+                is_invoice_paid = self.treeview_invoices.item(self.selected_item_id)['values'][5] == "PAID"
+                if is_invoice_paid and self.btn_mark_as['text'] != "✓ Mark as UNPAID":
+                    self.btn_mark_as.configure(text="✓ Mark as UNPAID")
+                elif not is_invoice_paid and self.btn_mark_as['text'] != "✓ Mark as PAID":
+                    self.btn_mark_as.configure(text="✓ Mark as PAID")
+            
+            self.btn_mark_as.pack(side="right")
+            
         else:
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
             self.treeview_services.selection_remove(*self.treeview_services.selection())
             self.treeview_invoices.selection_remove(*self.treeview_invoices.selection())
             self.btn_delete.configure(state=tk.DISABLED)
             self.btn_edit.configure(state=tk.DISABLED)
-            self.btn_mark_as_paid.configure(state=tk.DISABLED)
+            self.btn_mark_as.configure(state=tk.DISABLED)
 
     def add_test_data(self):
         self.treeview_insert_row(self.treeview_carriers, [['2', 'a', '789', 'NON-PRIMARY'],
@@ -354,7 +403,7 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=40, y=35)
             self.title_services.place(x=95, y=0)
-            self.btn_mark_as_paid.pack_forget()
+            self.btn_mark_as.pack_forget()
         elif index == 1 or (event is not None and event.widget.cget("text") == "Services"):
             self.active_treeview = "Services"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -368,7 +417,7 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=119, y=35)
             self.title_services.place(x=93, y=0)
-            self.btn_mark_as_paid.pack(padx=10, side="right")
+            self.btn_mark_as.pack_forget()
         elif index == 2 or (event is not None and event.widget.cget("text") == "Invoices"):
             self.active_treeview = "Invoices"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -382,13 +431,13 @@ class DataDisplayContainerWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=True)
             self.line_selector.place(x=202, y=35)
             self.title_services.place(x=95, y=0)
-            self.btn_mark_as_paid.pack_forget()
+            self.btn_mark_as.pack_forget()
 
         self.selected_item_id = ""
         self.selected_row = ""
         self.btn_delete.configure(state=tk.DISABLED)
         self.btn_edit.configure(state=tk.DISABLED)
-        self.btn_mark_as_paid.configure(state=tk.DISABLED)
+        self.btn_mark_as.configure(state=tk.DISABLED)
 
     def create_carriers_tv(self, root):
         self.carrier_columns = ('id', 'name', 'address', 'primary')

@@ -1,46 +1,66 @@
 import tkinter as tk
 from tkinter import messagebox
+from enum import Enum
 from .utils import tk_center
 from .navbar_container import NavbarContainerWidget
 from .user_info_container import UserInfoContainerWidget
 from .seperator_container import SeperatorContainerWidget
 from .data_display_container import DataDisplayContainerWidget
+from InsuranceBilling import InsuranceBilling
 
-# TODO: check uid for security
+EMPLOYEE_RANGE_L = 30000000
+EMPLOYEE_RANGE_H = 40000000
+
+ADMIN_IDS = ["1111"]
+
+class UIMode(Enum):
+    PATIENT = 0
+    EMPLOYEE = 1
 
 class MainGUI(tk.Tk):
-    def __init__(self, bill, master=None, enabled_test_data=False, **kw):
-        # assert bill is not None, f"Invalid `InsuranceBilling` class instance."
+    def __init__(self, bill: InsuranceBilling, master=None, enabled_test_data=False, **kw):
         super(MainGUI, self).__init__(master, **kw)
         self.bill = bill
         
         self.title("Healthcare Permanente - Insurance Billing")
         self.resizable(False, False)
         r = 0
-
-        self.sep0_widget = SeperatorContainerWidget(self, show=False)
-        self.sep0_widget.grid(column=0, row=r, pady=5)
-        r += 1
         
-        self.navbar_widget = NavbarContainerWidget(master=self, bill=bill)
-        self.navbar_widget.grid(column=0, row=r)
-        r += 1
+        self.ui_mode = UIMode.PATIENT
         
-        self.user_info_widget = UserInfoContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
-        self.user_info_widget.grid(column=0, row=r)
-        r += 1
+        if self.bill.id >= EMPLOYEE_RANGE_L and self.bill.id < EMPLOYEE_RANGE_H:
+            self.ui_mode = UIMode.EMPLOYEE
+            
         
-        self.sep1_widget = SeperatorContainerWidget(self)
-        self.sep1_widget.grid(column=0, row=r, pady=10)
-        r += 1
-        
-        self.data_display_widget = DataDisplayContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
-        self.data_display_widget.grid(column=0, row=r)
-        r += 1
-        
-        self.sep2_widget = SeperatorContainerWidget(self, show=False)
-        self.sep2_widget.grid(column=0, row=r, pady=5)
-        r += 1
+        # EMPLOYEE GUI VIEW
+        if self.ui_mode == UIMode.EMPLOYEE or str(self.bill.id) in ADMIN_IDS:
+            self.sep0_widget = SeperatorContainerWidget(self, show=False)
+            self.sep0_widget.grid(column=0, row=r, pady=5)
+            r += 1
+            
+            self.navbar_widget = NavbarContainerWidget(master=self, bill=bill)
+            self.navbar_widget.grid(column=0, row=r)
+            r += 1
+            
+            self.user_info_widget = UserInfoContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
+            self.user_info_widget.grid(column=0, row=r)
+            r += 1
+            
+            self.sep1_widget = SeperatorContainerWidget(self)
+            self.sep1_widget.grid(column=0, row=r, pady=10)
+            r += 1
+            
+            self.data_display_widget = DataDisplayContainerWidget(master=self, bill=self.bill, test_data=enabled_test_data)
+            self.data_display_widget.grid(column=0, row=r)
+            r += 1
+            
+            self.sep2_widget = SeperatorContainerWidget(self, show=False)
+            self.sep2_widget.grid(column=0, row=r, pady=5)
+            r += 1
+            
+        # PATIENT GUI VIEW
+        else:
+            pass
         
         self.wm_protocol("WM_DELETE_WINDOW", self.on_closing)
         

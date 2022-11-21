@@ -181,6 +181,7 @@ class InsuranceInvoice:
                  invoiced_services: list[InsuranceService] = None, date_invoiced: datetime = None, date_paid: datetime = None) -> None:
         self.id = id
         self.amount_due = to_dollar(amount_due)
+        self.cost = amount_due
 
         # info variables
         # [0: name
@@ -221,6 +222,16 @@ class InsuranceInvoice:
         self.status = PaymentStatus.PAID
         self.date_paid = datetime.now() if date_paid is None else date_paid
         self.days_overdue = max(0, (self.date_paid - self.due_date).days)
+    
+    def mark_as_unpaid(self) -> None:
+        """
+            Set status to `UNPAID`.
+        """
+        self.amount_due = self.cost
+        self.status = PaymentStatus.UNPAID
+        self.date_paid = None
+        self.days_overdue = 0
+    
 
     def get_last_day_of_month(self, year: str or int=None, month: str or int=None):
         """
@@ -575,14 +586,24 @@ class InsuranceBilling:
                 return True
         return False
 
-    def set_primary(self, carrier_id: str or int, primary: bool=True) -> bool:
+    def set_primary(self, carrier_id: str or int, to_primary: bool=True) -> bool:
         """ Set a carrier primary status. Return `False` if `carrier_id` is not found. """
+        carrier_id = str(carrier_id)
         for carrier in self.carriers:
             if carrier is not None and carrier.id == carrier_id:
-                for all_carrier in self.carriers:
-                    if all_carrier is not None:
-                        all_carrier.primary = not primary
-                carrier.primary = primary
+                # set all other carriers primary to False if new primary is True
+                if to_primary:
+                    for all_carrier in self.carriers:
+                        if all_carrier is not None:
+                            all_carrier.primary = False
+                            
+                if carrier.primary and not to_primary and len(self.carriers) > 1:
+                    if self.carriers[-1] != carrier:
+                        self.carriers[-1].primary = True
+                    else:
+                        self.carriers[-2].primary = True
+                carrier.primary = to_primary
+                
                 self.local_changes_made = True
                 return True
         return False
@@ -748,6 +769,14 @@ class InsuranceBilling:
                 return True
 
         return False
+    
+    def get_invoice(self, invoice_id: str or int) -> InsuranceInvoice:
+        invoice_id = str(invoice_id)
+        """ Return the instance of `InsuranceInvoice` that has the same `invoice_id`. """
+        for invoice in self.invoices:
+            if invoice is not None and invoice.id == invoice_id:
+                return invoice
+        return None
 
     def invoice_info(self, invoice_id: str or int=None) -> str:
         """ 
