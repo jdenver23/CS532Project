@@ -1,13 +1,9 @@
 #!/usr/bin/python3
-import InsuranceBilling
 import tkinter as tk
 import tkinter.ttk as ttk
 from .data_display_container_carrier_addedit_toplvl import CarrierAddEditToplvlWidget
 from .data_display_container_service_addedit_toplvl import ServiceAddEditToplvlWidget
-import sys
-
-# add .. to import from above top level package
-sys.path.append("..")
+from InsuranceBilling import InsuranceBilling
 
 
 class DataDisplayContainerWidget(tk.Frame):
@@ -52,7 +48,7 @@ class DataDisplayContainerWidget(tk.Frame):
         self.create_invoices_tv(self.treeview_fr)
         self.treeview_forced_set_state(self.treeview_carriers, show=True)
         self.active_treeview = "Carriers"
-
+        
         if test_data:
             self.add_test_data()
 

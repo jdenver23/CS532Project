@@ -3,10 +3,11 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import messagebox
 from .utils import tk_center
+from InsuranceBilling import InsuranceCarrier
 
 
 class CarrierAddEditToplvlWidget(tk.Toplevel):
-    def __init__(self, master=None, carrier=None, **kw):
+    def __init__(self, master=None, carrier: InsuranceCarrier=None, **kw):
         super(CarrierAddEditToplvlWidget, self).__init__(master, **kw)
         self.master = master
         self.c_carrier = carrier

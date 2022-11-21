@@ -4,11 +4,11 @@ from tkinter import messagebox, StringVar
 # external package -> 'pip install tkcalendar' to install
 from tkcalendar import Calendar
 from .utils import tk_center
-from InsuranceBilling import date_convert
+from InsuranceBilling import date_convert, InsuranceService
 
 
 class ServiceAddEditToplvlWidget(tk.Toplevel):
-    def __init__(self, master=None, service=None, **kw):
+    def __init__(self, master=None, service: InsuranceService=None, **kw):
         super(ServiceAddEditToplvlWidget, self).__init__(master, **kw)
         self.master = master
         self.c_service = service

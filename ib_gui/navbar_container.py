@@ -3,13 +3,10 @@ from tkinter import messagebox
 from .utils import get_icon
 import homepage
 import login
-import sys
-
-# add .. to import from above top level package
-sys.path.append("..")
+from InsuranceBilling import InsuranceBilling
 
 class NavbarContainerWidget(tk.Frame):
-    def __init__(self, bill, master=None, **kw):
+    def __init__(self, bill: InsuranceBilling, master=None, **kw):
         super(NavbarContainerWidget, self).__init__(master, **kw)
         self.bill = bill
         self.master = master

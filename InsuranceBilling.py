@@ -42,7 +42,7 @@ DATE_TIME_FORMAT_F = '%m-%d-%Y %H:%M:%S.%f'
 locale.setlocale(locale.LC_ALL, '')
 
 
-def to_dollar(amount, grouping=True) -> str:
+def to_dollar(amount: str or int or float, grouping: bool=True) -> str:
     """ 
         Convert `amount` into a proper dollar currency format. 
 
@@ -58,13 +58,14 @@ def to_dollar(amount, grouping=True) -> str:
     return locale.currency(float(amount), grouping=grouping)
 
 
-def dollar_to_float(amount) -> float:
+def dollar_to_float(amount: str or int or float) -> float:
+    amount = str(amount)
     for r in ["$", ","]:
         amount = amount.replace(r, '')
     return float(amount)
 
 
-def date_convert(_date: str, _type="date"):
+def date_convert(_date: str, _type: str="date"):
     if _date in NONE: return ""
     _date = str(_date)
     for format in [DATETIME_FORMAT_F, DATETIME_FORMAT, DATE_FORMAT, DATE_TIME_FORMAT, DATE_TIME_FORMAT_F]:
@@ -107,7 +108,7 @@ class PaymentStatus(Enum):
 
 
 class InsuranceCarrier:
-    def __init__(self, id, name, address, primary=False) -> None:
+    def __init__(self, id: str or int, name: str, address: str, primary: bool=False) -> None:
         self.id = id
         self.name = name
         self.address = address
@@ -121,7 +122,7 @@ class InsuranceCarrier:
     def as_list(self) -> list[str]:
         return [self.id, self.name, self.address, 'PRIMARY' if self.primary else 'NON-PRIMARY']
 
-    def as_csv_entry(self, delimiter=IB_DB_FIELD_DELIMITER) -> str:
+    def as_csv_entry(self, delimiter: str=IB_DB_FIELD_DELIMITER) -> str:
         return f"{self.id}{delimiter}{self.name}{delimiter}{self.address}{delimiter}{self.status.name}{delimiter}{'PRIMARY' if self.primary else 'NON-PRIMARY'}"
 
     def __repr__(self) -> str:
@@ -132,7 +133,7 @@ class InsuranceCarrier:
 
 
 class InsuranceService:
-    def __init__(self, id, description, cost, date: datetime = None) -> None:
+    def __init__(self, id: str or int, description: str, cost: str or int, date: datetime = None) -> None:
         self.id = id
         self.description = description
         self.cost = to_dollar(cost)
@@ -165,7 +166,7 @@ class InsuranceService:
     def mark_as_unpaid(self) -> None:
         self.payment_status = PaymentStatus.UNPAID
 
-    def as_csv_entry(self, delimiter=IB_DB_FIELD_DELIMITER) -> str:
+    def as_csv_entry(self, delimiter: str=IB_DB_FIELD_DELIMITER) -> str:
         return f"{self.id}{delimiter}{self.description}{delimiter}{self.get_cost()}{delimiter}{self.date}{delimiter}{self.payment_status.name}"
 
     def __repr__(self) -> str:
@@ -176,7 +177,8 @@ class InsuranceService:
 
 
 class InsuranceInvoice:
-    def __init__(self, id=0, status: PaymentStatus = PaymentStatus.UNPAID, amount_due="$0", patient_info: list[str] = None, carrier_info: list[str] = None, invoiced_services: list[InsuranceService] = None, date_invoiced: datetime = None, date_paid: datetime = None) -> None:
+    def __init__(self, id: str or int=0, status: PaymentStatus = PaymentStatus.UNPAID, amount_due: str or int="$0", patient_info: list[str] = None, carrier_info: list[str] = None, 
+                 invoiced_services: list[InsuranceService] = None, date_invoiced: datetime = None, date_paid: datetime = None) -> None:
         self.id = id
         self.amount_due = to_dollar(amount_due)
 
@@ -220,7 +222,7 @@ class InsuranceInvoice:
         self.date_paid = datetime.now() if date_paid is None else date_paid
         self.days_overdue = max(0, (self.date_paid - self.due_date).days)
 
-    def get_last_day_of_month(self, year=None, month=None):
+    def get_last_day_of_month(self, year: str or int=None, month: str or int=None):
         """
             Return the last day of specified year and month of invoiced date
         """
@@ -253,7 +255,7 @@ class InsuranceInvoice:
                  \r{"-"*16}\
                  \nAmount due: {self.amount_due}\t\tTotal cost: {to_dollar(total_cost)}""".expandtabs(4)
 
-    def as_csv_entry(self, delimiter=IB_DB_II_FIELD_DELIMITER) -> str:
+    def as_csv_entry(self, delimiter: str=IB_DB_II_FIELD_DELIMITER) -> str:
         invoiced_services_csv = IN_DELIMITER.join(
             s.as_csv_entry() for s in self.invoiced_services)
         return f"{self.id}{delimiter}{self.status.name}{delimiter}{self.amount_due}{delimiter}{self.patient_info_csv}{delimiter}{self.carrier_info_csv}{delimiter}{invoiced_services_csv}{delimiter}{self.date_invoiced}{delimiter}{self.due_date}{delimiter}{self.date_paid}{delimiter}{self.days_overdue}"
@@ -447,7 +449,7 @@ class InsuranceBilling:
             if actions > 0:
                 self.local_changes_made = False
 
-    def sort_local_db(self, sort_by_id=False, sort_by_name=False, sort_by_cost=False, reversed=False) -> None:
+    def sort_local_db(self, sort_by_id: bool=False, sort_by_name: bool=False, sort_by_cost: bool=False, reversed: bool=False) -> None:
         """
             Sort the local database according to the argument.\n
             Note: only one `sort_by_[]` can be used at a time.
@@ -472,7 +474,7 @@ class InsuranceBilling:
     # ---------------
     #   CARRIERS
     # ---------------
-    def new_carrier(self, carrier_name, carrier_address, primary=False) -> str:
+    def new_carrier(self, carrier_name: str, carrier_address: str, primary: bool=False) -> str:
         """ 
             Add a row of new Insurance Carrier to the local database.\n
             If `primary` is `True`, set all other carriers' `primary` key to `False`.\n
@@ -516,7 +518,7 @@ class InsuranceBilling:
 
         return n_carrier
 
-    def remove_carrier(self, carrier_id) -> bool:
+    def remove_carrier(self, carrier_id: str or int) -> bool:
         """ 
             Remove the row of where `carrier_id` is found in the local database.
 
@@ -545,7 +547,7 @@ class InsuranceBilling:
 
         return False
 
-    def get_carrier(self, carrier_id) -> InsuranceCarrier:
+    def get_carrier(self, carrier_id: str or int) -> InsuranceCarrier:
         """ Return the instance of `InsuranceCarrier` that has the same `carrier_id`. """
         carrier_id = str(carrier_id)
         for carrier in self.carriers:
@@ -553,7 +555,7 @@ class InsuranceBilling:
                 return carrier
         return None
     
-    def edit_carrier(self, carrier_id, to_carrier: InsuranceCarrier) -> bool:
+    def edit_carrier(self, carrier_id: str or int, to_carrier: InsuranceCarrier) -> bool:
         """ Replace an instance of `InsuranceCarrier` with a new `InsuranceCarrier`. """
         carrier_id = str(carrier_id)
         for i in range(len(self.carriers)):
@@ -562,7 +564,7 @@ class InsuranceBilling:
                 return True
         return False
     
-    def edit_carrier(self, carrier_id, n_name=None, n_address=None, n_primary: bool=None) -> bool:
+    def edit_carrier(self, carrier_id: str or int, n_name: str=None, n_address: str=None, n_primary: bool=None) -> bool:
         """ Replace an instance of `InsuranceCarrier` with specified options. """
         carrier_id = str(carrier_id)
         for i in range(len(self.carriers)):
@@ -573,7 +575,7 @@ class InsuranceBilling:
                 return True
         return False
 
-    def set_primary(self, carrier_id, primary=True) -> bool:
+    def set_primary(self, carrier_id: str or int, primary: bool=True) -> bool:
         """ Set a carrier primary status. Return `False` if `carrier_id` is not found. """
         for carrier in self.carriers:
             if carrier is not None and carrier.id == carrier_id:
@@ -588,7 +590,7 @@ class InsuranceBilling:
     # ---------------
     #   SERVICES
     # ---------------
-    def new_service(self, service_description, service_cost, date=datetime.now(), fillin_id=True) -> str:
+    def new_service(self, service_description: str, service_cost: str or int, date: datetime or str=datetime.now(), fillin_id: bool=True) -> str:
         """ 
             Add a row of new Service to the local database.\n
             Note: use `commit_to_db()` in order to save local changes to the database.
@@ -615,7 +617,7 @@ class InsuranceBilling:
 
         return n_service
 
-    def remove_service(self, service_id) -> bool:
+    def remove_service(self, service_id: str or int) -> bool:
         """ 
             Remove the row of where `service_id` is found in the local database.\n
             Note: use `commit_to_db()` in order to save local changes to the database.
@@ -636,7 +638,7 @@ class InsuranceBilling:
 
         return False
 
-    def get_service(self, service_id) -> InsuranceService:
+    def get_service(self, service_id: str or int) -> InsuranceService:
         service_id = str(service_id)
         """ Return the instance of `InsuranceService` that has the same `service_id`. """
         for service in self.services:
@@ -644,7 +646,7 @@ class InsuranceBilling:
                 return service
         return None
     
-    def edit_service(self, service_id, to_service: InsuranceService) -> bool:
+    def edit_service(self, service_id: str or int, to_service: InsuranceService) -> bool:
         """ Replace an instance of `InsuranceService` with a new `InsuranceService`. """
         service_id = str(service_id)
         for i in range(len(self.services)):
@@ -653,7 +655,7 @@ class InsuranceBilling:
                 return True
         return False
     
-    def edit_service(self, service_id, n_description=None, n_cost=None, n_date=None) -> bool:
+    def edit_service(self, service_id: str or int, n_description: str=None, n_cost: str or int=None, n_date: str or datetime=None) -> bool:
         """ Replace an instance of `InsuranceService` with a new `InsuranceService`. """
         service_id = str(service_id)
         for i in range(len(self.services)):
@@ -667,7 +669,7 @@ class InsuranceBilling:
     # ---------------
     #   INVOICES
     # ---------------
-    def generate_invoice(self, month=None) -> str:
+    def generate_invoice(self, month:str or int=None) -> str:
         """ 
             Generate invoice from this **current** billing cycle (customizable through
             `month=` argument) then append it to local invoice list.
@@ -726,7 +728,7 @@ class InsuranceBilling:
 
         return n_invoice
 
-    def remove_invoice(self, invoice_id) -> bool:
+    def remove_invoice(self, invoice_id: str or int) -> bool:
         """ 
             Remove the row of where `invoice_id` is found in the local database.\n
             Note: use `commit_to_db()` in order to save local changes to the database.
@@ -747,7 +749,7 @@ class InsuranceBilling:
 
         return False
 
-    def invoice_info(self, invoice_id=None) -> str:
+    def invoice_info(self, invoice_id: str or int=None) -> str:
         """ 
             Return invoice as string. Format as below:
 
@@ -777,7 +779,7 @@ class InsuranceBilling:
 
         return ""
 
-    def pay_for_invoice(self, invoice_id, amount="$0", pay_in_full=False) -> bool:
+    def pay_for_invoice(self, invoice_id: str or int, amount: str or int="$0", pay_in_full: bool=False) -> bool:
         """
             Make a payment to `invoice_id` with specified `amount`.
 
@@ -825,7 +827,7 @@ class InsuranceBilling:
     # ---------------
     #   REPORTS
     # ---------------
-    def generate_report(self, patient_name=None, carrier: InsuranceCarrier = None, carrier_name=None, carrier_address=None) -> str:
+    def generate_report(self, patient_name: str=None, carrier: InsuranceCarrier = None, carrier_name: str=None, carrier_address: str=None) -> str:
         """ 
             Generate reports of delinquent invoices either by `patient_name` or `carrier`.
 
