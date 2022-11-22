@@ -91,7 +91,7 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
             justify="left",
             takefocus=True,
             text='Done ✓')
-        self.btn_done.pack(side="right")
+        self.btn_done.pack(ipadx=5, ipady=5, side="right")
         self.btn_done.configure(command=self.form_submit)
         self.btn_cancel = tk.Button(self.control_container)
         self.btn_cancel.configure(
@@ -101,11 +101,11 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
             foreground="white",
             justify="left",
             text='× Cancel')
-        self.btn_cancel.pack(padx=10, side="right")
+        self.btn_cancel.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
-        self.control_container.pack(anchor="e", padx=30, pady=20, side="bottom")
+        self.control_container.pack(padx=30, pady=20, side="bottom", fill="x")
         
-        self.geometry("640x260")
+        self.geometry("640x270")
         self.resizable(False, False)
         self.title("Add/Edit service - Healthcare Permanente")
         self.protocol("WM_DELETE_WINDOW", self.form_cancel)
@@ -115,7 +115,7 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
 
         self.ddc = self.master.calls(widget_name="ddc")
 
-        tk_center(self, gui_w=640, gui_h=260)
+        tk_center(self, gui_w=640, gui_h=270)
         self.focus_force()
 
     def cost_entry_upd(self, *event):
@@ -128,14 +128,17 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
                 x, y = self.cost_frame.winfo_x(), self.cost_frame.winfo_y()
                 self.lb_warning.configure(text="Only digits (0-9) and ',.' are allowed here.")
                 self.lb_warning.place(x=x*1.9, y=y+85)
+                self.btn_done.configure(state=tk.DISABLED)
             else:
                 if "." in value:
                     if len(value[value.find(".")+1:]) > 2:
                         x, y = self.cost_frame.winfo_x(), self.cost_frame.winfo_y()
                         self.lb_warning.configure(text="Cent part should only have at most 2 digits.")
                         self.lb_warning.place(x=x*1.9, y=y+85)
+                        self.btn_done.configure(state=tk.DISABLED)
                         return
                 self.lb_warning.place_forget()
+                self.btn_done.configure(state=tk.NORMAL)
 
     def calendar_selection(self, event=None):
         self.entry_date.delete(0, tk.END)

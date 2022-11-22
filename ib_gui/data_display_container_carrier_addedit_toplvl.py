@@ -73,7 +73,7 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
             justify="left",
             takefocus=True,
             text='Done ✓')
-        self.btn_done.pack(side="right")
+        self.btn_done.pack(ipadx=5, ipady=5, side="right")
         self.btn_done.configure(command=self.form_submit)
         self.btn_cancel = tk.Button(self.control_container)
         self.btn_cancel.configure(
@@ -83,29 +83,33 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
             foreground="white",
             justify="left",
             text='× Cancel')
-        self.btn_cancel.pack(padx=10, side="right")
+        self.btn_cancel.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
-        self.control_container.pack(anchor="e", padx=30, pady=20, side="bottom")
+        self.control_container.pack(padx=30, pady=20, side="bottom", fill="x")
         
-        self.geometry("640x260")
+        self.geometry("640x270")
         self.resizable(False, False)
         self.title("Adding new carrier - Healthcare Permanente")
         self.protocol("WM_DELETE_WINDOW", self.form_cancel)
 
         self.lb_warning = tk.Label(self)
-        self.lb_warning.configure(font="{Verdana} 8 {bold}", fg='#ffaa00',
-                                  text="Warning: by setting this to PRIMARY will modify all other\ncarriers primary status to NON-PRIMARY.")
+        self.lb_warning.configure(font="{Verdana} 8 {bold}", fg='#ffaa00')
 
 
         self.ddc = self.master.calls(widget_name="ddc")
         
-        tk_center(self, gui_w=640, gui_h=260)
+        tk_center(self, gui_w=640, gui_h=270)
         self.focus_force()
 
     def primary_entry_upd(self, event=None):
-        if self.entry_primary.get() == "PRIMARY":
+        if not self.c_carrier.primary and self.entry_primary.get() == "PRIMARY":
             x, y = event.widget.winfo_x(), event.widget.winfo_y()
+            self.lb_warning.configure(text="Warning: by setting this to PRIMARY will modify all other\ncarriers primary status to NON-PRIMARY.")
             self.lb_warning.place(x=x*1.7, y=y+80)
+        elif self.c_carrier.primary and self.entry_primary.get() == "NON-PRIMARY":
+            x, y = event.widget.winfo_x(), event.widget.winfo_y()
+            self.lb_warning.configure(text="Warning: by setting this to NON-PRIMARY will assign the most\nrecent carrier primary status to PRIMARY.")
+            self.lb_warning.place(x=x*1.5, y=y+80)
         else:
             self.lb_warning.place_forget()
 

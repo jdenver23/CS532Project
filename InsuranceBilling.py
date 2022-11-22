@@ -5,7 +5,6 @@ from pathlib import Path
 import os
 import locale
 import csv
-from ib_gui import ib_gui
 
 
 # IB_DB key format:
@@ -108,12 +107,12 @@ class PaymentStatus(Enum):
 
 
 class InsuranceCarrier:
-    def __init__(self, id: str or int, name: str, address: str, primary: bool=False) -> None:
+    def __init__(self, id: str or int, name: str, address: str, primary: bool or str=False) -> None:
         self.id = id
         self.name = name
         self.address = address
         self.status = PaymentStatus.ONTIME
-        self.primary = primary
+        self.primary = primary if type(primary) == bool else primary == "PRIMARY"
         self.set_repr(self.id)
 
     def set_repr(self, repr) -> None:
@@ -137,6 +136,7 @@ class InsuranceService:
         self.id = id
         self.description = description
         self.cost = to_dollar(cost)
+        self.amount_due = self.cost
         self.set_date(date)
         self.payment_status = PaymentStatus.UNPAID
         self.set_repr(self.id)
@@ -149,6 +149,12 @@ class InsuranceService:
                     self.date = datetime.strptime(str(self.date), format)
                 except:
                     pass
+    
+    def pay(self, amount: str or int or float) -> None:
+        self.amount_due = max(0.0, dollar_to_float(self.amount_due) - dollar_to_float(amount))
+        if self.amount_due == 0.0:
+            self.mark_as_paid()
+        self.amount_due = to_dollar(self.amount_due)
 
     def set_repr(self, repr) -> None:
         self.repr = repr
@@ -177,11 +183,11 @@ class InsuranceService:
 
 
 class InsuranceInvoice:
-    def __init__(self, id: str or int=0, status: PaymentStatus = PaymentStatus.UNPAID, amount_due: str or int="$0", patient_info: list[str] = None, carrier_info: list[str] = None, 
+    def __init__(self, id: str or int=0, status: PaymentStatus = PaymentStatus.UNPAID, total_cost: str or int="$0", patient_info: list[str] = None, carrier_info: list[str] = None, 
                  invoiced_services: list[InsuranceService] = None, date_invoiced: datetime = None, date_paid: datetime = None) -> None:
         self.id = id
-        self.amount_due = to_dollar(amount_due)
-        self.cost = amount_due
+        self.amount_due = to_dollar(total_cost)
+        self.total_cost = self.amount_due
 
         # info variables
         # [0: name
@@ -227,7 +233,7 @@ class InsuranceInvoice:
         """
             Set status to `UNPAID`.
         """
-        self.amount_due = self.cost
+        self.amount_due = self.total_cost
         self.status = PaymentStatus.UNPAID
         self.date_paid = None
         self.days_overdue = 0
@@ -242,8 +248,8 @@ class InsuranceInvoice:
         return calendar.monthrange(self.date_invoiced.year, self.date_invoiced.month)[1]
 
     def as_list(self) -> list[str]:
-        return [self.id, str(self.date_invoiced.strftime('%m/%d/%Y')), str(self.due_date.strftime('%m-%d-%Y')) if self.due_date is not None else "",
-                self.amount_due, self.carrier_info[0], self.status.name, str(self.date_paid.strftime('%m-%d-%Y')) if self.date_paid is not None else "", self.days_overdue]
+        return [self.id, str(self.date_invoiced.strftime(DATE_FORMAT)), str(self.due_date.strftime(DATE_FORMAT)) if self.due_date is not None else "", self.amount_due,
+                self.total_cost, self.carrier_info[0], self.status.name, str(self.date_paid.strftime(DATE_FORMAT)) if self.date_paid is not None else "", self.days_overdue]
 
     def as_receipt(self) -> str:
         invoiced_services = ""
@@ -253,7 +259,8 @@ class InsuranceInvoice:
             invoiced_services += f"""\t - ID: {service.id}\
                                \n\t\t + Date: {service.date}\
                                \n\t\t + Description: {service.description}\
-                               \n\t\t + Cost: {to_dollar(service.get_cost())}\n"""
+                               \n\t\t + Amount Due: {self.amount_due}\
+                               \n\t\t + Total Cost: {to_dollar(service.get_cost())}\n"""
 
         return f"""Invoice ID: {self.id}\
                  \n\tStatus: {self.status.name}\
@@ -338,8 +345,7 @@ class InsuranceBilling:
             for user in csv.DictReader(f, fieldnames=USER_FIELD, delimiter=USER_FIELD_DELIMITER):
                 if user['ID'] == str(self.id):
                     self.user = user
-                    self.user_name = user['First Name'] + \
-                        ' ' + user['Last Name']
+                    self.user_name = user['First Name'] + ' ' + user['Last Name']
                     break
 
         assert self.user is not None, f"Cannot find specified user ID in database ({self.id})."
@@ -411,7 +417,7 @@ class InsuranceBilling:
 
                 r_invoice = InsuranceInvoice(id=invoice['Invoice ID'],
                                              status=PaymentStatus[invoice['Invoice Status']],
-                                             amount_due=invoice['Amount Due'],
+                                             total_cost=invoice['Amount Due'],
                                              patient_info=invoice['Patient Info'].split(
                                                  IN_DELIMITER),
                                              carrier_info=invoice['Carrier Info'].split(
@@ -569,20 +575,22 @@ class InsuranceBilling:
     def edit_carrier(self, carrier_id: str or int, to_carrier: InsuranceCarrier) -> bool:
         """ Replace an instance of `InsuranceCarrier` with a new `InsuranceCarrier`. """
         carrier_id = str(carrier_id)
-        for i in range(len(self.carriers)):
-            if self.carriers[i] is not None and self.carriers[i].id == carrier_id:
-                self.carriers[i] = to_carrier
+        for carrier in self.carriers:
+            if carrier is not None and carrier.id == carrier_id:
+                self.set_primary(carrier_id, to_carrier.primary)
+                carrier = to_carrier
                 return True
         return False
     
     def edit_carrier(self, carrier_id: str or int, n_name: str=None, n_address: str=None, n_primary: bool=None) -> bool:
         """ Replace an instance of `InsuranceCarrier` with specified options. """
         carrier_id = str(carrier_id)
-        for i in range(len(self.carriers)):
-            if self.carriers[i] is not None and self.carriers[i].id == carrier_id:
-                if n_name not in NONE: self.carriers[i].name = n_name
-                if n_address not in NONE: self.carriers[i].address = n_address
-                if n_primary not in NONE: self.carriers[i].n_primary = n_primary
+        for carrier in self.carriers:
+            if carrier is not None and carrier.id == carrier_id:
+                self.set_primary(carrier_id, n_primary)
+                if n_name not in NONE: carrier.name = n_name
+                if n_address not in NONE: carrier.address = n_address
+                if n_primary not in NONE: carrier.primary = n_primary
                 return True
         return False
 
@@ -596,13 +604,17 @@ class InsuranceBilling:
                     for all_carrier in self.carriers:
                         if all_carrier is not None:
                             all_carrier.primary = False
-                            
+                
                 if carrier.primary and not to_primary and len(self.carriers) > 1:
                     if self.carriers[-1] != carrier:
                         self.carriers[-1].primary = True
                     else:
                         self.carriers[-2].primary = True
-                carrier.primary = to_primary
+                        
+                if len(self.carriers) == 1:
+                    carrier.primary = True
+                else:
+                    carrier.primary = to_primary
                 
                 self.local_changes_made = True
                 return True
@@ -686,6 +698,15 @@ class InsuranceBilling:
                 if n_date not in NONE: self.services[i].set_date(n_date)
                 return True
         return False
+    
+    def pay_for_service(self, service_id: str or int, payment_amount: str or int or float) -> bool:
+        """ Pay for a service with `payment_amount`. """
+        service_id = str(service_id)
+        for service in self.services:
+            if service is not None and service.id == service_id:
+                return service.pay(payment_amount)
+            
+        return False
 
     # ---------------
     #   INVOICES
@@ -739,7 +760,7 @@ class InsuranceBilling:
         while any(invoice.id == invoice_id for invoice in self.invoices if invoice is not None):
             invoice_id = str(int(invoice_id) + 1)
 
-        n_invoice = InsuranceInvoice(id=invoice_id, amount_due=total_cost, patient_info=patient_info, carrier_info=carrier_info,
+        n_invoice = InsuranceInvoice(id=invoice_id, total_cost=total_cost, patient_info=patient_info, carrier_info=carrier_info,
                                      invoiced_services=invoiced_services)
         n_invoice.mark_as_invoiced()
 
@@ -808,7 +829,7 @@ class InsuranceBilling:
 
         return ""
 
-    def pay_for_invoice(self, invoice_id: str or int, amount: str or int="$0", pay_in_full: bool=False) -> bool:
+    def pay_for_invoice(self, invoice_id: str or int, payment_amount: str or int="$0", pay_in_full: bool=False) -> bool:
         """
             Make a payment to `invoice_id` with specified `amount`.
 
@@ -821,14 +842,14 @@ class InsuranceBilling:
             - `True` if payment was successful.
             - `False` otherwise.
         """
-        amount = float(amount.replace("$", ''))
-        if amount <= 0 and not pay_in_full:
+        payment_amount = float(payment_amount.replace("$", ''))
+        if payment_amount <= 0 and not pay_in_full:
             return False
 
         invoice_id = str(invoice_id)
         for invoice in self.invoices:
             if invoice is not None and invoice.id == invoice_id:
-                diff = float(invoice.amount_due.replace("$", '')) - amount
+                diff = float(invoice.amount_due.replace("$", '')) - payment_amount
                 if diff <= 0 or pay_in_full:
                     invoice.mark_as_paid()
                     for invoiced_service in invoice.invoiced_services:
@@ -874,219 +895,10 @@ class InsuranceBilling:
             if invoice is not None and invoice.status is PaymentStatus.DELINQUENT:
                 if patient_name is not None:
                     if invoice.patient_info[0] == patient_name:
-                        delinquent_reports += self.invoice_info(
-                            invoice.id) + "\n"
+                        delinquent_reports += self.invoice_info(invoice.id) + "\n"
                 else:
                     if invoice.carrier_info == [carrier.name, carrier.address]:
-                        delinquent_reports += self.invoice_info(
-                            invoice.id) + "\n"
+                        delinquent_reports += self.invoice_info(invoice.id) + "\n"
 
         return delinquent_reports
-
-
-def init_gui(uid: str or int):
-    insurance_bill = InsuranceBilling(id=uid)
-    app = ib_gui.MainGUI(bill=insurance_bill)
-    app.run()
-
-
-#
-#
-#   Test/Debug Section
-#
-#
-
-
-def __service_tests__(bill: InsuranceBilling):
-    print(bill.services)
-    if bill.remove_service(1):
-        print("<<< removed service with id = 1")
-        print(bill.services)
-
-    print(">>> add new service: labs with the cost of $627 id =",
-          bill.new_service('labs', '$627', date=datetime(2011, 12, 2)))
-    print(bill.services)
-    print(">>> add new service: vaccines with the cost of $288 id =",
-          bill.new_service('vaccines', '$288'))
-    print(bill.services)
-    if bill.remove_service(1):
-        print("<<< removed service with id = 1")
-        print(bill.services)
-    print(">>> add new service: medicines with the cost of $141 id =",
-          bill.new_service('medicines', '$141'))
-    print(bill.services)
-
-
-def __carrier_tests__(bill: InsuranceBilling):
-    print()
-    print(bill.carriers)
-    print(">>> add new carrier: PRIMARY Medical @111 1st st id =",
-          bill.new_carrier('Medical', '111 1st st', primary=True))
-    print(bill.carriers)
-    print(">>> add new carrier: PRIMARY Care @222 2nd st id =",
-          bill.new_carrier('Care', '222 2nd st', primary=True))
-    print(bill.carriers)
-
-    if bill.remove_carrier(0):
-        print("<<< removed carrier with id = 0")
-        print(bill.carriers)
-
-    print(">>> add new carrier: non-primary SupCare @333 3rd st with id =",
-          bill.new_carrier('SupCare', '333 3rd st', primary=False))
-    print(bill.carriers)
-
-
-def __invoice_tests__(bill: InsuranceBilling, month=datetime.now().month, pay=True, deq=False):
-    print()
-    if len(bill.carriers) == 0:
-        bill.new_carrier("kaiser", '@home', primary=True)
-
-    print(">>> list of invoices:", bill.invoices)
-    id = bill.generate_invoice(month=month)
-    if id != "-1":
-        print(">>> new invoice with id =", id)
-        print(">>> new list of invoices:", bill.invoices)
-        print(bill.invoice_info(id) or None)
-        print()
-        print(">>> last invoiced service:")
-        print(bill.invoices[-1].invoiced_services[-1] or None)
-
-        bill.commit_to_db()
-        if pay:
-            print()
-            print(">>> paying invoice id =",
-                  bill.invoices[-1].id, "in full amount...", end=' ')
-            time.sleep(0.7)
-            bill.pay_for_invoice(bill.invoices[-1].id, pay_in_full=True)
-            print(bill.invoices[-1].status.name + '!!')
-            time.sleep(0.4)
-
-            # delinquent test
-            if deq:
-                print(">> setting new primary carrier:".expandtabs(
-                    4), bill.set_primary(bill.carriers[-1].id))
-                print('', "-"*32, "\n>>> START delinquent test...\n", "-"*32, end='')
-                bill.new_service('deqlin', '$1234.56')
-                time.sleep(0.3)
-                __invoice_tests__(bill, pay=False)
-                bill.invoices[-1].status = PaymentStatus.DELINQUENT
-                print('', "-"*32, "\n>>> END delinquent test...\n", "-"*32)
-                time.sleep(0.1)
-    else:
-        print("\n>>> INVOICE INFO:")
-        print(bill.invoice_info() or None)
-
-    time.sleep(0.3)
-    print("\n>>> delinquent invoices by patient name:", bill.user_name)
-    print(bill.generate_report(patient_name=bill.user_name) or None)
-
-    time.sleep(0.1)
-    print(">>> delinquent invoices by carrier name:", bill.carriers[-2].name)
-    print(bill.generate_report(carrier=bill.carriers[-2]) or None)
-
-
-def __clean_up__():
-    count = 0
-    if Path(IB_DB_DIR + '\ib-test-users.csv').is_file():
-        count += 1
-        os.remove(IB_DB_DIR + '\ib-test-users.csv')
-
-    # remove used csv files in `IB_DB_DIR` directory
-    if Path(IB_DB_DIR).is_dir():
-        for file in os.listdir(IB_DB_DIR):
-            if file.endswith(".csv") and f"id{uid:08}_" in file:
-                os.remove(IB_DB_DIR + "/" + file)
-                count += 1
-    return count
-
-
-def __run_gui__(bill: InsuranceBilling) -> None:
-    app = ib_gui.MainGUI(bill=bill)
-    app.run()
-
-
-def __run_tests__(bill: InsuranceBilling) -> None:
-    __service_tests__(bill)  # service tests
-    bill.commit_to_db()
-    __carrier_tests__(bill)  # carrier tests
-    bill.commit_to_db()
-    __invoice_tests__(bill, pay=True, deq=True)  # invoice tests
-    bill.commit_to_db()
-
-    print(f"\n{bcolors.BOLD + bcolors.OKGREEN}All tests completed!{bcolors.ENDC}")
-    try:
-        for sec in range(5, 0, -1):
-            print(f"Cleaning up after {sec}s...", end='\r')
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print(
-            f"Cleaning up after {sec}s... {bcolors.FAIL}cancelled.{bcolors.ENDC}")
-        exit(0)
-
-    print(
-        f"Cleaning up after 0s... {bcolors.BOLD}removed {__clean_up__()} test files!{bcolors.ENDC}")
-
-
-def __test_init__():
-    global test_uid
-    global USER_FILE
-
-    test_uid = 1111
-    USER_FILE = IB_DB_DIR + '\ib-test-users.csv'
-    __clean_up__()
-    if not Path(IB_DB_DIR).is_dir():
-        os.mkdir(IB_DB_DIR)
-    with open(USER_FILE, mode='w') as f:
-        writer = csv.writer(f, delimiter=",")
-        writer.writerow([test_uid, "TRI", "TRAN", "tree@test.com", "123456",
-                        "1234567890", "123@4th Ave", "CS 532", "11/11/1111", "Male"])
-    bill = InsuranceBilling(test_uid)
-    # bill.new_carrier('Medical', '111 1st st', primary=True)
-    # bill.new_carrier('Care', '222 2nd st', primary=True)
-    # bill.new_carrier('SupCare', '333 3rd st', primary=False)
-    # bill.commit_to_db()
-
-    __service_tests__(bill)  # service tests
-    bill.commit_to_db()
-    __carrier_tests__(bill)  # carrier tests
-    bill.commit_to_db()
-    bill.generate_invoice()
-    bill.commit_to_db()
-
-    return bill
-
-
-if __name__ == "__main__":
-    class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKCYAN = '\033[96m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-    # only import time package for testing
-    import time
-
-    uid = 1111
-    bill = __test_init__()
-    backend_tests = False
-
-    __run_gui__(bill)
-
-    if backend_tests:
-        try:
-            for sec in range(3, 0, -1):
-                print(f"Running backend tests after {sec}s...", end='\r')
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print(
-                f"Running backend tests after {sec}s... {bcolors.FAIL}cancelled.{bcolors.ENDC}")
-            exit(0)
-
-        print(f"\n{bcolors.BOLD}Running backend tests...{bcolors.ENDC}")
-        __run_tests__(bill=bill)
-    else:
-        __clean_up__()
+    
