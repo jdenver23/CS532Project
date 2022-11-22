@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import *
 from PatientRecords import initialize
-import InsuranceBilling
+import InsuranceBillingGUI
 
 def home_gui(user_id):
     user_id = int(user_id)
@@ -53,7 +53,7 @@ def home_gui(user_id):
         
     def enter_insurance_billing():
         root.destroy()
-        InsuranceBilling.init_gui(str(user_id))
+        InsuranceBillingGUI.init_gui(str(user_id))
 
     #------ ALL BUTTONS -------#
     homeframe  = tk.Frame(mainframe, width = w, height = h)

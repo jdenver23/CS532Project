@@ -25,7 +25,7 @@ class MainGUI(tk.Tk):
         
         self.ui_mode = UIMode.PATIENT
         
-        if self.bill.id >= EMPLOYEE_RANGE_L and self.bill.id < EMPLOYEE_RANGE_H or str(self.bill.id) in ADMIN_IDS:
+        if int(self.bill.id) >= EMPLOYEE_RANGE_L and int(self.bill.id) < EMPLOYEE_RANGE_H or str(self.bill.id) in ADMIN_IDS:
             self.title("Insurance Billing - Healthcare Permanente (EMPLOYEE VIEW)")
             self.ui_mode = UIMode.EMPLOYEE
             
