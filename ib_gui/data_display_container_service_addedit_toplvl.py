@@ -165,11 +165,13 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
     def form_submit(self):
         data = {'description': self.entry_description.get(),
                 'date':self.entry_date.get(),
-                'cost': "$" + self.entry_cost.get()}
+                'cost': self.entry_cost.get()}
         if not any(data.values()):
             messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")
+            self.focus_force()
         else:
             self.destroy()
+            data["cost"] = "$" + data["cost"]
             if "" == data['description'] + data['cost'][1:]:
                 self.ddc.toplevel_callback()
             else:
@@ -182,7 +184,7 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
     def form_cancel(self):
         if "" != self.entry_description.get() + self.entry_cost.get():
             if not messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
-                self.deiconify()
+                self.focus_force()
                 return
         self.destroy()
         self.ddc.toplevel_callback()

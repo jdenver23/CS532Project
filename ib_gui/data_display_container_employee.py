@@ -1,15 +1,31 @@
 #!/usr/bin/python3
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 from .data_display_container_carrier_addedit_toplvl import CarrierAddEditToplvlWidget
 from .data_display_container_service_addedit_toplvl import ServiceAddEditToplvlWidget
-from InsuranceBilling import InsuranceBilling
+from InsuranceBilling import InsuranceBilling, dollar_to_float
 
-# TODO: add combobox/search box for patient select
+
 class DataDisplayContainerEmployeeWidget(tk.Frame):
     def __init__(self, bill: InsuranceBilling, master=None, test_data=False, **kw):
         super(DataDisplayContainerEmployeeWidget, self).__init__(master, **kw)
         self.bill = bill
+        
+        # TODO: add combobox/search box for patient select
+        # self.patient_select = tk.Frame(self)
+        # self.patient_select.configure(height=25, width=960)
+        # self.entry_patient_sel = ttk.Combobox(self.patient_select)
+        # self.all_patients_info = [f"[ID: {str(p.id)}] " +
+        #                           f"" for p in self.bill.invoices]
+        # for invoice_info in self.all_invoices_info:
+        #     if self.invoice_info_to_id(invoice_info) == str(self.c_invoice.id):
+        #         self.entry_patient_sel.set(invoice_info)
+        #         break
+        # self.entry_patient_sel.pack(anchor="w", padx=15, ipady=15, side="top", fill="x")
+        # self.entry_patient_sel.bind("<<ComboboxSelected>>", self.entry_patient_sel_upd)
+        # self.patient_select.pack(anchor="w", padx=10, side="top")
+        # self.patient_select.pack_propagate(0)
 
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
@@ -47,6 +63,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.create_services_tv(self.treeview_fr)
         self.create_invoices_tv(self.treeview_fr)
         self.treeview_forced_set_state(self.treeview_carriers, show=True)
+        self.treeview_reset_sel()
         self.active_treeview = "Carriers"
         
         if test_data:
@@ -78,7 +95,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             foreground="white",
             state="disabled",
             takefocus=True,
-            text='✏️ Edit')
+            text='ⓘ Edit')
         self.btn_edit.pack(ipadx=5, ipady=5, side="left")
         self.btn_edit.configure(command=lambda: self.treeview_edit_selection())
         self.btn_delete = tk.Button(self.control_container)
@@ -108,12 +125,12 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.pack_propagate(0)
 
         # hotkeys:
-        # "d" to move tab to right
-        # "a" to move tab to left
+        # "a" or "d" to move tab left/right
+        # "w" or "s" to select item
         self.master.bind("d", lambda x: self.toggle_treeview_tab(direction="right"))
-        self.master.bind("w", lambda x: self.toggle_treeview_tab(direction="right"))
         self.master.bind("a", lambda x: self.toggle_treeview_tab(direction="left"))
-        self.master.bind("s", lambda x: self.toggle_treeview_tab(direction="left"))
+        self.master.bind("w", lambda x: self.toggle_treeview_item(direction="up"))
+        self.master.bind("s", lambda x: self.toggle_treeview_item(direction="down"))
         
         self.pull_from_db()
     
@@ -191,8 +208,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         if renew_carriers: self.treeview_insert_row(self.treeview_carriers, [carrier.as_list() for carrier in self.bill.carriers])
         if renew_services: self.treeview_insert_row(self.treeview_services, [service.as_list() for service in self.bill.services])
         if renew_invoices: self.treeview_insert_row(self.treeview_invoices, [invoice.as_list() for invoice in self.bill.invoices])
-            
-
+        
     def reset_attributes(self):
         """Focus on master and permit mouse clicking."""
         self.master.unbind("<Button-1>", self.toplevel_force_focus_fid)
@@ -205,6 +221,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             idx = 2 if direction == "right" else 0
         elif self.active_treeview == "Invoices":
             idx = 0 if direction == "right" else 1
+        self.treeview_reset_sel()
         self.toggle_treeview(index=idx)
 
     def toplevel_callback(self, event=None):
@@ -236,7 +253,8 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 self.treeview_services.item(self.curr_selected, values=[self.id_to_edit] + list(data.values()))
             elif self.active_treeview == "Invoices":
                 # TODO: edit invoice here
-                pass
+                messagebox.showinfo("Editing an Invoice", "This feature is still under development.\
+                                    Please come back at a later time.")
         
     def toplevel_data_transfer_callback(self, data: dict):
         """`DDC` data transfer (add) call back."""
@@ -253,13 +271,56 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 n_data = self.bill.new_service(data['description'], data['cost'], data['date'])
                 self.treeview_insert_row(self.treeview_services, [n_data.as_list()])
             elif self.active_treeview == "Invoices":
-                # TODO: generate new invoice here
-                pass
+                # TODO: add edited invoice to local list
+                messagebox.showinfo("Generating a New Invoice", "This feature is still under development.\
+                                    Please come back at a later time.")
     
     def toplevel_force_focus(self, event=None):
         if hasattr(self, "curr_toplvl"):
             self.curr_toplvl.focus_force()
             return "break"
+    
+    def treeview_reset_sel(self):
+        self.treeview_carriers_curr_sel = None
+        self.treeview_services_curr_sel = None
+        self.treeview_invoices_curr_sel = None
+        
+    def toggle_treeview_item(self, direction="down", event=None):
+        dx = -1 if direction == "up" else 1
+        
+        if self.active_treeview == "Carriers":
+            if self.treeview_carriers_curr_sel is None: self.treeview_carriers_curr_sel = 0 if dx == 1 else -1
+            else: self.treeview_carriers_curr_sel += dx
+            all_child = self.treeview_carriers.get_children()
+            if self.treeview_carriers_curr_sel >= len(all_child):
+                self.treeview_carriers_curr_sel = 0
+            elif self.treeview_carriers_curr_sel < 0: 
+                self.treeview_carriers_curr_sel = len(all_child)-1
+            self.selected_item_id = all_child[self.treeview_carriers_curr_sel]
+            self.treeview_carriers.selection_set(self.selected_item_id)
+            self.treeview_sel_handler()
+        elif self.active_treeview == "Services":
+            if self.treeview_services_curr_sel is None: self.treeview_services_curr_sel = 0 if dx == 1 else -1
+            else: self.treeview_services_curr_sel += dx
+            all_child = self.treeview_services.get_children()
+            if self.treeview_services_curr_sel >= len(all_child):
+                self.treeview_services_curr_sel = 0
+            elif self.treeview_services_curr_sel < 0: 
+                self.treeview_services_curr_sel = len(all_child)-1
+            self.selected_item_id = all_child[self.treeview_services_curr_sel]
+            self.treeview_services.selection_set(self.selected_item_id)
+            self.treeview_sel_handler()
+        elif self.active_treeview == "Invoices":
+            if self.treeview_invoices_curr_sel is None: self.treeview_invoices_curr_sel = 0 if dx == 1 else -1
+            else: self.treeview_invoices_curr_sel += dx
+            all_child = self.treeview_invoices.get_children()
+            if self.treeview_invoices_curr_sel >= len(all_child):
+                self.treeview_invoices_curr_sel = 0
+            elif self.treeview_invoices_curr_sel < 0: 
+                self.treeview_invoices_curr_sel = len(all_child)-1
+            self.selected_item_id = all_child[self.treeview_invoices_curr_sel]
+            self.treeview_invoices.selection_set(self.selected_item_id)
+            self.treeview_sel_handler()
 
     def treeview_add_item_window(self):
         self.master.attributes("-disabled", True)
@@ -271,6 +332,8 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             self.curr_toplvl = ServiceAddEditToplvlWidget(self.master)
         elif self.active_treeview == "Invoices":
             # TODO: invoice adding gui
+            messagebox.showinfo("Generating a New Invoice", "This feature is still under development.\
+                                Please come back at a later time.")
             self.reset_attributes()
             pass
     
@@ -326,13 +389,12 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
     def treeview_sort_column(self, treeview, col, reverse=True):
         """Sort treeview column by name."""
         l = [(treeview.set(k, col), k) for k in treeview.get_children('')]
-        l.sort(key=lambda x: InsuranceBilling.dollar_to_float(x[0]) if col == 'cost' else x, reverse=reverse)
+        l.sort(key=lambda x: dollar_to_float(x[0]) if col == 'cost' else x, reverse=reverse)
 
         for index, (val, k) in enumerate(l):
             treeview.move(k, '', index)
 
-        treeview.heading(col, command=lambda: self.treeview_sort_column(
-            treeview, col, not reverse))
+        treeview.heading(col, command=lambda: self.treeview_sort_column(treeview, col, not reverse))
 
     def treeview_forced_set_state(self, treeview: ttk.Treeview, show=False):
         if not show:
@@ -344,16 +406,9 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
     def treeview_insert_row(self, treeview: ttk.Treeview, list_rows: list(list())):
         for row in list_rows:
             treeview.insert("", tk.END, values=row)
-
-    def treeview_click_handler(self, event):
-        # disable column resizing by disable mouse click at "separator"
-        if event.widget.identify_region(event.x, event.y) == "separator":
-            return "break"
-        
-        # `btn_delete` custom behaviour
-        self.selected_item_id = event.widget.identify('item', event.x, event.y)
-        self.selected_row = event.widget.item(self.selected_item_id)['values']
-        if self.selected_item_id != "" and event.widget.exists(self.selected_item_id):
+    
+    def treeview_sel_handler(self):
+        if self.selected_item_id != "":
             self.btn_delete.configure(state=tk.NORMAL)
             self.btn_edit.configure(state=tk.NORMAL)
             self.btn_mark_as.configure(state=tk.NORMAL)
@@ -381,6 +436,21 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             
             self.btn_mark_as.pack(ipadx=5, ipady=5, side="right")
             
+        else:
+            self.btn_delete.configure(state=tk.DISABLED)
+            self.btn_edit.configure(state=tk.DISABLED)
+            self.btn_mark_as.configure(state=tk.DISABLED)
+
+    def treeview_click_handler(self, event):
+        # disable column resizing by disable mouse click at "separator"
+        if event.widget.identify_region(event.x, event.y) == "separator":
+            return "break"
+        
+        # `btn_delete` custom behaviour
+        self.selected_item_id = event.widget.identify('item', event.x, event.y)
+        self.selected_row = event.widget.item(self.selected_item_id)['values']
+        if self.selected_item_id != "" and event.widget.exists(self.selected_item_id):
+            self.treeview_sel_handler()            
         else:
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
             self.treeview_services.selection_remove(*self.treeview_services.selection())

@@ -1,7 +1,6 @@
 from datetime import datetime
 from pathlib import Path
 import os
-import csv
 from InsuranceBilling import InsuranceBilling, PaymentStatus, IB_DB_DIR, USER_FILE
 from ib_gui import ib_gui
 
@@ -16,6 +15,8 @@ def init_gui(uid: str or int):
 #   Test/Debug Section
 #
 #
+
+uid = 30000000
 
 
 def __service_tests__(bill: InsuranceBilling):
@@ -107,7 +108,6 @@ def __invoice_tests__(bill: InsuranceBilling, month=datetime.now().month, pay=Tr
 
 
 def __clean_up__(opt=0):
-    global uid
     count = 0
     
     with open(USER_FILE, "r+", encoding = "utf-8") as file:
@@ -172,18 +172,15 @@ def __run_tests__(bill: InsuranceBilling) -> None:
 
 
 def __test_init__():
-    global uid
-    test_uid = 30000000
-    uid = test_uid
     __clean_up__()
     if not Path(IB_DB_DIR).is_dir():
         os.mkdir(IB_DB_DIR)
     with open(USER_FILE, mode='a', newline='\n') as f:
         f.write('\n')
-        f.write(",".join([str(test_uid), "TRI", "TRAN", "tree@test.com", "123456",
+        f.write(",".join([str(uid), "TRI", "TRAN", "tree@test.com", "123456",
                         "1234567890", "123@4th Ave", "CS 532", "11/11/1111", "Male"]))
         f.write('\n')
-    bill = InsuranceBilling(test_uid)
+    bill = InsuranceBilling(uid)
     # bill.new_carrier('Medical', '111 1st st', primary=True)
     # bill.new_carrier('Care', '222 2nd st', primary=True)
     # bill.new_carrier('SupCare', '333 3rd st', primary=False)
@@ -193,7 +190,8 @@ def __test_init__():
     bill.commit_to_db()
     __carrier_tests__(bill)  # carrier tests
     bill.commit_to_db()
-    bill.generate_invoice()
+    bill.generate_invoice(month=11)
+    bill.generate_invoice(month=12)
     bill.commit_to_db()
 
     return bill

@@ -2,7 +2,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from .data_display_container_make_a_payment import DataDisplayContainerMakeAPaymentWidget
-from InsuranceBilling import InsuranceBilling
+from InsuranceBilling import InsuranceBilling, dollar_to_float
 
 
 class DataDisplayContainerUserWidget(tk.Frame):
@@ -46,6 +46,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.create_services_tv(self.treeview_fr)
         self.create_invoices_tv(self.treeview_fr)
         self.treeview_forced_set_state(self.treeview_carriers, show=True)
+        self.treeview_reset_sel()
         self.active_treeview = "Carriers"
         
         if test_data:
@@ -75,12 +76,12 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.pack_propagate(0)
 
         # hotkeys:
-        # "d" to move tab to right
-        # "a" to move tab to left
+        # "a" or "d" to move tab left/right
+        # "w" or "s" to select item
         self.master.bind("d", lambda x: self.toggle_treeview_tab(direction="right"))
-        self.master.bind("w", lambda x: self.toggle_treeview_tab(direction="right"))
         self.master.bind("a", lambda x: self.toggle_treeview_tab(direction="left"))
-        self.master.bind("s", lambda x: self.toggle_treeview_tab(direction="left"))
+        self.master.bind("w", lambda x: self.toggle_treeview_item(direction="up"))
+        self.master.bind("s", lambda x: self.toggle_treeview_item(direction="down"))
         
         self.pull_from_db()
     
@@ -88,14 +89,14 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.master.attributes("-disabled", True)
         self.toplevel_force_focus_fid = self.master.bind("<Button-1>", self.toplevel_force_focus)
         
-        if self.active_treeview == "Services":
-            self.curr_selected = self.treeview_services.selection()[0]
-            self.id_to_edit = self.treeview_services.item(self.curr_selected)['values'][0]
-            self.curr_toplvl = DataDisplayContainerMakeAPaymentWidget(service=self.bill.get_service(self.id_to_edit), master=self.master)
-        elif self.active_treeview == "Invoices":
-            # TODO: invoice adding gui
+        if self.active_treeview == "Invoices":
+            self.curr_selected = self.treeview_invoices.selection()[0]
+            self.id_to_edit = self.treeview_invoices.item(self.curr_selected)['values'][0]
+            self.curr_toplvl = DataDisplayContainerMakeAPaymentWidget(invoice=self.bill.get_invoice(self.id_to_edit), 
+                                                                      bill=self.bill,
+                                                                      master=self.master)
+        else:
             self.reset_attributes()
-            pass
         
 
     def pull_from_db(self, refresh=True, renew_carriers=True, renew_services=True, renew_invoices=True):
@@ -121,6 +122,48 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.master.unbind("<Button-1>", self.toplevel_force_focus_fid)
         self.master.focus_force()
         self.master.attributes("-disabled", False)
+    
+    def treeview_reset_sel(self):
+        self.treeview_carriers_curr_sel = None
+        self.treeview_services_curr_sel = None
+        self.treeview_invoices_curr_sel = None
+        
+    def toggle_treeview_item(self, direction="down", event=None):
+        dx = -1 if direction == "up" else 1
+        
+        if self.active_treeview == "Carriers":
+            if self.treeview_carriers_curr_sel is None: self.treeview_carriers_curr_sel = 0 if dx == 1 else -1
+            else: self.treeview_carriers_curr_sel += dx
+            all_child = self.treeview_carriers.get_children()
+            if self.treeview_carriers_curr_sel >= len(all_child):
+                self.treeview_carriers_curr_sel = 0
+            elif self.treeview_carriers_curr_sel < 0: 
+                self.treeview_carriers_curr_sel = len(all_child)-1
+            self.selected_item_id = all_child[self.treeview_carriers_curr_sel]
+            self.treeview_carriers.selection_set(self.selected_item_id)
+            self.treeview_sel_handler()
+        elif self.active_treeview == "Services":
+            if self.treeview_services_curr_sel is None: self.treeview_services_curr_sel = 0 if dx == 1 else -1
+            else: self.treeview_services_curr_sel += dx
+            all_child = self.treeview_services.get_children()
+            if self.treeview_services_curr_sel >= len(all_child):
+                self.treeview_services_curr_sel = 0
+            elif self.treeview_services_curr_sel < 0: 
+                self.treeview_services_curr_sel = len(all_child)-1
+            self.selected_item_id = all_child[self.treeview_services_curr_sel]
+            self.treeview_services.selection_set(self.selected_item_id)
+            self.treeview_sel_handler()
+        elif self.active_treeview == "Invoices":
+            if self.treeview_invoices_curr_sel is None: self.treeview_invoices_curr_sel = 0 if dx == 1 else -1
+            else: self.treeview_invoices_curr_sel += dx
+            all_child = self.treeview_invoices.get_children()
+            if self.treeview_invoices_curr_sel >= len(all_child):
+                self.treeview_invoices_curr_sel = 0
+            elif self.treeview_invoices_curr_sel < 0: 
+                self.treeview_invoices_curr_sel = len(all_child)-1
+            self.selected_item_id = all_child[self.treeview_invoices_curr_sel]
+            self.treeview_invoices.selection_set(self.selected_item_id)
+            self.treeview_sel_handler()
         
     def toggle_treeview_tab(self, direction="right", event=None):
         idx = 1 if direction == "right" else 2
@@ -128,6 +171,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
             idx = 2 if direction == "right" else 0
         elif self.active_treeview == "Invoices":
             idx = 0 if direction == "right" else 1
+        self.treeview_reset_sel()
         self.toggle_treeview(index=idx)
 
     def toplevel_callback(self, event=None):
@@ -156,13 +200,12 @@ class DataDisplayContainerUserWidget(tk.Frame):
     def treeview_sort_column(self, treeview, col, reverse=True):
         """Sort treeview column by name."""
         l = [(treeview.set(k, col), k) for k in treeview.get_children('')]
-        l.sort(key=lambda x: InsuranceBilling.dollar_to_float(x[0]) if col == 'cost' else x, reverse=reverse)
+        l.sort(key=lambda x: dollar_to_float(x[0]) if col == 'cost' else x, reverse=reverse)
 
         for index, (val, k) in enumerate(l):
             treeview.move(k, '', index)
 
-        treeview.heading(col, command=lambda: self.treeview_sort_column(
-            treeview, col, not reverse))
+        treeview.heading(col, command=lambda: self.treeview_sort_column(treeview, col, not reverse))
 
     def treeview_forced_set_state(self, treeview: ttk.Treeview, show=False):
         if not show:
@@ -183,17 +226,21 @@ class DataDisplayContainerUserWidget(tk.Frame):
         # `btn_pay` custom behaviour
         self.selected_item_id = event.widget.identify('item', event.x, event.y)
         self.selected_row = event.widget.item(self.selected_item_id)['values']
-        if self.active_treeview == "Invoices" and self.selected_item_id != "" and event.widget.exists(self.selected_item_id):
-            payment_status = self.treeview_invoices.item(self.selected_item_id)['values'][6]
-            if payment_status == "UNPAID":
-                self.btn_pay.configure(state=tk.NORMAL)
-            else:
-                self.btn_pay.configure(state=tk.DISABLED)
-                
+        if event.widget.exists(self.selected_item_id):
+            self.treeview_sel_handler()
         else:
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
             self.treeview_services.selection_remove(*self.treeview_services.selection())
             self.treeview_invoices.selection_remove(*self.treeview_invoices.selection())
+    
+    def treeview_sel_handler(self):
+        if self.active_treeview == "Invoices" and self.selected_item_id != "":
+            payment_status = self.treeview_invoices.item(self.selected_item_id)['values'][6]
+            if payment_status != "PAID":
+                self.btn_pay.configure(state=tk.NORMAL)
+            else:
+                self.btn_pay.configure(state=tk.DISABLED)
+        else:
             self.btn_pay.configure(state=tk.DISABLED)
 
     def add_test_data(self):

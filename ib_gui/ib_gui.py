@@ -46,7 +46,7 @@ class MainGUI(tk.Tk):
         r += 1
         
         # EMPLOYEE GUI VIEW
-        if self.ui_mode == UIMode.EMPLOYEE:
+        if self.ui_mode is UIMode.EMPLOYEE:        
             self.data_display_widget = DataDisplayContainerEmployeeWidget(master=self, bill=self.bill, test_data=enabled_test_data)
             self.data_display_widget.grid(column=0, row=r)
             r += 1

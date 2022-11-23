@@ -3,7 +3,7 @@ from enum import Enum
 
 base_folder = os.path.dirname(__file__)
 def get_icon(icon_file_name):
-    return os.path.join(base_folder, f"icons\\{icon_file_name}")
+    return os.path.join(base_folder, f"icons/{icon_file_name}")
 
 def tk_center(tk, gui_w=None, gui_h=None):
     if gui_w is None:
@@ -20,3 +20,5 @@ def tk_center(tk, gui_w=None, gui_h=None):
 class UIMode(Enum):
     PATIENT = 0
     EMPLOYEE = 1
+    
+# TODO: class for all patient

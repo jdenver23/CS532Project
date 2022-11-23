@@ -120,6 +120,7 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
         
         if not any(data.values()):
             messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")
+            self.focus_force()
         else:
             self.destroy()
             if data['primary'] == "NON-PRIMARY" and "" == data['address'] + data['name']: 
@@ -133,7 +134,7 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
     def form_cancel(self):
         if "" != self.entry_name.get() + self.entry_address.get():
             if not messagebox.askyesno("Quit", "You have unsaved changes. Are you sure you want to close this window?"):
-                self.deiconify()
+                self.focus_force()
                 return
         self.destroy()
         self.ddc.toplevel_callback()

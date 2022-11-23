@@ -237,7 +237,6 @@ class InsuranceInvoice:
         self.status = PaymentStatus.UNPAID
         self.date_paid = None
         self.days_overdue = 0
-    
 
     def get_last_day_of_month(self, year: str or int=None, month: str or int=None):
         """
@@ -246,6 +245,14 @@ class InsuranceInvoice:
         if year is not None and month is not None:
             return calendar.monthrange(year, month)[1]
         return calendar.monthrange(self.date_invoiced.year, self.date_invoiced.month)[1]
+
+    def get_service(self, service_id: str or int) -> InsuranceService:
+        service_id = str(service_id)
+        """ Return the instance of `InsuranceService` that has the same `service_id`. """
+        for service in self.invoiced_services:
+            if service is not None and service.id == service_id:
+                return service
+        return None
 
     def as_list(self) -> list[str]:
         return [self.id, str(self.date_invoiced.strftime(DATE_FORMAT)), str(self.due_date.strftime(DATE_FORMAT)) if self.due_date is not None else "", self.amount_due,
@@ -356,7 +363,7 @@ class InsuranceBilling:
             open(self.__service_db, "a").close()
 
         # retrieve service list from db
-        self.services = []
+        self.services: list[InsuranceService] = []
         with open(self.__service_db, 'r') as f:
             for service in csv.DictReader(f, fieldnames=IB_DB_FIELDS['IS'], delimiter=IB_DB_FIELD_DELIMITER):
                 r_service = InsuranceService(id=service['Service ID'],
@@ -376,7 +383,7 @@ class InsuranceBilling:
             open(self.__carrier_db, "a").close()
 
         # retrieve carrier list from db
-        self.carriers = []
+        self.carriers: list[InsuranceCarrier] = []
         with open(self.__carrier_db, 'r') as f:
             for carrier in csv.DictReader(f, fieldnames=IB_DB_FIELDS['IC'], delimiter=IB_DB_FIELD_DELIMITER):
                 r_carrier = InsuranceCarrier(id=carrier['Carrier ID'],
@@ -402,7 +409,7 @@ class InsuranceBilling:
             open(self.__invoice_db, "a").close()
 
         # retrieve invoice list from db
-        self.invoices = []
+        self.invoices: list[InsuranceInvoice] = []
 
         with open(self.__invoice_db, 'r') as f:
             for invoice in csv.DictReader(f, fieldnames=IB_DB_FIELDS['II'], delimiter=IB_DB_II_FIELD_DELIMITER):
@@ -413,15 +420,13 @@ class InsuranceBilling:
                         invoiced_services.append(InsuranceService(id=service_d[0],
                                                                   description=service_d[1],
                                                                   cost=service_d[2],
-                                                                  date=datetime.strptime(service_d[3], DATETIME_FORMAT_F)))
+                                                                  date=date_convert(service_d[3])))
 
                 r_invoice = InsuranceInvoice(id=invoice['Invoice ID'],
                                              status=PaymentStatus[invoice['Invoice Status']],
                                              total_cost=invoice['Amount Due'],
-                                             patient_info=invoice['Patient Info'].split(
-                                                 IN_DELIMITER),
-                                             carrier_info=invoice['Carrier Info'].split(
-                                                 IN_DELIMITER),
+                                             patient_info=invoice['Patient Info'].split(IN_DELIMITER),
+                                             carrier_info=invoice['Carrier Info'].split(IN_DELIMITER),
                                              invoiced_services=invoiced_services)
 
                 if invoice['Date Invoiced'] not in NONE:
@@ -491,7 +496,7 @@ class InsuranceBilling:
     # ---------------
     #   CARRIERS
     # ---------------
-    def new_carrier(self, carrier_name: str, carrier_address: str, primary: bool=False) -> str:
+    def new_carrier(self, carrier_name: str, carrier_address: str, primary: bool=False) -> InsuranceCarrier:
         """ 
             Add a row of new Insurance Carrier to the local database.\n
             If `primary` is `True`, set all other carriers' `primary` key to `False`.\n
@@ -623,7 +628,7 @@ class InsuranceBilling:
     # ---------------
     #   SERVICES
     # ---------------
-    def new_service(self, service_description: str, service_cost: str or int, date: datetime or str=datetime.now(), fillin_id: bool=True) -> str:
+    def new_service(self, service_description: str, service_cost: str or int, date: datetime or str=datetime.now(), fillin_id: bool=True) -> InsuranceService:
         """ 
             Add a row of new Service to the local database.\n
             Note: use `commit_to_db()` in order to save local changes to the database.
@@ -711,7 +716,7 @@ class InsuranceBilling:
     # ---------------
     #   INVOICES
     # ---------------
-    def generate_invoice(self, month:str or int=None) -> str:
+    def generate_invoice(self, month:str or int=None) -> InsuranceInvoice:
         """ 
             Generate invoice from this **current** billing cycle (customizable through
             `month=` argument) then append it to local invoice list.
