@@ -18,6 +18,6 @@ class SeperatorContainerWidget(tk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     widget = SeperatorContainerWidget(root)
-    widget.pack(expand=True, fill="both")
+    # widget.pack(expand=True, fill="both")
     root.mainloop()
 

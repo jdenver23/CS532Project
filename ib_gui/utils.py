@@ -32,6 +32,7 @@ class UIMode(Enum):
 
 
 class Patient:
+    """ Patient class. This class is used for easier data management. """
     def __init__(self, id, first_name, last_name, email, phone_number, address, insurance_carrier, dob, gender, primary_care_physician, medications, appointments):
         self.id = id
         self.fname = first_name
@@ -48,6 +49,8 @@ class Patient:
         self.appointments = appointments
 
 class PatientAccount:
+    """ Patient Acount is used to retrieve all users' information in the database. 
+      \nIts main purpose is to provide a short description list of all users. """
     def __init__(self) -> None:
         if not Path(USER_FILE).is_file():
             open(USER_FILE, "a").close()
@@ -65,7 +68,7 @@ class PatientAccount:
                                         primary_care_physician=user[USER_FIELD[10]], medications=user[USER_FIELD[11]], appointments=user[USER_FIELD[11]])
                     self.patients.append(n_patient)
     
-    def as_list(self, opt="ID"):
+    def as_description_list(self, opt="ID"):
         _list = []
         for patient in self.patients:
             tmp = ""
@@ -74,9 +77,9 @@ class PatientAccount:
             elif opt == "Email":
                 tmp = ", ".join([patient.email, patient.name, patient.id, patient.dob, patient.phone_number])
             elif opt == "DOB":
-                tmp = ", ".join([patient.dob, patient.name, patient.id, patient.email, patient.phone_number])
+                tmp = ", ".join([patient.dob, patient.email, patient.name, patient.id, patient.phone_number])
             elif opt == "Phone#":
-                tmp = ", ".join([patient.phone_number, patient.name, patient.id, patient.email, patient.dob])
+                tmp = ", ".join([patient.phone_number, patient.dob, patient.email, patient.name, patient.id])
             else:
                 tmp = ", ".join([patient.id, patient.name, patient.email, patient.dob, patient.phone_number])
             

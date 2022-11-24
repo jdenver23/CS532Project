@@ -234,10 +234,9 @@ class DataDisplayContainerMakeAPaymentWidget(tk.Toplevel):
                 self.entry_description.configure(state=tk.DISABLED)
                 self.entry_date.configure(state=tk.DISABLED)
                 self.entry_cost.configure(state=tk.DISABLED)
-        else:
-            pass
         
     def create_services_tv(self, root):
+        """ Initialize services treeview. """
         self.service_columns = ('id', 'description', 'date', 'cost', 'payment_status')
         self.treeview_services = ttk.Treeview(root)
         self.treeview_services.configure(height=3, selectmode="extended", show="headings", columns=self.service_columns)

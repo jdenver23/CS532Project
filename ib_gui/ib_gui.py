@@ -11,9 +11,8 @@ from InsuranceBilling import InsuranceBilling
 ADMIN_IDS = ["1111"]
 
 class MainGUI(tk.Tk):
-    def __init__(self, bill: InsuranceBilling, master=None, enabled_test_data=False, **kw):
+    def __init__(self, user_id:str or int, bill: InsuranceBilling=None, master=None, enabled_test_data=False, **kw):
         super(MainGUI, self).__init__(master, **kw)
-        self.bill = bill
         
         self.title("Insurance Billing - Healthcare Permanente (USER VIEW)")
         self.resizable(False, False)
@@ -21,9 +20,15 @@ class MainGUI(tk.Tk):
         
         self.ui_mode = UIMode.PATIENT
         
-        if int(self.bill.id) >= EMPLOYEE_RANGE_L and int(self.bill.id) < EMPLOYEE_RANGE_H or str(self.bill.id) in ADMIN_IDS:
+        if int(user_id) >= EMPLOYEE_RANGE_L and int(user_id) < EMPLOYEE_RANGE_H or str(user_id) in ADMIN_IDS:
             self.title("Insurance Billing - Healthcare Permanente (EMPLOYEE VIEW)")
             self.ui_mode = UIMode.EMPLOYEE
+            self.bill = None
+        else:
+            if bill is not None:
+                self.bill: InsuranceBilling = bill
+            else:
+                self.bill: InsuranceBilling = InsuranceBilling(user_id)
             
         self.sep0_widget = SeperatorContainerWidget(self, show=False)
         self.sep0_widget.grid(column=0, row=r)
@@ -63,7 +68,13 @@ class MainGUI(tk.Tk):
         gui_w, gui_h = 960, 690
         tk_center(self, gui_w, gui_h)
         
+        # update billing info for all container
+        
+        self.user_info_widget.pull_from_db()
+        
         self.navbar_widget.def_calls()
+        self.navbar_widget.toggle_select_patient()
+        self.focus_force()
         
     def run(self):
         self.mainloop()
@@ -71,9 +82,17 @@ class MainGUI(tk.Tk):
     def on_closing(self):
         if messagebox.askyesno("Quit", "Do you want to quit?"):
             self.destroy()
+            
+        self.focus_force()
     
     def calls(self, widget_name):
-        """ Return specified widget reference. """
+        """ 
+            Return specified widget reference.\n
+            `widget_name` can only be one of the following:
+            - `nbc` for navbar_container
+            - `uic` for user_info_container
+            - `ddc` for data_display_container
+        """
         if widget_name == "nbc" and hasattr(self, "navbar_widget"):
             return self.navbar_widget
         if widget_name == "uic" and hasattr(self, "user_info_widget"):

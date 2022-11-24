@@ -1,12 +1,27 @@
-from datetime import datetime
-from pathlib import Path
 import os
+from pathlib import Path
+from datetime import datetime
 from InsuranceBilling import InsuranceBilling, PaymentStatus, IB_DB_DIR, USER_FILE
 from ib_gui import ib_gui
+from ib_gui.utils import EMPLOYEE_RANGE_L, EMPLOYEE_RANGE_H
 
+
+USER_ID = "2" + "0"*7
+EMPLOYEE_ID = "3" + "0"*7
+
+# set the uid to be tested
+# user and employee will have different view
+uid = EMPLOYEE_ID
+
+# set this to true to do backend tests for current uid
+# WARNING: it will remove all data of the current uid afterwardw!
+backend_tests = False
+
+
+# external gui initialize call
 def init_gui(uid: str or int):
-    insurance_bill = InsuranceBilling(id=uid)
-    app = ib_gui.MainGUI(bill=insurance_bill)
+    """ Initialize the main Insurance Billing GUI with specified `uid`. """
+    app = ib_gui.MainGUI(user_id=uid)
     app.run()
 
 
@@ -15,11 +30,6 @@ def init_gui(uid: str or int):
 #   Test/Debug Section
 #
 #
-
-USER_ID = "2" + "0"*7
-EMPLOYEE_ID = "3" + "0"*7
-
-uid = EMPLOYEE_ID
 
 
 def __service_tests__(bill: InsuranceBilling):
@@ -148,8 +158,8 @@ def __clean_up__(opt=0):
     return count
 
 
-def __run_gui__(bill: InsuranceBilling) -> None:
-    app = ib_gui.MainGUI(bill=bill)
+def __run_gui__(bill) -> None:
+    app = ib_gui.MainGUI(user_id=uid, bill=bill)
     app.run()
 
 
@@ -187,12 +197,11 @@ def __test_init__():
         f.write(",".join([str(uid), "TRI", "TRAN", "tree@test.com", "123456",
                         "1234567890", "123@4th Ave", "CS 532", "11/11/1111", "Male"]))
         f.write('\n')
-    bill = InsuranceBilling(uid)
-    # bill.new_carrier('Medical', '111 1st st', primary=True)
-    # bill.new_carrier('Care', '222 2nd st', primary=True)
-    # bill.new_carrier('SupCare', '333 3rd st', primary=False)
-    # bill.commit_to_db()
 
+    if int(uid) >= EMPLOYEE_RANGE_L and int(uid) < EMPLOYEE_RANGE_H:
+        return
+    
+    bill = InsuranceBilling(id=uid)
     __service_tests__(bill)  # service tests
     bill.commit_to_db()
     __carrier_tests__(bill)  # carrier tests
@@ -218,10 +227,8 @@ if __name__ == "__main__":
     # only import time package for testing
     import time
 
-    bill = __test_init__()
-    backend_tests = False
-
-    __run_gui__(bill)
+    g_bill = __test_init__()
+    __run_gui__(g_bill)
 
     if backend_tests:
         try:
@@ -234,6 +241,6 @@ if __name__ == "__main__":
             exit(0)
 
         print(f"\n{bcolors.BOLD}Running backend tests...{bcolors.ENDC}")
-        __run_tests__(bill=bill)
+        __run_tests__(bill=g_bill)
     else:
         __clean_up__(1)

@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import tkinter as tk
 from tkinter import messagebox, StringVar
-# external package -> 'pip install tkcalendar' to install
 from tkcalendar import Calendar
 from .utils import tk_center
 from InsuranceBilling import date_convert, InsuranceService

@@ -185,11 +185,10 @@ class InsuranceService:
 
 
 class InsuranceInvoice:
-    def __init__(self, id: str or int=0, status: PaymentStatus = PaymentStatus.UNPAID, total_cost: str or int="$0", patient_info: list[str] = None, carrier_info: list[str] = None, 
+    def __init__(self, id: str or int=0, status: PaymentStatus = PaymentStatus.UNPAID, amount_due: str or int=None, patient_info: list[str] = None, carrier_info: list[str] = None, 
                  invoiced_services: list[InsuranceService] = None, date_invoiced: datetime = None, date_paid: datetime = None) -> None:
         self.id = id
-        self.amount_due = to_dollar(total_cost)
-        self.total_cost = self.amount_due
+        self.amount_due = to_dollar(amount_due)
 
         # info variables
         # [0: name
@@ -207,6 +206,7 @@ class InsuranceInvoice:
 
         self.invoiced_services = invoiced_services
 
+        self.get_total_cost()
         self.status = status
         self.date_invoiced = date_invoiced
         self.due_date = (date_invoiced + timedelta(days=self.get_last_day_of_month(
@@ -255,15 +255,20 @@ class InsuranceInvoice:
                 return service
         return None
 
+    def get_total_cost(self) -> str:
+        total_cost = 0
+        for service in self.invoiced_services:
+            total_cost += service.get_cost()
+            
+        self.total_cost = to_dollar(total_cost)
+
     def as_list(self) -> list[str]:
         return [self.id, str(self.date_invoiced.strftime(DATE_FORMAT)), str(self.due_date.strftime(DATE_FORMAT)) if self.due_date is not None else "", self.amount_due,
                 self.total_cost, self.carrier_info[0], self.status.name, str(self.date_paid.strftime(DATE_FORMAT)) if self.date_paid is not None else "", self.days_overdue]
 
     def as_receipt(self) -> str:
         invoiced_services = ""
-        total_cost = 0
         for service in self.invoiced_services:
-            total_cost += service.get_cost()
             invoiced_services += f"""\t - ID: {service.id}\
                                \n\t\t + Date: {service.date}\
                                \n\t\t + Description: {service.description}\
@@ -279,7 +284,7 @@ class InsuranceInvoice:
                  \nInvoiced services:\
                  \n{invoiced_services}\
                  \r{"-"*16}\
-                 \nAmount due: {self.amount_due}\t\tTotal cost: {to_dollar(total_cost)}""".expandtabs(4)
+                 \nAmount due: {self.amount_due}\t\tTotal cost: {self.total_cost}""".expandtabs(4)
 
     def as_csv_entry(self, delimiter: str=IB_DB_II_FIELD_DELIMITER) -> str:
         invoiced_services_csv = IN_DELIMITER.join(
@@ -425,7 +430,7 @@ class InsuranceBilling:
 
                 r_invoice = InsuranceInvoice(id=invoice['Invoice ID'],
                                              status=PaymentStatus[invoice['Invoice Status']],
-                                             total_cost=invoice['Amount Due'],
+                                             amount_due=invoice['Amount Due'],
                                              patient_info=invoice['Patient Info'].split(IN_DELIMITER),
                                              carrier_info=invoice['Carrier Info'].split(IN_DELIMITER),
                                              invoiced_services=invoiced_services)
@@ -722,7 +727,7 @@ class InsuranceBilling:
     # ---------------
     #   INVOICES
     # ---------------
-    def generate_invoice(self, month:str or int=None) -> InsuranceInvoice:
+    def generate_invoice(self, month:str or int=None) -> InsuranceInvoice or int:
         """ 
             Generate invoice from this **current** billing cycle (customizable through
             `month=` argument) then append it to local invoice list.
@@ -738,10 +743,14 @@ class InsuranceBilling:
 
             #### Returns:
             - `InsuranceInvoice` instance.
-            - `-1` if all services are paid or no services found.
+            - `-1` if all services were paid or no services found.
+            - `-2` if no carriers were found. 
         """
         patient_info = [self.user['First Name'] + ' ' +
                         self.user['Last Name'], self.user['Address']]
+        if not self.carriers:
+            return -2
+        
         carrier_info = [self.carriers[-1].name, self.carriers[-1].address]
         if not self.carriers[-1].primary:
             for carrier in self.carriers:
@@ -767,13 +776,13 @@ class InsuranceBilling:
                         invoiced_services.append(service)
 
         if not invoiced_services or not self.services:
-            return '-1'
+            return -1
 
         invoice_id = "0"
         while any(invoice.id == invoice_id for invoice in self.invoices if invoice is not None):
             invoice_id = str(int(invoice_id) + 1)
 
-        n_invoice = InsuranceInvoice(id=invoice_id, total_cost=total_cost, patient_info=patient_info, carrier_info=carrier_info,
+        n_invoice = InsuranceInvoice(id=invoice_id, amount_due=total_cost, patient_info=patient_info, carrier_info=carrier_info,
                                      invoiced_services=invoiced_services)
         n_invoice.mark_as_invoiced()
 
@@ -881,6 +890,29 @@ class InsuranceBilling:
                     carrier.status = PaymentStatus.LATE
                 else:
                     carrier.status = PaymentStatus.ONTIME
+                self.local_changes_made = True
+                return True
+
+        return False
+    
+    def reset_invoice(self, invoice_id: str or int) -> bool:
+        """
+            Reset an InsuranceInvoice payment amount and all of its services costs.
+
+            #### Parameters:
+            - `invoice_id` to find in database.
+
+            #### Returns:
+            - `True` if the operation was successful.
+            - `False` otherwise.
+        """
+        invoice_id = str(invoice_id)
+        for invoice in self.invoices:
+            if invoice is not None and invoice.id == invoice_id:
+                invoice.mark_as_unpaid()
+                for invoiced_service in invoice.invoiced_services:
+                    invoiced_service.mark_as_unpaid()
+                    self.services[int(invoiced_service.id)].mark_as_unpaid()
                 self.local_changes_made = True
                 return True
 

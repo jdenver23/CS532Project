@@ -5,10 +5,11 @@ from tkinter import messagebox
 from .tkentrycomplete import AutocompleteCombobox
 from .utils import get_icon, tk_center, PatientAccount
 
-
 class DataDisplayContainerPatientSelectWidget(tk.Toplevel):
     def __init__(self, master=None, **kw):
         super(DataDisplayContainerPatientSelectWidget,self).__init__(master,**kw)
+        self.master = master
+        
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
         self.lb_title = tk.Label(self.section_title)
@@ -35,7 +36,7 @@ class DataDisplayContainerPatientSelectWidget(tk.Toplevel):
         self.entry_patient_sel.configure(width=75)
         
         self.patient_account = PatientAccount()
-        self.entry_patient_sel.set_completion_list(self.patient_account.as_list())
+        self.entry_patient_sel.set_completion_list(self.patient_account.as_description_list())
         
         self.entry_patient_sel.pack(anchor="w", ipady=5, padx=15, side="left")
         
@@ -218,25 +219,34 @@ class DataDisplayContainerPatientSelectWidget(tk.Toplevel):
         self.resizable(False, False)
         self.title("Select a Patient - Healthcare Permanente")
         
+        self.wm_protocol("WM_DELETE_WINDOW", self.on_closing)
+        
         tk_center(self, gui_h=390, gui_w=720)
         self.nbc = self.master.calls(widget_name="nbc")
+        
+    def on_closing(self, event=None):
+        if messagebox.askyesno("Patient Select", "Are you sure you want to close this window? This will log you out of the system."):
+            self.destroy()
+            self.nbc.logout(forced=True)
+            
+        self.focus_force()
         
     def search_filter_upd(self, *event):
         self.clear_entries()
         self.entry_patient_sel.delete(0, tk.END)
         if self.search_filter.get() == 0: # ID
-            self.entry_patient_sel.set_completion_list(self.patient_account.as_list("ID"))
+            self.entry_patient_sel.set_completion_list(self.patient_account.as_description_list("ID"))
         elif self.search_filter.get() == 1: # Name
-            self.entry_patient_sel.set_completion_list(self.patient_account.as_list("Name"))
+            self.entry_patient_sel.set_completion_list(self.patient_account.as_description_list("Name"))
         elif self.search_filter.get() == 2: # Email
-            self.entry_patient_sel.set_completion_list(self.patient_account.as_list("Email"))
+            self.entry_patient_sel.set_completion_list(self.patient_account.as_description_list("Email"))
         elif self.search_filter.get() == 3: # DOB
-            self.entry_patient_sel.set_completion_list(self.patient_account.as_list("DOB"))
+            self.entry_patient_sel.set_completion_list(self.patient_account.as_description_list("DOB"))
         elif self.search_filter.get() == 4: # Phone#
-            self.entry_patient_sel.set_completion_list(self.patient_account.as_list("Phone#"))
+            self.entry_patient_sel.set_completion_list(self.patient_account.as_description_list("Phone#"))
         
     def patient_search(self):
-        _id = self.entry_patient_sel.get().strip().split(",")[self.search_filter.get()]
+        _id = self.entry_patient_sel.get().split(",")[self.search_filter.get()].strip()
         patient = self.patient_account.get_patient(_id)
         self.clear_entries()
         if patient is None: 
@@ -286,10 +296,11 @@ class DataDisplayContainerPatientSelectWidget(tk.Toplevel):
         self.entry_patient_address.configure(state=tk.DISABLED)
 
     def form_submit(self):
-        _id = self.entry_patient_sel.get().strip().split(",")[self.search_filter.get()]
+        _id = self.entry_patient_sel.get().split(",")[self.search_filter.get()].strip()
         patient = self.patient_account.get_patient(_id)
         if patient is None:
             messagebox.showerror("Error", "Could not process last request (error while retrieving patient info). Please try again.")
+            self.focus_force()
             return
         
         self.destroy()

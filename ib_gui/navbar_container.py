@@ -50,7 +50,7 @@ class NavbarContainerWidget(tk.Frame):
             justify="left",
             overrelief="groove",
             relief="flat",
-            command=self.pull_db)
+            command=self.pull_from_db)
         self.btn_pull_db.pack(
             anchor="w",
             ipadx=2,
@@ -124,27 +124,37 @@ class NavbarContainerWidget(tk.Frame):
             
             self.bill = n_bill
     
-    def pull_db(self):
-        if messagebox.askyesno("Pull data from database", "Do you want pull data from database and discard all changes?"):
+    def pull_from_db(self, forced=False):
+        if forced or messagebox.askyesno("Pull data from database", "Do you want pull data from database and discard all changes?"):
             self.ddc.pull_from_db()
             messagebox.showinfo("Save Changes", "Successful!")
+            
+        self.focus_force()
     
-    def save_changes(self):
-        if messagebox.askyesno("Save Changes", "Do you want to commit changes to database?"):
+    def save_changes(self, forced=False):
+        if forced or messagebox.askyesno("Save Changes", "Do you want to commit changes to database?"):
             self.ddc.bill.commit_to_db()
             messagebox.showinfo("Save Changes", "Successful!")
+            self.ddc.pull_from_db()
+            
+        self.focus_force()
         
-    def home(self):
-        if messagebox.askyesno("Home", "Are you sure you want to go to home?"):
+    def home(self, forced=False):
+        if forced or messagebox.askyesno("Home", "Are you sure you want to go to home?"):
             self.master.destroy()
             homepage.home_gui(self.ddc.bill.user['ID'])
+            
+        self.focus_force()
     
-    def logout(self):
-        if messagebox.askyesno("Log out", "Are you sure you want to log out?"):
+    def logout(self, forced=False):
+        if forced or messagebox.askyesno("Log out", "Are you sure you want to log out?"):
             self.master.destroy()
             login.login_gui()
+            
+        self.focus_force()
 
     def btn_on_mouse_enter(self, event=None):
+        """ Show line selector and text widget when mouse enters buttons. """
         _text = "Home"
         tt_dx = -2
         tt_dy = 34
@@ -176,8 +186,8 @@ class NavbarContainerWidget(tk.Frame):
         self.line_selector.lift()
         # event.widget['background'] = '#dadada'
         
-
     def btn_on_mouse_leave(self, event=None):
+        """ Hide line selector and text widget when mouse enters buttons. """
         self.line_selector.place_forget()
         self.tooltip_selector.place_forget()
         # event.widget['background'] = 'SystemButtonFace' #default button color
@@ -186,5 +196,5 @@ class NavbarContainerWidget(tk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     widget = NavbarContainerWidget(root)
-    widget.pack(expand=True, fill="both")
+    # widget.pack(expand=True, fill="both")
     root.mainloop()

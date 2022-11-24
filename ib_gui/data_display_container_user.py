@@ -259,6 +259,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
                                  ['0', '1-1-2001', '2-1-2001', '$1200', 'test carrier', 'UNPAID', '', '123'], ])
 
     def toggle_treeview(self, event: tk.Event = None, index=None):
+        """ Switch treeview on selected. """
         if index == 0 or (event is not None and event.widget.cget("text") == "Carriers"):
             self.active_treeview = "Carriers"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -307,6 +308,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.btn_pay.configure(state=tk.DISABLED)
 
     def create_carriers_tv(self, root):
+        """ Initialize carriers treeview. """
         self.carrier_columns = ('id', 'name', 'address', 'primary')
         self.treeview_carriers = ttk.Treeview(root)
         self.treeview_carriers.configure(height=14, selectmode="extended", show="headings", columns=self.carrier_columns)
@@ -339,7 +341,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.treeview_services.column('payment_status', anchor=tk.CENTER, width=140)
 
     def create_invoices_tv(self, root):
-        # TODO: invoiced services will be in a different container
+        """ Initialize invoices treeview. """
         self.invoice_columns = ('id', 'invoiced_date', 'due_date', 'amt_due', 'total_cost', 'carrier_name', 'status', 'paid_date', 'days_overdue')
         self.treeview_invoices = ttk.Treeview(root)
         self.treeview_invoices.configure(height=14, selectmode="extended", show="headings", columns=self.invoice_columns)
@@ -368,5 +370,5 @@ class DataDisplayContainerUserWidget(tk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     widget = DataDisplayContainerUserWidget(root, test_data=True)
-    widget.pack(expand=True, fill="both")
+    # widget.pack(expand=True, fill="both")
     root.mainloop()

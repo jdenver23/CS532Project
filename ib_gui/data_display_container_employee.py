@@ -5,13 +5,13 @@ from tkinter import messagebox
 from .data_display_container_carrier_addedit_toplvl import CarrierAddEditToplvlWidget
 from .data_display_container_service_addedit_toplvl import ServiceAddEditToplvlWidget
 from .data_display_container_invoice_month_selection import InvoiceMonthSelectionWidget
-from InsuranceBilling import InsuranceBilling, dollar_to_float
+from InsuranceBilling import InsuranceBilling, InsuranceInvoice, dollar_to_float
 
 
 class DataDisplayContainerEmployeeWidget(tk.Frame):
     def __init__(self, bill: InsuranceBilling, master=None, test_data=False, **kw):
         super(DataDisplayContainerEmployeeWidget, self).__init__(master, **kw)
-        self.bill = bill
+        self.bill: InsuranceBilling = bill
 
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
@@ -169,10 +169,10 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 item_vals = self.treeview_invoices.item(selection)['values']
                 _to_edit = self.bill.get_invoice(item_vals[0])
                 if item_vals[6] == "UNPAID":
-                    _to_edit.mark_as_paid()
+                    self.bill.pay_for_invoice(item_vals[0], pay_in_full=True)
                     self.btn_mark_as.configure(text="✓ Mark as UNPAID")
                 else:
-                    _to_edit.mark_as_unpaid()
+                    self.bill.reset_invoice(item_vals[0])
                     self.btn_mark_as.configure(text="✓ Mark as PAID")
                 self.treeview_invoices.item(selection, values=_to_edit.as_list())
             
@@ -187,14 +187,15 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         if renew_services: self.treeview_services.delete(*self.treeview_services.get_children())
         if renew_invoices: self.treeview_invoices.delete(*self.treeview_invoices.get_children())
 
-        # reset local lists from database data
-        if refresh:
-            self.bill.retrieve_data()
+        if self.bill is not None:
+            # reset local lists from database data
+            if refresh:
+                self.bill.retrieve_data()
 
-        # get data from db then insert to treeviews
-        if renew_carriers: self.treeview_insert_row(self.treeview_carriers, [carrier.as_list() for carrier in self.bill.carriers])
-        if renew_services: self.treeview_insert_row(self.treeview_services, [service.as_list() for service in self.bill.services])
-        if renew_invoices: self.treeview_insert_row(self.treeview_invoices, [invoice.as_list() for invoice in self.bill.invoices])
+            # get data from db then insert to treeviews
+            if renew_carriers: self.treeview_insert_row(self.treeview_carriers, [carrier.as_list() for carrier in self.bill.carriers])
+            if renew_services: self.treeview_insert_row(self.treeview_services, [service.as_list() for service in self.bill.services])
+            if renew_invoices: self.treeview_insert_row(self.treeview_invoices, [invoice.as_list() for invoice in self.bill.invoices])
         
     def reset_attributes(self):
         """Focus on master and permit mouse clicking."""
@@ -258,12 +259,13 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 n_data = self.bill.new_service(data['description'], data['cost'], data['date'])
                 self.treeview_insert_row(self.treeview_services, [n_data.as_list()])
             elif self.active_treeview == "Invoices":
-                # TODO: add edited invoice to local list
-                # messagebox.showinfo("Generating a New Invoice", "This feature is still under development. Please come back at a later time.")
                 n_return = self.bill.generate_invoice(data['month'])
                 if n_return == -1:
                     messagebox.showwarning("Warning", f"Could not generate new invoice (no services found in {data['mth_i']})")
-                else:
+                elif n_return == -2:
+                    messagebox.showwarning("Warning", f"Could not generate new invoice (no carriers found for {self.bill.user_name})")
+                
+                if type(n_return) == InsuranceInvoice:
                     self.pull_from_db(refresh=False, renew_carriers=False, renew_services=False)
     
     def toplevel_force_focus(self, event=None):
@@ -277,6 +279,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.treeview_invoices_curr_sel = None
         
     def toggle_treeview_item(self, direction="down", event=None):
+        """ Handle keybind events to navigate through treeviews and its items. """
         dx = -1 if direction == "up" else 1
         
         if self.active_treeview == "Carriers":
@@ -415,7 +418,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                     self.btn_mark_as.configure(text="✓ Mark as PAID")
                     
             elif self.active_treeview == "Invoices":
-                is_invoice_paid = self.treeview_invoices.item(self.selected_item_id)['values'][5] == "PAID"
+                is_invoice_paid = self.treeview_invoices.item(self.selected_item_id)['values'][6] == "PAID"
                 if is_invoice_paid:
                     self.btn_mark_as.configure(text="✓ Mark as UNPAID")
                 elif not is_invoice_paid:
@@ -459,6 +462,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                                  ['0', '1-1-2001', '2-1-2001', '$1200', 'test carrier', 'UNPAID', '', '123'], ])
 
     def toggle_treeview(self, event: tk.Event = None, index=None):
+        """ Switch treeview on selected. """
         if index == 0 or (event is not None and event.widget.cget("text") == "Carriers"):
             self.active_treeview = "Carriers"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -509,6 +513,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.btn_mark_as.configure(state=tk.DISABLED)
 
     def create_carriers_tv(self, root):
+        """ Initialize carriers treeview. """
         self.carrier_columns = ('id', 'name', 'address', 'primary')
         self.treeview_carriers = ttk.Treeview(root)
         self.treeview_carriers.configure(height=14, selectmode="extended", show="headings", columns=self.carrier_columns)
@@ -524,6 +529,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.treeview_carriers.column('primary', anchor=tk.CENTER, width=145)
 
     def create_services_tv(self, root):
+        """ Initialize services treeview. """
         self.service_columns = ('id', 'description', 'date', 'cost', 'payment_status')
         self.treeview_services = ttk.Treeview(root)
         self.treeview_services.configure(height=14, selectmode="extended", show="headings", columns=self.service_columns)
@@ -541,7 +547,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.treeview_services.column('payment_status', anchor=tk.CENTER, width=140)
 
     def create_invoices_tv(self, root):
-        # TODO: invoiced services will be in a different container
+        """ Initialize invoices treeview. """
         self.invoice_columns = ('id', 'invoiced_date', 'due_date', 'amt_due', 'total_cost', 'carrier_name', 'status', 'paid_date', 'days_overdue')
         self.treeview_invoices = ttk.Treeview(root)
         self.treeview_invoices.configure(height=14, selectmode="extended", show="headings", columns=self.invoice_columns)
@@ -570,5 +576,5 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     widget = DataDisplayContainerEmployeeWidget(root, test_data=True)
-    widget.pack(expand=True, fill="both")
+    # widget.pack(expand=True, fill="both")
     root.mainloop()
