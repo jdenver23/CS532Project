@@ -72,6 +72,7 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
             foreground="white",
             justify="left",
             takefocus=True,
+            overrelief="ridge",
             text='Done ✓')
         self.btn_done.pack(ipadx=5, ipady=5, side="right")
         self.btn_done.configure(command=self.form_submit)
@@ -82,7 +83,8 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
-            text='× Cancel')
+            text='× Cancel',
+            overrelief="ridge")
         self.btn_cancel.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
         self.control_container.pack(padx=30, pady=20, side="bottom", fill="x")
@@ -94,7 +96,6 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
 
         self.lb_warning = tk.Label(self)
         self.lb_warning.configure(font="{Verdana} 8 {bold}", fg='#ffaa00')
-
 
         self.ddc = self.master.calls(widget_name="ddc")
         
@@ -118,7 +119,7 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
                 'address': self.entry_address.get(),
                 'primary': self.entry_primary.get()}
         
-        if not any(data.values()):
+        if any(not val for val in data.values()):
             messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")
             self.focus_force()
         else:

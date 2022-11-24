@@ -16,7 +16,10 @@ def init_gui(uid: str or int):
 #
 #
 
-uid = 30000000
+USER_ID = "2" + "0"*7
+EMPLOYEE_ID = "3" + "0"*7
+
+uid = EMPLOYEE_ID
 
 
 def __service_tests__(bill: InsuranceBilling):
@@ -25,9 +28,10 @@ def __service_tests__(bill: InsuranceBilling):
         print("<<< removed service with id = 1")
         print(bill.services)
 
+    print(">>> add new service: labs with the cost of $27 id =",
+          bill.new_service('labs', '$27', date=datetime(2011, 12, 6)))
     print(">>> add new service: labs with the cost of $627 id =",
           bill.new_service('labs', '$627', date=datetime(2011, 12, 2)))
-    print(bill.services)
     print(">>> add new service: vaccines with the cost of $288 id =",
           bill.new_service('vaccines', '$288'))
     print(bill.services)
@@ -44,7 +48,6 @@ def __carrier_tests__(bill: InsuranceBilling):
     print(bill.carriers)
     print(">>> add new carrier: PRIMARY Medical @111 1st st id =",
           bill.new_carrier('Medical', '111 1st st', primary=True))
-    print(bill.carriers)
     print(">>> add new carrier: PRIMARY Care @222 2nd st id =",
           bill.new_carrier('Care', '222 2nd st', primary=True))
     print(bill.carriers)
@@ -108,6 +111,7 @@ def __invoice_tests__(bill: InsuranceBilling, month=datetime.now().month, pay=Tr
 
 
 def __clean_up__(opt=0):
+    global uid
     count = 0
     
     with open(USER_FILE, "r+", encoding = "utf-8") as file:
@@ -172,7 +176,10 @@ def __run_tests__(bill: InsuranceBilling) -> None:
 
 
 def __test_init__():
+    global uid
+    
     __clean_up__()
+    
     if not Path(IB_DB_DIR).is_dir():
         os.mkdir(IB_DB_DIR)
     with open(USER_FILE, mode='a', newline='\n') as f:

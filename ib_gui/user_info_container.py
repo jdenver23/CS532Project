@@ -108,6 +108,27 @@ class UserInfoContainerWidget(tk.Frame):
         self.user_info_container.grid_propagate(0)
         self.user_info_container.grid_anchor("center")
         self.configure(borderwidth=0)
+    
+    def pull_from_db(self):
+        self.user_id.configure(state=tk.NORMAL)
+        self.user_name.configure(state=tk.NORMAL)
+        self.user_address.configure(state=tk.NORMAL)
+        self.user_dob.configure(state=tk.NORMAL)
+        
+        self.user_id.delete("1.0", tk.END)
+        self.user_name.delete("1.0", tk.END)
+        self.user_address.delete("1.0", tk.END)
+        self.user_dob.delete("1.0", tk.END)
+        
+        self.user_id.insert("1.0", self.bill.user["ID"])
+        self.user_name.insert("1.0", self.bill.user_name)
+        self.user_address.insert("1.0", self.bill.user["Address"])
+        self.user_dob.insert("1.0", self.bill.user['Date of Birth'])
+        
+        self.user_id.configure(state=tk.DISABLED)
+        self.user_name.configure(state=tk.DISABLED)
+        self.user_address.configure(state=tk.DISABLED)
+        self.user_dob.configure(state=tk.DISABLED)
 
     def set_text(self, text_widget, text="", index="0.0"):
         text_widget.insert(index, text)

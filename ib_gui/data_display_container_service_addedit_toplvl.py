@@ -90,6 +90,7 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
             foreground="white",
             justify="left",
             takefocus=True,
+            overrelief="ridge",
             text='Done ✓')
         self.btn_done.pack(ipadx=5, ipady=5, side="right")
         self.btn_done.configure(command=self.form_submit)
@@ -100,6 +101,7 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
+            overrelief="ridge",
             text='× Cancel')
         self.btn_cancel.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
@@ -154,19 +156,19 @@ class ServiceAddEditToplvlWidget(tk.Toplevel):
         y = self.winfo_pointery() - self.winfo_rooty()
         self.cal.place(x=x, y=y)
         if x > 380:
-            self.geometry(f"{640 + x-380}x360")
+            self.geometry(f"{640 + x-380}x380")
         else:
-            self.geometry("640x360")
+            self.geometry("640x380")
 
     def hide_calendar(self, event=None):
-        self.geometry("640x260")
+        self.geometry("640x270")
         self.cal.place_forget()
 
     def form_submit(self):
         data = {'description': self.entry_description.get(),
-                'date':self.entry_date.get(),
+                'date': self.entry_date.get(),
                 'cost': self.entry_cost.get()}
-        if not any(data.values()):
+        if any(not val for val in data.values()):
             messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")
             self.focus_force()
         else:

@@ -58,13 +58,15 @@ def to_dollar(amount: str or int or float, grouping: bool=True) -> str:
 
 
 def dollar_to_float(amount: str or int or float) -> float:
+    """ Convert `amount` to float value. """
     amount = str(amount)
     for r in ["$", ","]:
         amount = amount.replace(r, '')
     return float(amount)
 
 
-def date_convert(_date: str, _type: str="date"):
+def date_convert(_date: str or datetime, _type: str="date"):
+    """ Parse `_date` into either `date`, `datetime`, or `str` object. """
     if _date in NONE: return ""
     _date = str(_date)
     for format in [DATETIME_FORMAT_F, DATETIME_FORMAT, DATE_FORMAT, DATE_TIME_FORMAT, DATE_TIME_FORMAT_F]:
@@ -217,8 +219,7 @@ class InsuranceInvoice:
             Mark today as invoiced date and set due Date to on the same day of next month.
         """
         self.date_invoiced = datetime.now() if date_invoiced is None else date_invoiced
-        self.due_date = self.date_invoiced + \
-            timedelta(days=self.get_last_day_of_month())
+        self.due_date = self.date_invoiced + timedelta(days=self.get_last_day_of_month())
 
     def mark_as_paid(self, date_paid: datetime = None) -> None:
         """
@@ -584,6 +585,7 @@ class InsuranceBilling:
             if carrier is not None and carrier.id == carrier_id:
                 self.set_primary(carrier_id, to_carrier.primary)
                 carrier = to_carrier
+                self.local_changes_made = True
                 return True
         return False
     
@@ -596,6 +598,7 @@ class InsuranceBilling:
                 if n_name not in NONE: carrier.name = n_name
                 if n_address not in NONE: carrier.address = n_address
                 if n_primary not in NONE: carrier.primary = n_primary
+                self.local_changes_made = True
                 return True
         return False
 
@@ -690,6 +693,7 @@ class InsuranceBilling:
         for i in range(len(self.services)):
             if self.services[i] is not None and self.services[i].id == service_id:
                 self.services[i] = to_service
+                self.local_changes_made = True
                 return True
         return False
     
@@ -701,6 +705,7 @@ class InsuranceBilling:
                 if n_description not in NONE: self.services[i].description = n_description
                 if n_cost not in NONE: self.services[i].cost = n_cost
                 if n_date not in NONE: self.services[i].set_date(n_date)
+                self.local_changes_made = True
                 return True
         return False
     
@@ -709,6 +714,7 @@ class InsuranceBilling:
         service_id = str(service_id)
         for service in self.services:
             if service is not None and service.id == service_id:
+                self.local_changes_made = True
                 return service.pay(payment_amount)
             
         return False
@@ -748,6 +754,8 @@ class InsuranceBilling:
         total_cost = 0
         if month is None:
             month = datetime.now().month
+        else:
+            month = int(month)
 
         for service in self.services:
             if service is not None and service.date.month == month:
@@ -793,7 +801,6 @@ class InsuranceBilling:
                 self.invoices.remove(invoice)
                 self.local_changes_made = True
                 return True
-
         return False
     
     def get_invoice(self, invoice_id: str or int) -> InsuranceInvoice:
@@ -847,14 +854,14 @@ class InsuranceBilling:
             - `True` if payment was successful.
             - `False` otherwise.
         """
-        payment_amount = float(payment_amount.replace("$", ''))
+        payment_amount = dollar_to_float(payment_amount)
         if payment_amount <= 0 and not pay_in_full:
             return False
 
         invoice_id = str(invoice_id)
         for invoice in self.invoices:
             if invoice is not None and invoice.id == invoice_id:
-                diff = float(invoice.amount_due.replace("$", '')) - payment_amount
+                diff = dollar_to_float(invoice.amount_due) - payment_amount
                 if diff <= 0 or pay_in_full:
                     invoice.mark_as_paid()
                     for invoiced_service in invoice.invoiced_services:

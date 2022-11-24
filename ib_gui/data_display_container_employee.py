@@ -4,6 +4,7 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 from .data_display_container_carrier_addedit_toplvl import CarrierAddEditToplvlWidget
 from .data_display_container_service_addedit_toplvl import ServiceAddEditToplvlWidget
+from .data_display_container_invoice_month_selection import InvoiceMonthSelectionWidget
 from InsuranceBilling import InsuranceBilling, dollar_to_float
 
 
@@ -11,21 +12,6 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
     def __init__(self, bill: InsuranceBilling, master=None, test_data=False, **kw):
         super(DataDisplayContainerEmployeeWidget, self).__init__(master, **kw)
         self.bill = bill
-        
-        # TODO: add combobox/search box for patient select
-        # self.patient_select = tk.Frame(self)
-        # self.patient_select.configure(height=25, width=960)
-        # self.entry_patient_sel = ttk.Combobox(self.patient_select)
-        # self.all_patients_info = [f"[ID: {str(p.id)}] " +
-        #                           f"" for p in self.bill.invoices]
-        # for invoice_info in self.all_invoices_info:
-        #     if self.invoice_info_to_id(invoice_info) == str(self.c_invoice.id):
-        #         self.entry_patient_sel.set(invoice_info)
-        #         break
-        # self.entry_patient_sel.pack(anchor="w", padx=15, ipady=15, side="top", fill="x")
-        # self.entry_patient_sel.bind("<<ComboboxSelected>>", self.entry_patient_sel_upd)
-        # self.patient_select.pack(anchor="w", padx=10, side="top")
-        # self.patient_select.pack_propagate(0)
 
         self.section_title = tk.Frame(self)
         self.section_title.configure(height=25, width=960)
@@ -83,6 +69,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             font="{Verdana} 10 {}",
             foreground="white",
             takefocus=True,
+            overrelief="ridge",
             text='+ Add')
         self.btn_add.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_add.configure(command=lambda: self.treeview_add_item_window())
@@ -94,7 +81,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             font="{Verdana} 10 {}",
             foreground="white",
             state="disabled",
-            takefocus=True,
+            overrelief="ridge",
             text='ⓘ Edit')
         self.btn_edit.pack(ipadx=5, ipady=5, side="left")
         self.btn_edit.configure(command=lambda: self.treeview_edit_selection())
@@ -105,7 +92,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             font="{Verdana} 10 {}",
             foreground="white",
             state="disabled",
-            takefocus=True,
+            overrelief="ridge",
             text='× Delete')
         self.btn_delete.pack(ipadx=5, ipady=5, padx=10, side="left")
         self.btn_delete.configure(command=lambda: self.treeview_del_selection())
@@ -116,7 +103,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             font="{Verdana} 10 {}",
             foreground="white",
             state="disabled",
-            takefocus=True)
+            overrelief="ridge")
         self.btn_mark_as.configure(command=lambda: self.selection_mark_as())
 
         self.control_container.pack(anchor="n", padx=30, side="top", fill="x")
@@ -253,8 +240,8 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 self.treeview_services.item(self.curr_selected, values=[self.id_to_edit] + list(data.values()))
             elif self.active_treeview == "Invoices":
                 # TODO: edit invoice here
-                messagebox.showinfo("Editing an Invoice", "This feature is still under development.\
-                                    Please come back at a later time.")
+                messagebox.showinfo("Editing an Invoice", "This feature is still under development. Please come back at a later time.")
+                self.reset_attributes()
         
     def toplevel_data_transfer_callback(self, data: dict):
         """`DDC` data transfer (add) call back."""
@@ -272,8 +259,12 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 self.treeview_insert_row(self.treeview_services, [n_data.as_list()])
             elif self.active_treeview == "Invoices":
                 # TODO: add edited invoice to local list
-                messagebox.showinfo("Generating a New Invoice", "This feature is still under development.\
-                                    Please come back at a later time.")
+                # messagebox.showinfo("Generating a New Invoice", "This feature is still under development. Please come back at a later time.")
+                n_return = self.bill.generate_invoice(data['month'])
+                if n_return == -1:
+                    messagebox.showwarning("Warning", f"Could not generate new invoice (no services found in {data['mth_i']})")
+                else:
+                    self.pull_from_db(refresh=False, renew_carriers=False, renew_services=False)
     
     def toplevel_force_focus(self, event=None):
         if hasattr(self, "curr_toplvl"):
@@ -331,11 +322,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         elif self.active_treeview == "Services":
             self.curr_toplvl = ServiceAddEditToplvlWidget(self.master)
         elif self.active_treeview == "Invoices":
-            # TODO: invoice adding gui
-            messagebox.showinfo("Generating a New Invoice", "This feature is still under development.\
-                                Please come back at a later time.")
-            self.reset_attributes()
-            pass
+            self.curr_toplvl = InvoiceMonthSelectionWidget(self.master)
     
     def treeview_edit_selection(self) -> None:
         self.master.attributes("-disabled", True)
@@ -354,7 +341,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         elif self.active_treeview == "Invoices":
             self.curr_selected = self.treeview_invoices.selection()[0]
             self.id_to_edit = self.treeview_invoices.item(self.curr_selected)['values'][0]
-            
+            messagebox.showinfo("Editing an Invoice", "This feature is still under development. Please come back at a later time.")
             self.reset_attributes()
 
     def treeview_del_selection(self):
@@ -415,23 +402,23 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             
             if self.active_treeview == "Carriers":
                 is_carrier_primary = self.treeview_carriers.item(self.selected_item_id)['values'][3] == "PRIMARY"
-                if is_carrier_primary and self.btn_mark_as['text'] != "✓ Mark as NON-PRIMARY":
+                if is_carrier_primary:
                     self.btn_mark_as.configure(text="✓ Mark as NON-PRIMARY")
-                elif not is_carrier_primary and self.btn_mark_as['text'] != "✓ Mark as PRIMARY":
+                elif not is_carrier_primary:
                     self.btn_mark_as.configure(text="✓ Mark as PRIMARY")
                     
             elif self.active_treeview == "Services":
                 is_service_paid = self.treeview_services.item(self.selected_item_id)['values'][4] == "PAID"
-                if is_service_paid and self.btn_mark_as['text'] != "✓ Mark as UNPAID":
+                if is_service_paid:
                     self.btn_mark_as.configure(text="✓ Mark as UNPAID")
-                elif not is_service_paid and self.btn_mark_as['text'] != "✓ Mark as PAID":
+                elif not is_service_paid:
                     self.btn_mark_as.configure(text="✓ Mark as PAID")
                     
             elif self.active_treeview == "Invoices":
                 is_invoice_paid = self.treeview_invoices.item(self.selected_item_id)['values'][5] == "PAID"
-                if is_invoice_paid and self.btn_mark_as['text'] != "✓ Mark as UNPAID":
+                if is_invoice_paid:
                     self.btn_mark_as.configure(text="✓ Mark as UNPAID")
-                elif not is_invoice_paid and self.btn_mark_as['text'] != "✓ Mark as PAID":
+                elif not is_invoice_paid:
                     self.btn_mark_as.configure(text="✓ Mark as PAID")
             
             self.btn_mark_as.pack(ipadx=5, ipady=5, side="right")

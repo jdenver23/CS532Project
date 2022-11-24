@@ -1,12 +1,13 @@
 import tkinter as tk
 from tkinter import messagebox
-from .utils import get_icon
+from .utils import get_icon, UIMode, Patient
 import homepage
 import login
 from InsuranceBilling import InsuranceBilling
+from .data_display_container_patient_select import DataDisplayContainerPatientSelectWidget
 
 class NavbarContainerWidget(tk.Frame):
-    def __init__(self, bill: InsuranceBilling, master=None, **kw):
+    def __init__(self, bill: InsuranceBilling, master=None, ui_mode=UIMode.PATIENT, **kw):
         super(NavbarContainerWidget, self).__init__(master, **kw)
         self.bill = bill
         self.master = master
@@ -21,23 +22,25 @@ class NavbarContainerWidget(tk.Frame):
             borderwidth=0,
             image=self.img_home,
             justify="left",
-            overrelief="flat",
+            overrelief="groove",
             relief="flat",
             command=self.home)
         self.btn_home.pack(anchor="w", padx=5, pady=5, side="left")
         self.btn_home.bind("<Enter>", self.btn_on_mouse_enter, add="+")
         self.btn_home.bind("<Leave>", self.btn_on_mouse_leave, add="+")
-        self.btn_save_changes = tk.Button(self)
-        self.img_save = tk.PhotoImage(file=get_icon("save.png"))
-        self.btn_save_changes.configure(
-            borderwidth=0,
-            image=self.img_save,
-            overrelief="flat",
-            relief="flat",
-            command=self.save_changes)
-        self.btn_save_changes.pack(anchor="w", ipadx=1, padx=10, pady=5, side="left")
-        self.btn_save_changes.bind("<Enter>", self.btn_on_mouse_enter, add="+")
-        self.btn_save_changes.bind("<Leave>", self.btn_on_mouse_leave, add="+")
+        
+        if ui_mode == UIMode.EMPLOYEE:
+            self.btn_save_changes = tk.Button(self)
+            self.img_save = tk.PhotoImage(file=get_icon("save.png"))
+            self.btn_save_changes.configure(
+                borderwidth=0,
+                image=self.img_save,
+                overrelief="groove",
+                relief="flat",
+                command=self.save_changes)
+            self.btn_save_changes.pack(anchor="w", ipadx=1, padx=10, pady=5, side="left")
+            self.btn_save_changes.bind("<Enter>", self.btn_on_mouse_enter, add="+")
+            self.btn_save_changes.bind("<Leave>", self.btn_on_mouse_leave, add="+")
         
         self.btn_pull_db = tk.Button(self)
         self.img_pull = tk.PhotoImage(file=get_icon("pull.png"))
@@ -45,7 +48,7 @@ class NavbarContainerWidget(tk.Frame):
             borderwidth=0,
             image=self.img_pull,
             justify="left",
-            overrelief="flat",
+            overrelief="groove",
             relief="flat",
             command=self.pull_db)
         self.btn_pull_db.pack(
@@ -67,12 +70,27 @@ class NavbarContainerWidget(tk.Frame):
             borderwidth=0,
             image=self.img_logout,
             justify="left",
-            overrelief="flat",
+            overrelief="groove",
             relief="flat",
             command=self.logout)
         self.btn_logout.pack(anchor="e", padx=5, pady=5, side="right")
         self.btn_logout.bind("<Enter>", self.btn_on_mouse_enter, add="+")
         self.btn_logout.bind("<Leave>", self.btn_on_mouse_leave, add="+")
+        
+        if ui_mode == UIMode.EMPLOYEE:
+            self.btn_select_patient = tk.Button(self)
+            self.img_person = tk.PhotoImage(file=get_icon("person.png"))
+            self.btn_select_patient.configure(
+                borderwidth=0,
+                image=self.img_person,
+                justify="left",
+                overrelief="groove",
+                relief="flat",
+                command=self.toggle_select_patient)
+            self.btn_select_patient.pack(anchor="e", padx=35, pady=5, side="right")
+            self.btn_select_patient.bind("<Enter>", self.btn_on_mouse_enter, add="+")
+            self.btn_select_patient.bind("<Leave>", self.btn_on_mouse_leave, add="+")
+            
         self.configure(height=75, width=960)
         self.pack_propagate(0)
         
@@ -83,22 +101,43 @@ class NavbarContainerWidget(tk.Frame):
         self.tooltip_selector.configure(font="{Verdana} 8 {}")
         
         self.master.bind("<Control_L>s", lambda x: self.save_changes())
+        
+    def def_calls(self):
+        self.ddc = self.master.calls(widget_name="ddc")
+        self.uic = self.master.calls(widget_name="uic")
+    
+    def toggle_select_patient(self):
+        if hasattr(self, "btn_select_patient"):
+            self.master.withdraw()
+            DataDisplayContainerPatientSelectWidget(master=self.master)
+    
+    def toplevel_callback(self, data: Patient=None):
+        self.master.deiconify()
+        if data is not None:
+            n_bill = InsuranceBilling(data.id)
+            
+            self.ddc.bill = n_bill
+            self.ddc.pull_from_db()
+            
+            self.uic.bill = n_bill
+            self.uic.pull_from_db()
+            
+            self.bill = n_bill
     
     def pull_db(self):
         if messagebox.askyesno("Pull data from database", "Do you want pull data from database and discard all changes?"):
-            ddc = self.master.calls(widget_name="ddc")
-            ddc.pull_from_db()
+            self.ddc.pull_from_db()
             messagebox.showinfo("Save Changes", "Successful!")
     
     def save_changes(self):
         if messagebox.askyesno("Save Changes", "Do you want to commit changes to database?"):
-            self.bill.commit_to_db()
+            self.ddc.bill.commit_to_db()
             messagebox.showinfo("Save Changes", "Successful!")
         
     def home(self):
         if messagebox.askyesno("Home", "Are you sure you want to go to home?"):
             self.master.destroy()
-            homepage.home_gui(self.bill.user['ID'])
+            homepage.home_gui(self.ddc.bill.user['ID'])
     
     def logout(self):
         if messagebox.askyesno("Log out", "Are you sure you want to log out?"):
@@ -111,18 +150,24 @@ class NavbarContainerWidget(tk.Frame):
         tt_dy = 34
         ls_dx = 0
         ls_dy = 33
-        if event.widget == self.btn_save_changes:
-            _text = "Save"
-            ls_dx -= 3
-            tt_dx -= 1
-        elif event.widget == self.btn_pull_db:
+        if hasattr(self, "btn_save_changes"):
+            if event.widget == self.btn_save_changes:
+                _text = "Save"
+                ls_dx -= 3
+                tt_dx -= 1
+        if event.widget == self.btn_pull_db:
             _text = "Pull"
             tt_dx += 5
             ls_dx -= 2
-        elif event.widget == self.btn_logout:
+        if event.widget == self.btn_logout:
             _text = 'Log out'
             ls_dx -= 3
             tt_dx -= 7
+        if hasattr(self, "btn_select_patient"):
+            if event.widget == self.btn_select_patient:
+                _text = "Select Patient"
+                ls_dx -= 3
+                tt_dx -= 25
             
         self.tooltip_selector.configure(text=_text)
         self.tooltip_selector.place(x=event.widget.winfo_x()+tt_dx, y=event.widget.winfo_y()+tt_dy)

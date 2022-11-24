@@ -67,6 +67,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
             foreground="white",
             state="disabled",
             takefocus=True,
+            overrelief="ridge",
             text="Make a Payment")
         self.btn_pay.configure(command=lambda: self.selection_pay())
 
@@ -191,6 +192,8 @@ class DataDisplayContainerUserWidget(tk.Frame):
             if self.active_treeview == "Invoices":
                 self.bill.pay_for_invoice(invoice_id=self.id_to_edit, payment_amount=data['payment_amount'])
                 self.treeview_invoices.item(self.curr_selected, values=self.bill.get_invoice(self.id_to_edit).as_list())
+                self.bill.commit_to_db()
+                self.pull_from_db(refresh=True)
     
     def toplevel_force_focus(self, event=None):
         if hasattr(self, "curr_toplvl"):

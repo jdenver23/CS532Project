@@ -153,6 +153,7 @@ class DataDisplayContainerMakeAPaymentWidget(tk.Toplevel):
             foreground="white",
             justify="left",
             takefocus=True,
+            overrelief="ridge",
             text='Pay Now ✓')
         self.btn_pay.pack(ipadx=5, ipady=5, side="right")
         self.btn_pay.configure(command=self.form_submit)
@@ -163,6 +164,7 @@ class DataDisplayContainerMakeAPaymentWidget(tk.Toplevel):
             font="{Verdana} 10 {}",
             foreground="white",
             justify="left",
+            overrelief="ridge",
             text='× Cancel')
         self.btn_cancel.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
@@ -291,7 +293,7 @@ class DataDisplayContainerMakeAPaymentWidget(tk.Toplevel):
 
     def form_submit(self):
         data = {'payment_amount': self.entry_payment_amount.get()}
-        if not any(data.values()):
+        if any(not val for val in data.values()):
             messagebox.showwarning("Warning", "Make sure to fill out all fields before continue.")
             self.focus_force()
         else:
