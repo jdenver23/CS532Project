@@ -65,7 +65,7 @@ class PharmacyOrder:
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
-                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                             matching_prescriptions.append(information_dictionary)
             # if user is patient then only show that patient's prescriptions that match the query                
             else:
@@ -75,7 +75,7 @@ class PharmacyOrder:
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
-                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                             matching_prescriptions.append(information_dictionary)
             
             # Return the list of matching prescriptions. if no match, then list is empty. 
@@ -99,7 +99,7 @@ class PharmacyOrder:
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
-                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                             matching_prescriptions.append(information_dictionary)
             # if user is patient, then display only that user's prescriptions that match the query.
             else:
@@ -108,7 +108,7 @@ class PharmacyOrder:
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
-                            information_dictionary = PharmacyOrder.get_all_row_info(row)
+                            information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                             matching_prescriptions.append(information_dictionary)
             
             # Return the list of matching prescriptions. if no match, then list is empty. 
@@ -220,7 +220,7 @@ class PharmacyOrder:
         print("Successful Pharmacy Order added")
 
     # Function that gets all the information of a specific row and returns it as dictionary format.
-    def get_all_row_info(row):
+    def get_all_row_info_dict(row):
         info_dict = {\
             "Prescription ID": row["Prescription ID"],\
             "Patient Name": row["Patient Name"],\
@@ -234,6 +234,22 @@ class PharmacyOrder:
             "Date Filled": row["Date Filled"],\
             "Pharmacist": row["Pharmacist"]}
         return info_dict
+
+    # Function that gets all the information of a specific row and returns it as list format.
+    def get_all_row_info_list(row):
+        info_list = [\
+            row["Prescription ID"],\
+            row["Patient Name"],\
+            row["Patient ID"],\
+            row["Physician Name"],\
+            row["Prescribed Medication"],\
+            row["Medication ID"],\
+            row["Dosage"],\
+            row["Frequency"],\
+            row["Date Ordered"],\
+            row["Date Filled"],\
+            row["Pharmacist"]]
+        return info_list
 
     # Function to print information(either the row information or an error message) of the result of search_by_prescription_id
     def print_search_by_prescription_id(self, dict_info, p_ID):
@@ -256,13 +272,13 @@ class PharmacyOrder:
             if user_id_int >= 30000000 and user_id_int < 40000000:
                 for row in reader:
                     if row["Prescription ID"] == prescription_id:
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         return information_dictionary
             # if patient
             else:
                 for row in reader:
                     if user_ID == row["Patient ID"] and row["Prescription ID"] == prescription_id:
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         return information_dictionary
                     # print error message if prescription id matches but patient does not. 
                     if row["Prescription ID"] == prescription_id and user_ID != row["Patient ID"]:
@@ -293,13 +309,13 @@ class PharmacyOrder:
             if user_id_int >= 30000000 and user_id_int < 40000000:
                 for row in reader:
                     if row["Patient Name"] == patient_name and row["Prescribed Medication"] == prescribed_medication:
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         matches_list.append(information_dictionary)
             # if user is a patient, then make sure patient is only seraching their records.    
             else:
                 for row in reader:
                     if row["Patient Name"] == patient_name and row["Prescribed Medication"] == prescribed_medication and row["Patient ID"] == user_id:
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         matches_list.append(information_dictionary)
                     
                     # if patient name and user ID don't match, return empty list and shoot error message. 
@@ -341,14 +357,14 @@ class PharmacyOrder:
                 # allow for the user to view all prescriptions for any patient that need to be filled. 
                 for row in reader:
                     if row["Date Filled"] == '':
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         not_yet_filled_list.append(information_dictionary)
             # if user is not employee
             else:
                 # allow user to only view their prescriptions that need to be filled.
                 for row in reader:
                     if row["Patient ID"] == user_ID and row["Date Filled"] == '':
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         not_yet_filled_list.append(information_dictionary)
 
         return not_yet_filled_list
@@ -364,21 +380,23 @@ class PharmacyOrder:
                 # allow for the user to view all prescriptions for any patient that need to be filled. 
                 for row in reader:
                     if row["Date Filled"] != "" and row["Date Filled"] != "Date Filled":
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         filled_list.append(information_dictionary)
             # if user is not employee
             else:
                 # allow user to only view their prescriptions that need to be filled.
                 for row in reader:
                     if row["Patient ID"] == user_ID and row["Date Filled"] != '':
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         filled_list.append(information_dictionary)
         
         return filled_list
 
     # Function to show all prescriptions that is allowed by userID
-    def show_prescription_orders(self, user_ID):
-        orders_list = list()
+    # returns a list of dictionaries.
+    # TODO: need to update test with new name. 
+    def show_prescription_orders_dict(self, user_ID):
+        orders_list_of_dict = list()
 
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
@@ -388,46 +406,78 @@ class PharmacyOrder:
                 for row in reader:
                     # skip the header row
                     if row["Prescription ID"] != "Prescription ID":
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
-                        orders_list.append(information_dictionary)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
+                        orders_list_of_dict.append(information_dictionary)
             # if user is not employee
             else:
                 # allow user to only view their prescriptions that need to be filled.
                 for row in reader:
                     if row["Patient ID"] == user_ID:
-                        information_dictionary = PharmacyOrder.get_all_row_info(row)
-                        orders_list.append(information_dictionary)
+                        information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
+                        orders_list_of_dict.append(information_dictionary)
         
-        return orders_list
+        return orders_list_of_dict
+    
+
+    # Function to show all prescriptions that is allowed by userID
+    # returns a list of list.
+    # TODO: needs to be tested
+    def show_prescription_orders_list(self, user_ID):
+        orders_list_of_list = list()
+
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+            # if the user is an employee
+            if int(user_ID) >= 30000000 and int(user_ID) < 40000000:
+                # allow for the user to view all prescriptions 
+                for row in reader:
+                    # skip the header row
+                    if row["Prescription ID"] != "Prescription ID":
+                        information_dictionary = PharmacyOrder.get_all_row_info_list(row)
+                        orders_list_of_list.append(information_dictionary)
+            # if user is not employee
+            else:
+                # allow user to only view their prescriptions that need to be filled.
+                for row in reader:
+                    if row["Patient ID"] == user_ID:
+                        information_dictionary = PharmacyOrder.get_all_row_info_list(row)
+                        orders_list_of_list.append(information_dictionary)
+        
+        return orders_list_of_list
 
     # Function to complete a prescription. Need to provide prescripion ID, pharmacist name, and date filled.
     # date_filled must be a Date object.
     # only Employee users have permission to complete orders.
+    # user_ID is a string, presc_ID is a string, pharmacist_name is a string, and date_filled is a string. 
     # NOTE: presc_ID must be an integer value.
-    def complete_order(self, user_ID, presc_ID, pharmacist_name, date_filled):
+    def complete_order(self, user_ID, presc_ID, pharmacist_name, date_filled_str):
         user_id_int = int(user_ID)
+        presc_ID_int = int(presc_ID)
+
+        # need to convert date_filled from string to Date object. 
+        date_filled = datetime.strptime(date_filled_str, "%m/%d/%Y").date()
+
         if user_id_int >= 40000000: 
             print("ERROR: Patients do not have Complete Order capabilities.")
             return
 
         pharm_order_df = pd.read_csv(PharmacyOrder.csv_filename, index_col="Prescription ID")
-        if pd.isna(pharm_order_df.loc[presc_ID, "Pharmacist"]) and pd.isna(pharm_order_df.loc[presc_ID, "Date Filled"]):
-            pharm_order_df.loc[presc_ID, "Pharmacist"] = pharmacist_name
+        if pd.isna(pharm_order_df.loc[presc_ID_int, "Pharmacist"]) and pd.isna(pharm_order_df.loc[presc_ID_int, "Date Filled"]):
+            pharm_order_df.loc[presc_ID_int, "Pharmacist"] = pharmacist_name
             # check to make sure that Date filled is after date ordered. 
-            date_object_ordered = datetime.strptime(pharm_order_df.loc[presc_ID, "Date Ordered"], "%m/%d/%Y").date()
+            date_object_ordered = datetime.strptime(pharm_order_df.loc[presc_ID_int, "Date Ordered"], "%m/%d/%Y").date()
             # if date filled is before date ordered, then print error
             if date_filled < date_object_ordered:
                 print("ERROR: Failed to Complete Prescription Order - Date Filled is before Date Ordered.")
                 return
             else:
-                # update date filled, but first convert it to string. 
-                pharm_order_df.loc[presc_ID, "Date Filled"] = date_filled.strftime("%m/%d/%Y")
-                print(type(pharm_order_df.loc[presc_ID, "Date Filled"]))
+                # update date filled, but first convert it to string.                                                                                                                                                                   
+                pharm_order_df.loc[presc_ID_int, "Date Filled"] = date_filled.strftime("%m/%d/%Y")
             # reset index so that prescription ID is added back to the dataFrame
             pharm_order_df = pharm_order_df.reset_index()
             pharm_order_df.to_csv(PharmacyOrder.csv_filename, index=False)
         else:
-            print("Pharmacy Order " + str(presc_ID) + " has already been completed.")
+            print("Pharmacy Order " + str(presc_ID_int) + " has already been completed.")
             return
                        
         
@@ -557,13 +607,13 @@ invalid_med = "Vitamin Z"
 # TEST 8 for complete pharmacy order
 # pharm_order.add_order("30323230", "43", "Mando", "60413492", "dr. guzman", "Vitamin X", "2586", "350 mg", "once a day", "10/13/2022", "", "")
 # 8.1 Patient User attempts to complete order with valid date. Should Fail
-# pharm_order.complete_order("50323230", 43, "Dr. Casetti", date(2022, 10, 14))
+# pharm_order.complete_order("50323230", "43", "Dr. Casetti", "10/14/2022")
 # 8.2 Patient User attempts to complete order with current date before date ordered. Should Fail
-# pharm_order.complete_order("50323230", 43, "Dr. Casetti", date(2022, 10, 11))
+# pharm_order.complete_order("50323230", "43", "Dr. Casetti", "10/11/2022")
 # 8.3 Employee user attempts to complete order when date filled is before date ordered. Should Fail
-# pharm_order.complete_order("30323230", 43, "Dr. Casetti", date(2022, 10, 11))
+# pharm_order.complete_order("30323230", "43", "Dr. Casetti", "10/11/2022")
 # 8.4 Employee user attempt sto complete order with valid date.
-# pharm_order.complete_order("30323230", 43, "Dr. Casetti", date(2022, 10, 14))
+# pharm_order.complete_order("30323230", "43", "Dr. Casetti", "10/14/2022")
 # pharm_order.delete_pharmacy_order("30323230", 43)
 
 # Test 9 for displaying not yet filled orders. 
@@ -584,8 +634,8 @@ invalid_med = "Vitamin Z"
 
 # Test 11 for displaying all orders depending on the userID
 # 11.1 test for employee ID. show all prescriptions filled or not.
-# print(pharm_order.show_prescription_orders("30245442"))
+# print(pharm_order.show_prescription_orders_dict("30245442"))
 # 11.2 test for patient ID. show all prescriptions filled or not for the give patient
-# print(pharm_order.show_prescription_orders("50323230"))
+# print(pharm_order.show_prescription_orders_dict("50323230"))
 # 11.3 test for non-existent ID
-# print(pharm_order.show_prescription_orders("40024244"))
+# print(pharm_order.show_prescription_orders_dict("40024244"))
