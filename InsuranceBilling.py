@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from enum import Enum
 from datetime import datetime, timedelta
 import calendar

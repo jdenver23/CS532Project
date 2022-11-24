@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import tkinter as tk
 from tkinter import messagebox
 from .utils import tk_center, UIMode, EMPLOYEE_RANGE_L, EMPLOYEE_RANGE_H
@@ -8,7 +9,6 @@ from .data_display_container_employee import DataDisplayContainerEmployeeWidget
 from .data_display_container_user import DataDisplayContainerUserWidget
 from InsuranceBilling import InsuranceBilling
 
-ADMIN_IDS = ["1111"]
 
 class MainGUI(tk.Tk):
     def __init__(self, user_id:str or int, bill: InsuranceBilling=None, master=None, enabled_test_data=False, **kw):
@@ -20,7 +20,7 @@ class MainGUI(tk.Tk):
         
         self.ui_mode = UIMode.PATIENT
         
-        if int(user_id) >= EMPLOYEE_RANGE_L and int(user_id) < EMPLOYEE_RANGE_H or str(user_id) in ADMIN_IDS:
+        if int(user_id) >= EMPLOYEE_RANGE_L and int(user_id) < EMPLOYEE_RANGE_H:
             self.title("Insurance Billing - Healthcare Permanente (EMPLOYEE VIEW)")
             self.ui_mode = UIMode.EMPLOYEE
             self.bill = None
@@ -69,7 +69,6 @@ class MainGUI(tk.Tk):
         tk_center(self, gui_w, gui_h)
         
         # update billing info for all container
-        
         self.user_info_widget.pull_from_db()
         
         self.navbar_widget.def_calls()

@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 import tkinter as tk
+
 
 class SeperatorContainerWidget(tk.Frame):
     def __init__(self, master=None, show=True, **kw):

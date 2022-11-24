@@ -346,7 +346,6 @@ def login_gui():
         else:
             messagebox.showwarning('Login', 'Please fill all fields.')
     
-    # added this to handle window closing so it doesnt break other things :3
     def on_closing():
         if messagebox.askyesno("Quit", "Do you want to quit?"):
             root.destroy()
@@ -358,6 +357,6 @@ def login_gui():
     root.mainloop()
 
 if __name__ == "__main__":
-    # only call login_gui() when executed as script
-    # this prevents code executions from being imported as a module
+    # only run the code below when executed as script
+    # this prevents auto code executions from being imported as a module
     login_gui()

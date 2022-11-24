@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import tkinter as tk
 from tkinter import messagebox
 from .utils import get_icon, UIMode, Patient
@@ -5,6 +6,7 @@ import homepage
 import login
 from InsuranceBilling import InsuranceBilling
 from .data_display_container_patient_select import DataDisplayContainerPatientSelectWidget
+
 
 class NavbarContainerWidget(tk.Frame):
     def __init__(self, bill: InsuranceBilling, master=None, ui_mode=UIMode.PATIENT, **kw):

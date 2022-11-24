@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import csv
 import sys
@@ -32,7 +33,7 @@ class UIMode(Enum):
 
 
 class Patient:
-    """ Patient class. This class is used for easier data management. """
+    """ Patient is used for easier data management. """
     def __init__(self, id, first_name, last_name, email, phone_number, address, insurance_carrier, dob, gender, primary_care_physician, medications, appointments):
         self.id = id
         self.fname = first_name
@@ -49,7 +50,7 @@ class Patient:
         self.appointments = appointments
 
 class PatientAccount:
-    """ Patient Acount is used to retrieve all users' information in the database. 
+    """ PatientAcount is used to retrieve all users' information in the database. 
       \nIts main purpose is to provide a short description list of all users. """
     def __init__(self) -> None:
         if not Path(USER_FILE).is_file():
@@ -71,7 +72,6 @@ class PatientAccount:
     def as_description_list(self, opt="ID"):
         _list = []
         for patient in self.patients:
-            tmp = ""
             if opt == "Name":
                 tmp = ", ".join([patient.name, patient.id, patient.email, patient.dob, patient.phone_number])
             elif opt == "Email":
@@ -82,7 +82,6 @@ class PatientAccount:
                 tmp = ", ".join([patient.phone_number, patient.dob, patient.email, patient.name, patient.id])
             else:
                 tmp = ", ".join([patient.id, patient.name, patient.email, patient.dob, patient.phone_number])
-            
             _list.append(tmp)
         return _list
             
@@ -92,3 +91,4 @@ class PatientAccount:
             if patient.id == patient_id:
                 return patient
         return None
+    

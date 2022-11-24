@@ -5,6 +5,7 @@ from tkinter import messagebox
 from .tkentrycomplete import AutocompleteCombobox
 from .utils import get_icon, tk_center, PatientAccount
 
+
 class DataDisplayContainerPatientSelectWidget(tk.Toplevel):
     def __init__(self, master=None, **kw):
         super(DataDisplayContainerPatientSelectWidget,self).__init__(master,**kw)

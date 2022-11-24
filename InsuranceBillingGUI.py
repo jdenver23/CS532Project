@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 from pathlib import Path
 from datetime import datetime
@@ -14,7 +15,7 @@ EMPLOYEE_ID = "3" + "0"*7
 uid = USER_ID
 
 # set this to True to do backend tests for current uid
-# WARNING: it will remove all data of the current uid afterwardw!
+# WARNING: it will remove all data of the current uid afterward!
 backend_tests = False
 
 # set this to False to keep test data
@@ -217,7 +218,9 @@ def __test_init__():
         bill.invoices[-1].status = PaymentStatus.DELINQUENT
         bill.commit_to_db()
     
-    if not test_data and (not bill.carriers or not bill.services or not bill.invoices):
+    if clean_up and not test_data:
+        add_test_data()
+    elif not test_data and (not bill.carriers or not bill.services or not bill.invoices):
         add_test_data()
     elif test_data:
         add_test_data()
@@ -236,7 +239,7 @@ if __name__ == "__main__":
         ENDC = '\033[0m'
         BOLD = '\033[1m'
         UNDERLINE = '\033[4m'
-    # only import time package for testing
+    # only import `time`` package for testing
     import time
 
     g_bill = __test_init__()
