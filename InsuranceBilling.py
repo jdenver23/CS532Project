@@ -272,19 +272,18 @@ class InsuranceInvoice:
             invoiced_services += f"""\t - ID: {service.id}\
                                \n\t\t + Date: {service.date}\
                                \n\t\t + Description: {service.description}\
-                               \n\t\t + Amount Due: {self.amount_due}\
-                               \n\t\t + Total Cost: {to_dollar(service.get_cost())}\n"""
+                               \n\t\t + Cost: {to_dollar(service.get_cost())}\n\n"""
 
         return f"""Invoice ID: {self.id}\
                  \n\tStatus: {self.status.name}\
-                 \nPatient's information:\
+                 \n\nPatient's information:\
                  \n\tName: {self.patient_info[0]}\t\t\tAddress: {self.patient_info[1]}\
-                 \nCarrier information:\
+                 \n\nCarrier information:\
                  \n\tName: {self.carrier_info[0]}\t\t\tAddress: {self.carrier_info[1]}\
-                 \nInvoiced services:\
+                 \n\nInvoiced services:\
                  \n{invoiced_services}\
                  \r{"-"*16}\
-                 \nAmount due: {self.amount_due}\t\tTotal cost: {self.total_cost}""".expandtabs(4)
+                 \n\nAmount due: {self.amount_due}\t\tTotal cost: {self.total_cost}""".expandtabs(4)
 
     def as_csv_entry(self, delimiter: str=IB_DB_II_FIELD_DELIMITER) -> str:
         invoiced_services_csv = IN_DELIMITER.join(
@@ -769,8 +768,7 @@ class InsuranceBilling:
         for service in self.services:
             if service is not None and service.date.month == month:
                 if service.payment_status is PaymentStatus.UNPAID:
-                    last_day_of_month = calendar.monthrange(
-                        service.date.year, month)[1]
+                    last_day_of_month = calendar.monthrange(service.date.year, month)[1]
                     if service.date.day <= last_day_of_month:
                         total_cost += service.get_cost()
                         invoiced_services.append(service)
@@ -837,8 +835,6 @@ class InsuranceBilling:
             \t\t + Cost: `cost`
             \----------------\n
             Amount due: `amt`\t\tTotal cost: `cost`
-
-            :func:`InsuranceBilling`
         """
         if invoice_id is None and len(self.invoices) > 0:
             invoice_id = self.invoices[-1].id

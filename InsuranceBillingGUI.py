@@ -11,11 +11,17 @@ EMPLOYEE_ID = "3" + "0"*7
 
 # set the uid to be tested
 # user and employee will have different view
-uid = EMPLOYEE_ID
+uid = USER_ID
 
-# set this to true to do backend tests for current uid
+# set this to True to do backend tests for current uid
 # WARNING: it will remove all data of the current uid afterwardw!
 backend_tests = False
+
+# set this to False to keep test data
+clean_up = False
+
+# set this to True to add test data
+test_data = False
 
 
 # external gui initialize call
@@ -98,8 +104,7 @@ def __invoice_tests__(bill: InsuranceBilling, month=datetime.now().month, pay=Tr
 
             # delinquent test
             if deq:
-                print(">> setting new primary carrier:".expandtabs(
-                    4), bill.set_primary(bill.carriers[-1].id))
+                print(">> setting new primary carrier:".expandtabs(4), bill.set_primary(bill.carriers[-1].id))
                 print('', "-"*32, "\n>>> START delinquent test...\n", "-"*32, end='')
                 bill.new_service('deqlin', '$1234.56')
                 time.sleep(0.3)
@@ -121,7 +126,6 @@ def __invoice_tests__(bill: InsuranceBilling, month=datetime.now().month, pay=Tr
 
 
 def __clean_up__(opt=0):
-    global uid
     count = 0
     
     with open(USER_FILE, "r+", encoding = "utf-8") as file:
@@ -185,30 +189,38 @@ def __run_tests__(bill: InsuranceBilling) -> None:
         f"Cleaning up after 0s... {bcolors.BOLD}removed {__clean_up__()} test files!{bcolors.ENDC}")
 
 
-def __test_init__():
-    global uid
-    
-    __clean_up__()
-    
-    if not Path(IB_DB_DIR).is_dir():
-        os.mkdir(IB_DB_DIR)
-    with open(USER_FILE, mode='a', newline='\n') as f:
-        f.write('\n')
-        f.write(",".join([str(uid), "TRI", "TRAN", "tree@test.com", "123456",
-                        "1234567890", "123@4th Ave", "CS 532", "11/11/1111", "Male"]))
-        f.write('\n')
+def __test_init__():    
+    if clean_up:
+        __clean_up__()
 
     if int(uid) >= EMPLOYEE_RANGE_L and int(uid) < EMPLOYEE_RANGE_H:
+        __clean_up__()
         return
     
     bill = InsuranceBilling(id=uid)
-    __service_tests__(bill)  # service tests
-    bill.commit_to_db()
-    __carrier_tests__(bill)  # carrier tests
-    bill.commit_to_db()
-    bill.generate_invoice(month=11)
-    bill.generate_invoice(month=12)
-    bill.commit_to_db()
+    
+    def add_test_data():
+        if not Path(IB_DB_DIR).is_dir():
+            os.mkdir(IB_DB_DIR)
+        with open(USER_FILE, mode='a', newline='\n') as f:
+            f.write('\n')
+            f.write(",".join([str(uid), "TRI", "TRAN", "tree@test.com", "123456",
+                            "1234567890", "123@4th Ave", "CS 532", "11/11/1111", "Male"]))
+            f.write('\n')
+            
+        __service_tests__(bill)  # service tests
+        __carrier_tests__(bill)  # carrier tests
+        bill.generate_invoice(month=11)
+        bill.generate_invoice(month=12)
+        bill.new_service('deqlin', '$1234.56', date=datetime(2022, 10, 1))
+        bill.generate_invoice(month=10)
+        bill.invoices[-1].status = PaymentStatus.DELINQUENT
+        bill.commit_to_db()
+    
+    if not test_data and (not bill.carriers or not bill.services or not bill.invoices):
+        add_test_data()
+    elif test_data:
+        add_test_data()
 
     return bill
 
@@ -243,4 +255,5 @@ if __name__ == "__main__":
         print(f"\n{bcolors.BOLD}Running backend tests...{bcolors.ENDC}")
         __run_tests__(bill=g_bill)
     else:
-        __clean_up__(1)
+        if clean_up:
+            __clean_up__(1)

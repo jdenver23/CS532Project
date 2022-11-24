@@ -5,6 +5,7 @@ from tkinter import messagebox
 from .data_display_container_carrier_addedit_toplvl import CarrierAddEditToplvlWidget
 from .data_display_container_service_addedit_toplvl import ServiceAddEditToplvlWidget
 from .data_display_container_invoice_month_selection import InvoiceMonthSelectionWidget
+from .data_display_container_invoice_view import InvoiceViewWidget
 from InsuranceBilling import InsuranceBilling, InsuranceInvoice, dollar_to_float
 
 
@@ -60,8 +61,32 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         treeview_style.configure('Treeview', rowheight=25)
 
         self.treeview_fr.pack(anchor="n", padx=10, pady=10, side="top")
-
+        
         self.control_container = tk.Frame(self)
+        
+        self.btn_viewedit = tk.Button(self.control_container)
+        self.btn_viewedit.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            state="disabled",
+            overrelief="ridge",
+            text='ⓘ Edit')
+        self.btn_viewedit.pack(ipadx=5, ipady=5, side="left")
+        self.btn_viewedit.configure(command=lambda: self.treeview_edit_selection())
+        self.btn_delete = tk.Button(self.control_container)
+        self.btn_delete.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            state="disabled",
+            overrelief="ridge",
+            text='× Delete')
+        self.btn_delete.pack(ipadx=5, ipady=5, padx=10, side="left")
+        self.btn_delete.configure(command=lambda: self.treeview_del_selection())
+        
         self.btn_add = tk.Button(self.control_container)
         self.btn_add.configure(
             background="#2980b9",
@@ -74,28 +99,6 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.btn_add.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_add.configure(command=lambda: self.treeview_add_item_window())
         
-        self.btn_edit = tk.Button(self.control_container)
-        self.btn_edit.configure(
-            background="#2980b9",
-            disabledforeground="black",
-            font="{Verdana} 10 {}",
-            foreground="white",
-            state="disabled",
-            overrelief="ridge",
-            text='ⓘ Edit')
-        self.btn_edit.pack(ipadx=5, ipady=5, side="left")
-        self.btn_edit.configure(command=lambda: self.treeview_edit_selection())
-        self.btn_delete = tk.Button(self.control_container)
-        self.btn_delete.configure(
-            background="#2980b9",
-            disabledforeground="black",
-            font="{Verdana} 10 {}",
-            foreground="white",
-            state="disabled",
-            overrelief="ridge",
-            text='× Delete')
-        self.btn_delete.pack(ipadx=5, ipady=5, padx=10, side="left")
-        self.btn_delete.configure(command=lambda: self.treeview_del_selection())
         self.btn_mark_as = tk.Button(self.control_container)
         self.btn_mark_as.configure(
             background="#2980b9",
@@ -105,6 +108,16 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             state="disabled",
             overrelief="ridge")
         self.btn_mark_as.configure(command=lambda: self.selection_mark_as())
+        
+        self.btn_generate_reports = tk.Button(self.control_container)
+        self.btn_generate_reports.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            overrelief="ridge",
+            text="Generate Reports")
+        self.btn_generate_reports.configure(command=lambda: self.generate_reports())
 
         self.control_container.pack(anchor="n", padx=30, side="top", fill="x")
 
@@ -120,6 +133,9 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.master.bind("s", lambda x: self.toggle_treeview_item(direction="down"))
         
         self.pull_from_db()
+    
+    def generate_reports(self):
+        messagebox.showinfo("Generating Delinquent Reports", "This feature is currently unavailable. Please come back at a later time.")
     
     def selection_mark_as(self):
         if self.active_treeview == "Carriers":
@@ -179,7 +195,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
 
     def pull_from_db(self, refresh=True, renew_carriers=True, renew_services=True, renew_invoices=True):
         self.btn_delete.configure(state=tk.DISABLED)
-        self.btn_edit.configure(state=tk.DISABLED)
+        self.btn_viewedit.configure(state=tk.DISABLED)
         self.btn_mark_as.configure(state=tk.DISABLED)
         
         # remove all children from all treeviews
@@ -241,7 +257,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 self.treeview_services.item(self.curr_selected, values=[self.id_to_edit] + list(data.values()))
             elif self.active_treeview == "Invoices":
                 # TODO: edit invoice here
-                messagebox.showinfo("Editing an Invoice", "This feature is still under development. Please come back at a later time.")
+                messagebox.showinfo("Editing an Invoice", "This feature is currently unavailable. Please come back at a later time.")
                 self.reset_attributes()
         
     def toplevel_data_transfer_callback(self, data: dict):
@@ -344,8 +360,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         elif self.active_treeview == "Invoices":
             self.curr_selected = self.treeview_invoices.selection()[0]
             self.id_to_edit = self.treeview_invoices.item(self.curr_selected)['values'][0]
-            messagebox.showinfo("Editing an Invoice", "This feature is still under development. Please come back at a later time.")
-            self.reset_attributes()
+            self.curr_toplvl = InvoiceViewWidget(master=self.master, invoice=self.bill.get_invoice(self.id_to_edit), bill=self.bill)
 
     def treeview_del_selection(self):
         if self.active_treeview == "Carriers":
@@ -373,7 +388,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             self.treeview_invoices.delete(*selections)
 
         self.btn_delete.configure(state=tk.DISABLED)
-        self.btn_edit.configure(state=tk.DISABLED)
+        self.btn_viewedit.configure(state=tk.DISABLED)
         self.btn_mark_as.configure(state=tk.DISABLED)
 
     def treeview_sort_column(self, treeview, col, reverse=True):
@@ -400,8 +415,9 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
     def treeview_sel_handler(self):
         if self.selected_item_id != "":
             self.btn_delete.configure(state=tk.NORMAL)
-            self.btn_edit.configure(state=tk.NORMAL)
+            self.btn_viewedit.configure(state=tk.NORMAL)
             self.btn_mark_as.configure(state=tk.NORMAL)
+            self.btn_generate_reports.configure(state=tk.NORMAL)
             
             if self.active_treeview == "Carriers":
                 is_carrier_primary = self.treeview_carriers.item(self.selected_item_id)['values'][3] == "PRIMARY"
@@ -424,11 +440,11 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
                 elif not is_invoice_paid:
                     self.btn_mark_as.configure(text="✓ Mark as PAID")
             
-            self.btn_mark_as.pack(ipadx=5, ipady=5, side="right")
+            self.btn_mark_as.pack(padx=10, ipadx=5, ipady=5, side="right")
             
         else:
             self.btn_delete.configure(state=tk.DISABLED)
-            self.btn_edit.configure(state=tk.DISABLED)
+            self.btn_viewedit.configure(state=tk.DISABLED)
             self.btn_mark_as.configure(state=tk.DISABLED)
 
     def treeview_click_handler(self, event):
@@ -446,7 +462,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             self.treeview_services.selection_remove(*self.treeview_services.selection())
             self.treeview_invoices.selection_remove(*self.treeview_invoices.selection())
             self.btn_delete.configure(state=tk.DISABLED)
-            self.btn_edit.configure(state=tk.DISABLED)
+            self.btn_viewedit.configure(state=tk.DISABLED)
             self.btn_mark_as.configure(state=tk.DISABLED)
 
     def add_test_data(self):
@@ -476,7 +492,9 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=40, y=35)
             self.title_services.place(x=95, y=0)
+            self.btn_viewedit.configure(text="ⓘ Edit")
             self.btn_mark_as.pack_forget()
+            self.btn_generate_reports.pack_forget()
         elif index == 1 or (event is not None and event.widget.cget("text") == "Services"):
             self.active_treeview = "Services"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -490,7 +508,9 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=False)
             self.line_selector.place(x=119, y=35)
             self.title_services.place(x=93, y=0)
+            self.btn_viewedit.configure(text="ⓘ Edit")
             self.btn_mark_as.pack_forget()
+            self.btn_generate_reports.pack_forget()
         elif index == 2 or (event is not None and event.widget.cget("text") == "Invoices"):
             self.active_treeview = "Invoices"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -504,12 +524,14 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             self.treeview_forced_set_state(self.treeview_invoices, show=True)
             self.line_selector.place(x=202, y=35)
             self.title_services.place(x=95, y=0)
+            self.btn_viewedit.configure(text="ⓘ View")
             self.btn_mark_as.pack_forget()
+            self.btn_generate_reports.pack(ipadx=5, ipady=5, side="left")
 
         self.selected_item_id = ""
         self.selected_row = ""
         self.btn_delete.configure(state=tk.DISABLED)
-        self.btn_edit.configure(state=tk.DISABLED)
+        self.btn_viewedit.configure(state=tk.DISABLED)
         self.btn_mark_as.configure(state=tk.DISABLED)
 
     def create_carriers_tv(self, root):
@@ -564,7 +586,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.treeview_invoices.heading('total_cost', text="Total", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'total_cost'))
         self.treeview_invoices.column('total_cost', anchor=tk.CENTER, width=75)
         self.treeview_invoices.heading('carrier_name', text="Carrier", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'carrier_name'))
-        self.treeview_invoices.column('carrier_name', anchor=tk.CENTER, width=135)
+        self.treeview_invoices.column('carrier_name', anchor=tk.CENTER, width=140)
         self.treeview_invoices.heading('status', text="Status", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'status'))
         self.treeview_invoices.column('status', anchor=tk.CENTER, width=100)
         self.treeview_invoices.heading('paid_date', text="Date Paid", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'paid_date'))

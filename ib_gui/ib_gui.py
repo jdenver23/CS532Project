@@ -82,8 +82,6 @@ class MainGUI(tk.Tk):
     def on_closing(self):
         if messagebox.askyesno("Quit", "Do you want to quit?"):
             self.destroy()
-            
-        self.focus_force()
     
     def calls(self, widget_name):
         """ 

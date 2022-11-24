@@ -169,6 +169,7 @@ class DataDisplayContainerMakeAPaymentWidget(tk.Toplevel):
         self.btn_cancel.pack(ipadx=5, ipady=5, padx=10, side="right")
         self.btn_cancel.configure(command=self.form_cancel)
         self.control_container.pack(fill="x", padx=30, side="top")
+        
         self.configure(takefocus=True, width=200)
         self.geometry("720x470")
         self.resizable(False, False)

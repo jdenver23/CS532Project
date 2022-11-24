@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox
 from .data_display_container_make_a_payment import DataDisplayContainerMakeAPaymentWidget
+from .data_display_container_invoice_view import InvoiceViewWidget
 from InsuranceBilling import InsuranceBilling, dollar_to_float
 
 
@@ -59,6 +61,17 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.treeview_fr.pack(anchor="n", padx=10, pady=10, side="top")
 
         self.control_container = tk.Frame(self)
+        
+        self.btn_view = tk.Button(self.control_container)
+        self.btn_view.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            state="disabled",
+            overrelief="ridge",
+            text='ⓘ View')
+        self.btn_view.configure(command=lambda: self.treeview_view_selection())
         self.btn_pay = tk.Button(self.control_container)
         self.btn_pay.configure(
             background="#2980b9",
@@ -70,6 +83,16 @@ class DataDisplayContainerUserWidget(tk.Frame):
             overrelief="ridge",
             text="Make a Payment")
         self.btn_pay.configure(command=lambda: self.selection_pay())
+        
+        self.btn_request_reports = tk.Button(self.control_container)
+        self.btn_request_reports.configure(
+            background="#2980b9",
+            disabledforeground="black",
+            font="{Verdana} 10 {}",
+            foreground="white",
+            overrelief="ridge",
+            text="Request Reports")
+        self.btn_request_reports.configure(command=lambda: self.request_reports())
 
         self.control_container.pack(anchor="n", padx=30, side="top", fill="x")
 
@@ -85,6 +108,9 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.master.bind("s", lambda x: self.toggle_treeview_item(direction="down"))
         
         self.pull_from_db()
+    
+    def request_reports(self):
+        messagebox.showinfo("Requesting Delinquent Reports", "This feature is current unavailable. Please come back at a later time.")
     
     def selection_pay(self):
         self.master.attributes("-disabled", True)
@@ -117,12 +143,20 @@ class DataDisplayContainerUserWidget(tk.Frame):
         if renew_services: self.treeview_insert_row(self.treeview_services, [service.as_list() for service in self.bill.services])
         if renew_invoices: self.treeview_insert_row(self.treeview_invoices, [invoice.as_list() for invoice in self.bill.invoices])
             
-
     def reset_attributes(self):
         """Focus on master and permit mouse clicking."""
         self.master.unbind("<Button-1>", self.toplevel_force_focus_fid)
         self.master.focus_force()
         self.master.attributes("-disabled", False)
+    
+    def treeview_view_selection(self) -> None:
+        self.master.attributes("-disabled", True)
+        self.toplevel_force_focus_fid = self.master.bind("<Button-1>", self.toplevel_force_focus)
+        
+        if self.active_treeview == "Invoices":
+            self.curr_selected = self.treeview_invoices.selection()[0]
+            self.id_to_edit = self.treeview_invoices.item(self.curr_selected)['values'][0]
+            self.curr_toplvl = InvoiceViewWidget(master=self.master, invoice=self.bill.get_invoice(self.id_to_edit), bill=self.bill)
     
     def treeview_reset_sel(self):
         self.treeview_carriers_curr_sel = None
@@ -238,6 +272,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
     
     def treeview_sel_handler(self):
         if self.active_treeview == "Invoices" and self.selected_item_id != "":
+            self.btn_view.configure(state=tk.NORMAL)
             payment_status = self.treeview_invoices.item(self.selected_item_id)['values'][6]
             if payment_status != "PAID":
                 self.btn_pay.configure(state=tk.NORMAL)
@@ -245,6 +280,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
                 self.btn_pay.configure(state=tk.DISABLED)
         else:
             self.btn_pay.configure(state=tk.DISABLED)
+            self.btn_view.configure(state=tk.DISABLED)
 
     def add_test_data(self):
         self.treeview_insert_row(self.treeview_carriers, [['2', 'a', '789', 'NON-PRIMARY'],
@@ -274,6 +310,8 @@ class DataDisplayContainerUserWidget(tk.Frame):
             self.line_selector.place(x=40, y=35)
             self.title_services.place(x=95, y=0)
             self.btn_pay.pack_forget()
+            self.btn_view.pack_forget()
+            self.btn_request_reports.pack_forget()
         elif index == 1 or (event is not None and event.widget.cget("text") == "Services"):
             self.active_treeview = "Services"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -288,6 +326,8 @@ class DataDisplayContainerUserWidget(tk.Frame):
             self.line_selector.place(x=119, y=35)
             self.title_services.place(x=93, y=0)
             self.btn_pay.pack_forget()
+            self.btn_view.pack_forget()
+            self.btn_request_reports.pack_forget()
         elif index == 2 or (event is not None and event.widget.cget("text") == "Invoices"):
             self.active_treeview = "Invoices"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -302,6 +342,8 @@ class DataDisplayContainerUserWidget(tk.Frame):
             self.line_selector.place(x=202, y=35)
             self.title_services.place(x=95, y=0)
             self.btn_pay.pack(ipadx=5, ipady=5, side="right")
+            self.btn_view.pack(ipadx=5, ipady=5, side="left")
+            self.btn_request_reports.pack(ipadx=5, ipady=5, padx=10, side="left")
 
         self.selected_item_id = ""
         self.selected_row = ""
@@ -358,7 +400,7 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.treeview_invoices.heading('total_cost', text="Total", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'total_cost'))
         self.treeview_invoices.column('total_cost', anchor=tk.CENTER, width=75)
         self.treeview_invoices.heading('carrier_name', text="Carrier", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'carrier_name'))
-        self.treeview_invoices.column('carrier_name', anchor=tk.CENTER, width=135)
+        self.treeview_invoices.column('carrier_name', anchor=tk.CENTER, width=140)
         self.treeview_invoices.heading('status', text="Status", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'status'))
         self.treeview_invoices.column('status', anchor=tk.CENTER, width=100)
         self.treeview_invoices.heading('paid_date', text="Date Paid", command=lambda: self.treeview_sort_column(self.treeview_invoices, 'paid_date'))
