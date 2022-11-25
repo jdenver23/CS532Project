@@ -18,7 +18,8 @@ IB_DB_DIR = "IB_DB"
 IB_DB_FIELDS = {
     "IC": ['Carrier ID', 'Carrier Name', 'Carrier Address', 'Carrier Status', 'Primary Carrier'],
     "IS": ['Service ID', 'Service Description', 'Service Cost', 'Service Date', 'Payment Status'],
-    "II": ['Invoice ID', 'Invoice Status', 'Amount Due', 'Patient Info', 'Carrier Info', 'Invoiced Services', 'Date Invoiced', 'Due Date', 'Date Paid', 'Days Overdue'],
+    "II": ['Invoice ID', 'Invoice Status', 'Amount Due', 'Patient Info', 'Carrier Info', 
+           'Invoiced Services', 'Date Invoiced', 'Due Date', 'Date Paid', 'Days Overdue'],
 }
 IB_DB_FIELD_DELIMITER = ","
 IB_DB_II_FIELD_DELIMITER = "&"
@@ -915,31 +916,44 @@ class InsuranceBilling:
 
         return False
 
-    # ---------------
-    #   REPORTS
-    # ---------------
-    def generate_report(self, patient_name: str=None, carrier: InsuranceCarrier = None, carrier_name: str=None, carrier_address: str=None) -> str:
-        """ 
-            Generate reports of delinquent invoices either by `patient_name` or `carrier`.
+# ---------------
+#   REPORTS
+# ---------------
+def generate_delinquent_reports(user_id: str or int=None, carrier_name: str = None, carrier_address: str = None) -> str:
+    """ 
+        Generate reports of delinquent invoices either by `user_id` or `carrier`.
 
-            #### Parameters:
-            - `patient_name` to find in database.
-            - `carrier` to find in database.
-            - `carrier_name` is used when `carrier` is not provided.
-            - `carrier_address` is used when `carrier` is not provided.
+        #### Parameters:
+        - `user_id` to find in database. 
+        - `carrier_name` and `carrier_address` to find in database.
 
-            #### Returns:
-            - delinquent reports as a string.
-        """
-        delinquent_reports = ""
-        for invoice in self.invoices:
-            if invoice is not None and invoice.status is PaymentStatus.DELINQUENT:
-                if patient_name is not None:
-                    if invoice.patient_info[0] == patient_name:
-                        delinquent_reports += self.invoice_info(invoice.id) + "\n"
-                else:
-                    if invoice.carrier_info == [carrier.name, carrier.address]:
-                        delinquent_reports += self.invoice_info(invoice.id) + "\n"
-
-        return delinquent_reports
+        #### Returns:
+        - delinquent reports as a string.
+    """
+    delinquent_reports = ""
     
+    check_ids: list[str] = []
+    
+    if user_id is not None:
+        check_ids.append(user_id)
+    
+    elif None not in [carrier_name, carrier_address]:
+        all_ids: list[str] = []
+        if Path(IB_DB_DIR).is_dir():
+            for file in os.listdir(IB_DB_DIR):
+                if file.endswith("_invoices.csv") and "id" in file:
+                    all_ids.append(file.split("id")[1].split("_invoices.csv")[0])
+        
+        for uid in all_ids:
+            _bill = InsuranceBilling(uid)
+            for _carrier in _bill.carriers:
+                if _carrier.name + _carrier.address == carrier_name + carrier_address:
+                    check_ids.append(uid)
+                    
+    for uid in check_ids:
+        _bill = InsuranceBilling(uid)
+        for invoice in _bill.invoices:
+            if invoice is not None and invoice.status is PaymentStatus.DELINQUENT:
+                    delinquent_reports += _bill.invoice_info(invoice.id) + "\n"
+            
+    return delinquent_reports

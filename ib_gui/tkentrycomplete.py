@@ -80,7 +80,7 @@ class AutocompleteEntry(tkinter.Entry):
 
 class AutocompleteCombobox(tkinter.ttk.Combobox):
 
-        def set_completion_list(self, completion_list):
+        def set_completion_list(self, completion_list, callback=None):
                 """Use our completion list as our drop down selection menu, arrows move through menu."""
                 self._completion_list = sorted(completion_list, key=str.lower) # Work with a sorted list
                 self._hits = []
@@ -88,6 +88,10 @@ class AutocompleteCombobox(tkinter.ttk.Combobox):
                 self.position = 0
                 self.bind('<KeyRelease>', self.handle_keyrelease)
                 self['values'] = self._completion_list  # Setup our popup menu
+
+        def set_callback(self, callback):
+                # define callback to call whenever there are hits that can be autocompleted
+                self.callback = callback
 
         def autocomplete(self, delta=0):
                 """autocomplete the Combobox, delta may be 0/1/-1 to cycle through possible hits"""
@@ -114,6 +118,7 @@ class AutocompleteCombobox(tkinter.ttk.Combobox):
                         self.delete(0,tkinter.END)
                         self.insert(0,self._hits[self._hit_index])
                         self.select_range(self.position,tkinter.END)
+                        if hasattr(self, "callback"): self.callback(self._hits[self._hit_index])
 
         def handle_keyrelease(self, event):
                 """event handler for the keyrelease event on this widget"""

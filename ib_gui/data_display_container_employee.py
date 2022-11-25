@@ -6,6 +6,7 @@ from .data_display_container_carrier_addedit_toplvl import CarrierAddEditToplvlW
 from .data_display_container_service_addedit_toplvl import ServiceAddEditToplvlWidget
 from .data_display_container_invoice_month_selection import InvoiceMonthSelectionWidget
 from .data_display_container_invoice_view import InvoiceViewWidget
+from .data_display_container_reports_view import ReportsViewWidget
 from InsuranceBilling import InsuranceBilling, InsuranceInvoice, dollar_to_float
 
 
@@ -135,7 +136,9 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
         self.pull_from_db()
     
     def generate_reports(self):
-        messagebox.showinfo("Generating Delinquent Reports", "This feature is currently unavailable. Please come back at a later time.")
+        self.master.attributes("-disabled", True)
+        self.toplevel_force_focus_fid = self.master.bind("<Button-1>", self.toplevel_force_focus)
+        self.curr_toplvl = ReportsViewWidget(master=self.master, bill=self.bill)
     
     def selection_mark_as(self):
         if self.active_treeview == "Carriers":
@@ -255,10 +258,6 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             elif self.active_treeview == "Services":
                 self.bill.edit_service(service_id=self.id_to_edit, n_description=data['description'], n_cost=data['cost'], n_date=data['date'])
                 self.treeview_services.item(self.curr_selected, values=[self.id_to_edit] + list(data.values()))
-            elif self.active_treeview == "Invoices":
-                # TODO: edit invoice here
-                messagebox.showinfo("Editing an Invoice", "This feature is currently unavailable. Please come back at a later time.")
-                self.reset_attributes()
         
     def toplevel_data_transfer_callback(self, data: dict):
         """`DDC` data transfer (add) call back."""

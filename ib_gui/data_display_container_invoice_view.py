@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter.scrolledtext import ScrolledText
 from .utils import tk_center
 from InsuranceBilling import InsuranceBilling, InsuranceInvoice, dollar_to_float
-from tkinter.scrolledtext import ScrolledText
 
 
 class InvoiceViewWidget(tk.Toplevel):
@@ -83,7 +83,6 @@ class InvoiceViewWidget(tk.Toplevel):
         tk_center(self, gui_w=720, gui_h=490)
         self.focus_force()
 
-    
     def invoice_info_to_id(self, info: str):
         return info.split("]")[0].replace("[ID: ", "")
     

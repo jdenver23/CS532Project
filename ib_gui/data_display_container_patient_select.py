@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import tkinter as tk
-import tkinter.ttk as ttk
 from tkinter import messagebox
 from .tkentrycomplete import AutocompleteCombobox
 from .utils import get_icon, tk_center, PatientAccount
@@ -35,10 +34,10 @@ class DataDisplayContainerPatientSelectWidget(tk.Toplevel):
         
         self.entry_patient_sel = AutocompleteCombobox(self.sel_combo_frame)
         self.entry_patient_sel.configure(width=75)
-        
+        self.entry_patient_sel.set_callback(self.autocomplete_ccb_keyhandle)
+        self.entry_patient_sel.bind("<<ComboboxSelected>>", self.autocomplete_ccb_keyhandle)
         self.patient_account = PatientAccount()
         self.entry_patient_sel.set_completion_list(self.patient_account.as_description_list())
-        
         self.entry_patient_sel.pack(anchor="w", ipady=5, padx=15, side="left")
         
         self.btn_search = tk.Button(self.sel_combo_frame)
@@ -229,8 +228,9 @@ class DataDisplayContainerPatientSelectWidget(tk.Toplevel):
         if messagebox.askyesno("Patient Select", "Are you sure you want to close this window? This will log you out of the system."):
             self.destroy()
             self.nbc.logout(forced=True)
-            
-        self.focus_force()
+    
+    def autocomplete_ccb_keyhandle(self, *args):
+        self.patient_search()
         
     def search_filter_upd(self, *event):
         self.clear_entries()

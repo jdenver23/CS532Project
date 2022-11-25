@@ -12,7 +12,7 @@ EMPLOYEE_ID = "3" + "0"*7
 
 # set the uid to be tested
 # user and employee will have different view
-uid = USER_ID
+uid = EMPLOYEE_ID
 
 # set this to True to do backend tests for current uid
 # WARNING: it will remove all data of the current uid afterward!
@@ -192,10 +192,10 @@ def __run_tests__(bill: InsuranceBilling) -> None:
 
 def __test_init__():    
     if clean_up:
-        __clean_up__()
+        __clean_up__(1)
 
     if int(uid) >= EMPLOYEE_RANGE_L and int(uid) < EMPLOYEE_RANGE_H:
-        __clean_up__()
+        __clean_up__(1)
         return
     
     bill = InsuranceBilling(id=uid)

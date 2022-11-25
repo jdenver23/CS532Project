@@ -14,6 +14,8 @@ class MainGUI(tk.Tk):
     def __init__(self, user_id:str or int, bill: InsuranceBilling=None, master=None, enabled_test_data=False, **kw):
         super(MainGUI, self).__init__(master, **kw)
         
+        self.font="{Verdana} 10 {}"
+        
         self.title("Insurance Billing - Healthcare Permanente (USER VIEW)")
         self.resizable(False, False)
         r = 0
@@ -67,6 +69,8 @@ class MainGUI(tk.Tk):
         
         gui_w, gui_h = 960, 690
         tk_center(self, gui_w, gui_h)
+        
+        self.option_add('*TCombobox*Listbox.font', self.font)
         
         # update billing info for all container
         self.user_info_widget.pull_from_db()

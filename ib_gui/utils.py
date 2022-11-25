@@ -62,7 +62,7 @@ class PatientAccount:
             for user in csv.DictReader(f, fieldnames=USER_FIELD, delimiter=USER_FIELD_DELIMITER):
                 if not user[USER_FIELD[0]].isnumeric():
                     continue
-                if int(user[USER_FIELD[0]]) >= EMPLOYEE_RANGE_H:
+                if int(user[USER_FIELD[0]]) < EMPLOYEE_RANGE_L or int(user[USER_FIELD[0]]) >= EMPLOYEE_RANGE_H:
                     n_patient = Patient(id=user[USER_FIELD[0]], first_name=user[USER_FIELD[1]], last_name=user[USER_FIELD[2]], 
                                         email=user[USER_FIELD[3]], phone_number=user[USER_FIELD[5]], address=user[USER_FIELD[6]],
                                         insurance_carrier=user[USER_FIELD[7]], dob=user[USER_FIELD[8]], gender=user[USER_FIELD[9]], 

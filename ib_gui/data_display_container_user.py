@@ -83,16 +83,6 @@ class DataDisplayContainerUserWidget(tk.Frame):
             overrelief="ridge",
             text="Make a Payment")
         self.btn_pay.configure(command=lambda: self.selection_pay())
-        
-        self.btn_request_reports = tk.Button(self.control_container)
-        self.btn_request_reports.configure(
-            background="#2980b9",
-            disabledforeground="black",
-            font="{Verdana} 10 {}",
-            foreground="white",
-            overrelief="ridge",
-            text="Request Reports")
-        self.btn_request_reports.configure(command=lambda: self.request_reports())
 
         self.control_container.pack(anchor="n", padx=30, side="top", fill="x")
 
@@ -108,9 +98,6 @@ class DataDisplayContainerUserWidget(tk.Frame):
         self.master.bind("s", lambda x: self.toggle_treeview_item(direction="down"))
         
         self.pull_from_db()
-    
-    def request_reports(self):
-        messagebox.showinfo("Requesting Delinquent Reports", "This feature is current unavailable. Please come back at a later time.")
     
     def selection_pay(self):
         self.master.attributes("-disabled", True)
@@ -311,7 +298,6 @@ class DataDisplayContainerUserWidget(tk.Frame):
             self.title_services.place(x=95, y=0)
             self.btn_pay.pack_forget()
             self.btn_view.pack_forget()
-            self.btn_request_reports.pack_forget()
         elif index == 1 or (event is not None and event.widget.cget("text") == "Services"):
             self.active_treeview = "Services"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -327,7 +313,6 @@ class DataDisplayContainerUserWidget(tk.Frame):
             self.title_services.place(x=93, y=0)
             self.btn_pay.pack_forget()
             self.btn_view.pack_forget()
-            self.btn_request_reports.pack_forget()
         elif index == 2 or (event is not None and event.widget.cget("text") == "Invoices"):
             self.active_treeview = "Invoices"
             self.treeview_carriers.selection_remove(*self.treeview_carriers.selection())
@@ -343,7 +328,6 @@ class DataDisplayContainerUserWidget(tk.Frame):
             self.title_services.place(x=95, y=0)
             self.btn_pay.pack(ipadx=5, ipady=5, side="right")
             self.btn_view.pack(ipadx=5, ipady=5, side="left")
-            self.btn_request_reports.pack(ipadx=5, ipady=5, padx=10, side="left")
 
         self.selected_item_id = ""
         self.selected_row = ""
