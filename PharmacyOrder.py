@@ -263,7 +263,8 @@ class PharmacyOrder:
     # If user is a patient, they can only access a prescription (via its id) IF patient ID matches userID.
     # if user is an employee, they can access any prescription. 
     # NOTE: if you search by prescription_id, you will only get one result.
-    def search_by_prescription_id(self, user_ID, prescription_id):
+    # returns a dictionary.
+    def search_by_prescription_id_dict(self, user_ID, prescription_id):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
@@ -287,6 +288,37 @@ class PharmacyOrder:
             # if no match then return empty dictionary
             return dict()
 
+    # Function that searches based on prescription_id and returns a dictionary of the corresponding information
+    # or otherwise an empty dictionary if there is no match. 
+    # If user is a patient, they can only access a prescription (via its id) IF patient ID matches userID.
+    # if user is an employee, they can access any prescription. 
+    # NOTE: if you search by prescription_id, you will only get one result.
+    # returns a list.
+    def search_by_prescription_id_list(self, user_ID, prescription_id):
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+
+            user_id_int = int(user_ID)
+            # if employee, then no restrictions besides original query
+            if user_id_int >= 30000000 and user_id_int < 40000000:
+                for row in reader:
+                    if row["Prescription ID"] == prescription_id:
+                        information_dictionary = PharmacyOrder.get_all_row_info_list(row)
+                        return information_dictionary
+            # if patient
+            else:
+                for row in reader:
+                    if user_ID == row["Patient ID"] and row["Prescription ID"] == prescription_id:
+                        information_dictionary = PharmacyOrder.get_all_row_info_list(row)
+                        return information_dictionary
+                    # print error message if prescription id matches but patient does not. 
+                    if row["Prescription ID"] == prescription_id and user_ID != row["Patient ID"]:
+                        print("ERROR: Patients are not allowed to access another patient's prescription orders")
+            
+            # if no match then return empty dictionary
+            return dict()
+
+
     # Function to print information (either the a list of row information or an error message)
     def print_search_by_patient_name_and_medication(self, list_info, p_name, med):
         if len(list_info) == 0:
@@ -298,7 +330,10 @@ class PharmacyOrder:
     # or otherwise an empty dictionary if there is no match. Returns a list of rows (which are of type dict())
     # if user is patient, they should only allowed to be searching by their own medication. 
     # NOTE: if you search by patient name and medication, it is possible to have more than 1 result.
-    def search_by_patient_name_and_medication(self, user_id, patient_name, prescribed_medication):
+    # user_id: string, patient_name: string, prescribed_medication: string
+    # returns a list of dictionaries
+    # TODO: need to update tests. 
+    def search_by_patient_name_and_medication_dict(self, user_id, patient_name, prescribed_medication):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
@@ -308,7 +343,7 @@ class PharmacyOrder:
             # if user is an employee, then the user has full access to search by patient name and medication
             if user_id_int >= 30000000 and user_id_int < 40000000:
                 for row in reader:
-                    if row["Patient Name"] == patient_name and row["Prescribed Medication"] == prescribed_medication:
+                    if row["Patient Name"] == patient_name.upper() and row["Prescribed Medication"] == prescribed_medication.upper():
                         information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                         matches_list.append(information_dictionary)
             # if user is a patient, then make sure patient is only seraching their records.    
@@ -323,7 +358,42 @@ class PharmacyOrder:
                         print("ERROR: Patients cannot access other Patient's pharmacy orders")
                         return list()
             
-            # If no match then return empty dictionary
+            # If no match then return empty list
+            return matches_list
+
+    # Function that searches based on patient name and medication and returns a dictionary of the information
+    # or otherwise an empty dictionary if there is no match. Returns a list of rows (which are of type dict())
+    # if user is patient, they should only allowed to be searching by their own medication. 
+    # NOTE: if you search by patient name and medication, it is possible to have more than 1 result.
+    # user_id: string, patient_name: string, prescribed_medication: string
+    # returns a list of lists
+    # TODO: need to add tests. 
+    def search_by_patient_name_and_medication_list(self, user_id, patient_name, prescribed_medication):
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+
+            matches_list = list()
+
+            user_id_int = int(user_id)
+            # if user is an employee, then the user has full access to search by patient name and medication
+            if user_id_int >= 30000000 and user_id_int < 40000000:
+                for row in reader:
+                    if row["Patient Name"] == patient_name.upper() and row["Prescribed Medication"] == prescribed_medication.upper():
+                        information_list = PharmacyOrder.get_all_row_info_list(row)
+                        matches_list.append(information_list)
+            # if user is a patient, then make sure patient is only seraching their records.    
+            else:
+                for row in reader:
+                    if row["Patient Name"] == patient_name.upper() and row["Prescribed Medication"] == prescribed_medication.upper() and row["Patient ID"] == user_id:
+                        information_list = PharmacyOrder.get_all_row_info_list(row)
+                        matches_list.append(information_list)
+                    
+                    # if patient name and user ID don't match, return empty list and shoot error message. 
+                    if row["Patient Name"] == patient_name.upper() and row["Patient ID"] != user_id:
+                        print("ERROR: Patients cannot access other Patient's pharmacy orders")
+                        return list()
+            
+            # If no match then return empty list
             return matches_list
 
     # Function to delete pharmacy order by prescription ID. presc_ID is an integer value.

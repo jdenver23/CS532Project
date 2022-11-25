@@ -5,7 +5,7 @@
 
 import csv #To store our Data
 import pandas as pd #For Data Manipulation/Data Access
-
+import PySimpleGUI as sg
 
 class LabOrderTracking:
 
@@ -22,18 +22,18 @@ class LabOrderTracking:
         results_labtest = "Good" #Can be good, okay, or urgent
 
     #Now we get user input if we want to store info in the .CSV file so they can be accessed later
-        user_id = input("Please enter your 8 digit USER ID to verify you are an employee.\n")
+        #user_id = input("Please enter your 8 digit USER ID to verify you are an employee.\n")
+        #user_id = sg.popup_get_text("Please enter your 8 digit USER ID to verify you are an employee.")
+        #if(len(user_id) != 8):
+        #    print("YOU DID NOT ENTER AN 8 digit USER ID. PLEASE TRY AGAIN!!!\n")
+        #    exit()
 
-        if(len(user_id) != 8):
-            print("YOU DID NOT ENTER AN 8 digit USER ID. PLEASE TRY AGAIN!!!\n")
-            exit()
-
-        first_digit = user_id[0]
-        print(first_digit) #Used to test what the first digit of the User ID is. 
+        #first_digit = user_id[0]
+        #print(first_digit) #Used to test what the first digit of the User ID is. 
     
-        if(first_digit != "3"): #Used to make sure only employees access the lab order tracking system
-            print("ONLY EMPLOYEES HAVE ACCESS TO THE LAB ORDER TRACKING SYSTEM!!!\n")
-            exit() #To stop the program from running if it is not an employee. 
+        #if(first_digit != "3"): #Used to make sure only employees access the lab order tracking system
+        #    print("ONLY EMPLOYEES HAVE ACCESS TO THE LAB ORDER TRACKING SYSTEM!!!\n")
+        #    exit() #To stop the program from running if it is not an employee. 
 
     
         decision = int(input("Please enter 1 for ADDING information to the Lab Order Tracking System, 2 for retrieving SORTED information from the Lab Order Tracking System, or 3 for retrieiving SPECIFIC information from the Lab Order Tracking System. \n")) #If user input == 1, store. If user input == 2, we retrieve. 
