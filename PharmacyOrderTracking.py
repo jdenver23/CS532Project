@@ -15,20 +15,24 @@
 # https://stackoverflow.com/questions/5286093/display-listbox-with-columns-using-tkinter
 # https://stackoverflow.com/questions/68148391/placing-multiple-buttons-in-same-column-tkinter-using-grid
 # https://www.youtube.com/watch?v=yICGS9Lv86s - used to help find if multiple rows in TreeView selected.
-# 
+# https://github.com/flatplanet/Intro-To-TKinter-Youtube-Course/blob/master/treebase.py - for Search
+# https://www.youtube.com/watch?v=odt87CeLlro
+# https://www.youtube.com/watch?v=rtR5wHXPKZ4&list=PLCC34OHNcOtoC6GglhF3ncJ5rLwQrLGnV&index=117
+# https://github.com/flatplanet/Intro-To-TKinter-Youtube-Course
 #-----------------------------------------------------
 
 import PharmacyOrder as PO
 import Medications as MED
-import CompleteOrder
+# import CompleteOrder 
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+import csv
 
 PRESC_ID_LOC = 0
 PAT_NAME_LOC = 1
-PAT_ID_LOC = 2
+PAT_ID_LOC = 2 
 PHYS_NAME_LOC = 3
 PRESC_MED_LOC = 4
 MED_ID_LOC = 5
@@ -37,6 +41,9 @@ FREQ_LOC = 7
 D_ORD_LOC= 8
 D_FILL_LOC = 9
 PHARM_LOC = 10
+
+USERS_CSV = "users.csv"
+USERS_FIELD_NAMES = ['ID', 'First Name', 'Last Name', 'Email,Password', 'Phone Number', 'Address', 'Insurance Carrier', 'Date of Birth', 'Gender', 'Primary Care Physician', 'Medication' , 'Appointments']
 
 class PharmacyOrderTracking:
     
@@ -70,14 +77,17 @@ class PharmacyOrderTracking:
     def PO_print_search_by_prescription_id(self, dict_info, p_ID):
         self.pharm_order_accessor.print_search_by_prescription_id(dict_info, p_ID)
     
-    def PO_search_by_prescription_id(self, user_ID, prescription_id):
-        return self.pharm_order_accessor.search_by_prescription_id(user_ID, prescription_id)
+    # GUI Done
+    def PO_search_by_prescription_id_list(self, user_ID, prescription_id):
+        return self.pharm_order_accessor.search_by_prescription_id_list(user_ID, prescription_id)
 
+    # MIGHT NOT BE NEEDED.
     def PO_print_search_by_patient_name_and_medication(self, list_info, p_name, med):
         self.pharm_order_accessor.print_search_by_patient_name_and_medication(list_info, p_name, med)
     
-    def PO_search_by_patient_name_and_medication(self, user_ID, patient_name, prescribed_medication):
-        return self.pharm_order_accessor.search_by_patient_name_and_medication(user_ID, patient_name, prescribed_medication)
+    # GUI done
+    def PO_search_by_patient_name_and_medication_list(self, user_ID, patient_name, prescribed_medication):
+        return self.pharm_order_accessor.search_by_patient_name_and_medication_list(user_ID, patient_name, prescribed_medication)
     
     def PO_orders_to_be_filled(self, user_ID):
         return self.pharm_order_accessor.orders_to_be_filled(user_ID)
@@ -85,11 +95,26 @@ class PharmacyOrderTracking:
     def PO_orders_to_be_filled(self, user_ID):
         return self.pharm_order_accessor.orders_filled(user_ID)
 
+    # GUI done
     def PO_show_prescription_orders_list(self, user_ID):
         return self.pharm_order_accessor.show_prescription_orders_list(user_ID)
     
+    # GUI done
     def PO_complete_order(self, user_ID, presc_ID, pharmacist_name, date_filled):
         return self.pharm_order_accessor.complete_order(user_ID, presc_ID, pharmacist_name, date_filled)
+
+
+# get_patient_name takes a user Id and returns the user's full name from information gathere
+# from users.csv database.
+# user_ID: string
+def get_patient_name(user_ID):
+    with open(USERS_CSV, mode='r', newline='') as f:
+        reader = csv.DictReader(f, fieldnames=USERS_FIELD_NAMES)
+        for row in reader: 
+            if row["ID"] == user_ID:
+                return row["First Name"] + " " + row["Last Name"]
+        
+        return ""
 
 
 # GUI driven with tkinter
@@ -105,17 +130,7 @@ def runGUI(POT_var):
     top.grid(row=0, column=0, sticky='ns')
     bottom.grid(row=1, column=0, sticky='ns')
 
-    # listbox = Listbox(root, height = 500,
-    #                 width = 500,
-    #                 bg = "grey",
-    #                 activestyle = 'dotbox',
-    #                 font = "Helvetica",
-    #                 fg = "black")
-
     root.geometry("1275x700")
-
-    # style = ttk.Style()
-    # style.theme_use('clam')
 
     # define columns
     PO_columns = ("Prescription_ID","Patient_Name","Patient_ID","Physician_Name","Prescribed_Medication","Medication_ID","Dosage","Frequency","Date_Ordered","Date_Filled","Pharmacist")
@@ -189,26 +204,128 @@ def runGUI(POT_var):
             # NOTE: not sure what "values" does
             selected_list = tree.item(selected, "values")
             CO_run_GUI(POT_var.user_ID, selected_list, POT_var, root)
-        # print(tree.selection()[0])
-        # if len(tree.selection()) == 0:
-        #     # TODO: needs to be changed later
-        #     print("ERROR: Must select an order before clicking Complete Order.")
-        #     return
-        # if len(tree.selection()) == 1:
-        #     # TODO: needs to be changed later
-        #     print("ERROR: Only one order can be completed at a time.")
-        #     return
         
-        
-        # CompleteOrder.open(POT_var.user_ID)
         root.destroy()
-        # EditPatient.enter_prog(person.id_number)
 
     user_ID_int = int(POT_var.user_ID)
     if user_ID_int >= 30000000 and user_ID_int < 40000000:
         complete_order_button = ttk.Button(top, text='Complete Order', command = complete_order)
         # edit_button.pack(in_=top, side=LEFT)
-        complete_order_button.grid(row=1, column=0, sticky='ns')
+        complete_order_button.grid(row=1, column=0, sticky='w')
+
+    
+    # NOW add MENU option to root.
+    POT_menu = Menu(root)
+    root.config(menu=POT_menu)
+
+    # function execute the search button in the "Search by Prescription Name and Prescribed Medication"
+    def execute_search_by_name_and_medication():
+        patient_name_entered = patient_name_entry.get()
+        medication_entered = medication_entry.get()
+
+        # need to get rid of leading/trailing spaces. 
+        patient_name_entered = patient_name_entered.strip()
+        medication_entered = medication_entered.strip()
+
+        # close the search option box
+        search_BNAM.destroy()
+
+        # clear Tree view
+        for order in tree.get_children():
+            tree.delete(order)
+        
+        # get resulting list from search. 
+        search_result_list = POT_var.PO_search_by_patient_name_and_medication_list(POT_var.user_ID, patient_name_entered, medication_entered)
+
+        for order in search_result_list:
+            tree.insert('', tk.END, values=order)
+
+    # TODO: needs a back button as well as a note to alert user that both entries must be filled. Also needs error messages.
+    def search_by_name_and_medication():
+        global search_BNAM, patient_name_entry, medication_entry
+
+        search_BNAM = Toplevel(root)
+        search_BNAM.title("Search By Patient Name & Prescribed Medication")
+        search_BNAM.geometry("400x300")
+
+        patient_name_frame = LabelFrame(search_BNAM, text="Patient Name")
+        patient_name_frame.pack(padx=10, pady=10)
+
+        patient_name_entry = Entry(patient_name_frame, font=("Helvetica", 10))
+        if user_ID_int >= 40000000:
+            # if the user is a patient, then only allow for their name to be an option 
+            # (i.e. the user can't access other people's records. )
+            patient_name_entry = Entry(patient_name_frame)
+            # default the Entry box to have the patient's name
+            patient_name_entry.insert(0, get_patient_name(POT_var.user_ID))
+            # make the textbox read-only so that the user can't change the name. 
+            patient_name_entry.config(state='readonly')
+        patient_name_entry.pack(pady=20, padx=20)
+
+        medication_frame = LabelFrame(search_BNAM, text="Prescribed Medication")
+        medication_frame.pack(padx=10, pady=10)
+
+        medication_entry = Entry(medication_frame, font=("Helvetica", 10))
+        medication_entry.pack(pady=20, padx=20)
+
+        search_BNAM_button = Button(search_BNAM, text="Search Orders", command=execute_search_by_name_and_medication)
+        search_BNAM_button.pack(padx=20, pady=20)
+
+
+    # TODO: still needs a back button as well as alert user that entry must be filled. also needs error messages. 
+    def execute_search_by_presc_id():
+        presc_ID_entered = presc_ID_entry.get()
+
+        # need to get rid of leading/trailing spaces.
+        presc_ID_entered = presc_ID_entered.strip()
+
+        # close the search option box
+        search_BPI.destroy()
+
+        # clear Treeview
+        for order in tree.get_children():
+            tree.delete(order)
+        
+        # get resulting list from search.
+        search_result_list = POT_var.PO_search_by_prescription_id_list(POT_var.user_ID, presc_ID_entered)
+        
+        tree.insert('', tk.END, values=search_result_list)
+
+    def search_by_presc_id():
+        global presc_ID_entry, search_BPI
+        search_BPI = Toplevel(root)
+        search_BPI.title("Search By Prescription ID")
+        search_BPI.geometry("400x200")
+
+        presc_ID_frame =LabelFrame(search_BPI, text="Prescription ID")
+        presc_ID_frame.pack(padx=10, pady=10)
+
+        presc_ID_entry = Entry(presc_ID_frame, font=("Helvetica", 10))
+        presc_ID_entry.pack(pady=20, padx=20)
+
+        search_BPI_button = Button(search_BPI, text="Search Orders", command=execute_search_by_presc_id)
+        search_BPI_button.pack(padx=20, pady=20)
+        pass
+
+    def reset_search():
+        # clear Treeview
+        for order in tree.get_children():
+            tree.delete(order)
+
+        full_list = POT_var.PO_show_prescription_orders_list(POT_var.user_ID)
+
+        for order in full_list:
+            tree.insert('', tk.END, values=order)
+        
+
+    search_menu_options = Menu(POT_menu, tearoff=0)
+    POT_menu.add_cascade(label="Search", menu=search_menu_options)
+
+    search_menu_options.add_command(label="Search By Patient Name & Medication", command=search_by_name_and_medication)
+    search_menu_options.add_separator()
+    search_menu_options.add_command(label="Search By Prescription ID", command=search_by_presc_id)
+    search_menu_options.add_separator()
+    search_menu_options.add_command(label="Reset Search", command=reset_search)
 
     root.mainloop()
 
@@ -218,7 +335,7 @@ def initialize(passed_user_id):
     POT_instance = PharmacyOrderTracking(passed_user_id)
     runGUI(POT_instance)
 
-
+# TODO: still some todos that need to be completed in here
 def CO_run_GUI(passed_user_id, passed_order_list, POT_var, root_window):
     CO_root = tk.Tk()
     CO_root.title("Complete Order")
