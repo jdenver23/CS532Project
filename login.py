@@ -338,6 +338,7 @@ def login_gui():
                         # take to homepage after logging in
                         root.destroy()
                         homepage.home_gui(id)
+                        return
                     elif row[3] == email_in and row[4] != password_in:
                         messagebox.showinfo('Login', 'Incorrect password, please try again.')
                         return
