@@ -934,7 +934,7 @@ def generate_delinquent_reports(user_id: str or int=None, carrier_name: str = No
     
     check_ids: list[str] = []
     
-    if user_id is not None:
+    if user_id is not None and str(user_id).isnumeric():
         check_ids.append(user_id)
     
     elif None not in [carrier_name, carrier_address]:

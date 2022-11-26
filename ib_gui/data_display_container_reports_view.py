@@ -198,9 +198,10 @@ class ReportsViewWidget(tk.Toplevel):
         self.entry_info_upd(_info)
         
     def patient_search(self):
-        _id = self.entry_patient_sel.get().split(",")[self.search_filter.get()].strip()
-        _info = generate_delinquent_reports(user_id=_id)
-        self.entry_info_upd(_info)
+        if self.entry_patient_sel.get() in self.entry_patient_sel['values']:
+            _id = self.entry_patient_sel.get().split(",")[self.search_filter.get()].strip()
+            _info = generate_delinquent_reports(user_id=_id)
+            self.entry_info_upd(_info)
         
     def entry_info_upd(self, text):
         self.text_reports_info.configure(state=tk.NORMAL)
