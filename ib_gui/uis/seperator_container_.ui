@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<interface version="1.3">
+  <object class="tk.Frame" id="seperator_container_" named="True">
+    <property name="height">5</property>
+    <property name="width">720</property>
+    <layout manager="pack">
+      <property name="side">top</property>
+    </layout>
+    <containerlayout manager="pack">
+      <property name="propagate">False</property>
+    </containerlayout>
+    <child>
+      <object class="tk.LabelFrame" id="line_seperator" named="True">
+        <property name="height">2</property>
+        <property name="width">200</property>
+        <layout manager="pack">
+          <property name="anchor">center</property>
+          <property name="expand">true</property>
+          <property name="fill">x</property>
+          <property name="padx">10</property>
+          <property name="side">left</property>
+        </layout>
+      </object>
+    </child>
+  </object>
+</interface>

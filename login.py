@@ -6,7 +6,7 @@ from tkinter import ttk
 from tkinter.ttk import *
 from tkinter import messagebox
 import datetime
-from homepage import home_gui
+import homepage
 
 
 def login_gui():
@@ -331,23 +331,32 @@ def login_gui():
                 reader = csv.reader(f, delimiter = ",")
                 # checks for email/password combo in database
                 for row in reader:
-                    if email_in in row[3] and password_in in row[4]:
+                    if email_in == row[3] and password_in == row[4]: ### shouldnt be email_in in row[3] here :3
                         # get id from row here
                         id = row[0]
                         messagebox.showinfo('Login', 'Login successful.')
                         # take to homepage after logging in
                         root.destroy()
-                        home_gui(id)
+                        homepage.home_gui(id)
                     elif row[3] == email_in and row[4] != password_in:
                         messagebox.showinfo('Login', 'Incorrect password, please try again.')
+                        return
                 messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
                 go_to_register()
         else:
             messagebox.showwarning('Login', 'Please fill all fields.')
+    
+    def on_closing():
+        if messagebox.askyesno("Quit", "Do you want to quit?"):
+            root.destroy()
+            exit()
 
     login_button['command'] = validate_login
+    root.wm_protocol("WM_DELETE_WINDOW", on_closing)
 
     root.mainloop()
 
-
-login_gui()
+if __name__ == "__main__":
+    # only run the code below when executed as script
+    # this prevents auto code executions from being imported as a module
+    login_gui()
