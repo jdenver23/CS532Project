@@ -144,7 +144,7 @@ class NavbarContainerWidget(tk.Frame):
     def home(self, forced=False):
         if forced or messagebox.askyesno("Home", "Are you sure you want to go to home?"):
             self.master.destroy()
-            homepage.home_gui(self.ddc.bill.user['ID'])
+            homepage.home_gui(self.master.calls())
             
         self.focus_force()
     

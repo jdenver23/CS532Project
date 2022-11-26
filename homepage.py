@@ -15,7 +15,7 @@ def home_gui(user_id):
     h = 525
 
     #------ CENTER FORM ------#
-    root.overrideredirect(1) # removes border
+    # root.overrideredirect(1) # removes border
     ws = root.winfo_screenwidth()
     hs = root.winfo_screenheight()
     x = (ws - w) / 2

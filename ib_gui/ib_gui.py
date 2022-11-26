@@ -21,6 +21,7 @@ class MainGUI(tk.Tk):
         r = 0
         
         self.ui_mode = UIMode.PATIENT
+        self.uid = user_id
         
         if int(user_id) >= EMPLOYEE_RANGE_L and int(user_id) < EMPLOYEE_RANGE_H:
             self.title("Insurance Billing - Healthcare Permanente (EMPLOYEE VIEW)")
@@ -36,7 +37,7 @@ class MainGUI(tk.Tk):
         self.sep0_widget.grid(column=0, row=r)
         r += 1
         
-        self.navbar_widget = NavbarContainerWidget(master=self, bill=bill, ui_mode=self.ui_mode)
+        self.navbar_widget = NavbarContainerWidget(master=self, bill=self.bill, ui_mode=self.ui_mode)
         self.navbar_widget.grid(column=0, row=r)
         r += 1
         
@@ -86,13 +87,14 @@ class MainGUI(tk.Tk):
         if messagebox.askyesno("Quit", "Do you want to quit?"):
             self.destroy()
     
-    def calls(self, widget_name):
+    def calls(self, widget_name=""):
         """ 
             Return specified widget reference.\n
             `widget_name` can only be one of the following:
-            - `nbc` for navbar_container
-            - `uic` for user_info_container
-            - `ddc` for data_display_container
+            - `nbc` for navbar_container.
+            - `uic` for user_info_container.
+            - `ddc` for data_display_container.
+            - leave blank for the `user_id` that was used to login.
         """
         if widget_name == "nbc" and hasattr(self, "navbar_widget"):
             return self.navbar_widget
@@ -100,4 +102,5 @@ class MainGUI(tk.Tk):
             return self.user_info_widget
         if widget_name == "ddc" and hasattr(self, "data_display_widget"):
             return self.data_display_widget
+        return self.uid
         
