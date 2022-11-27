@@ -301,6 +301,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             if self.treeview_carriers_curr_sel is None: self.treeview_carriers_curr_sel = 0 if dx == 1 else -1
             else: self.treeview_carriers_curr_sel += dx
             all_child = self.treeview_carriers.get_children()
+            if len(all_child) == 0: return
             if self.treeview_carriers_curr_sel >= len(all_child):
                 self.treeview_carriers_curr_sel = 0
             elif self.treeview_carriers_curr_sel < 0: 
@@ -312,6 +313,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             if self.treeview_services_curr_sel is None: self.treeview_services_curr_sel = 0 if dx == 1 else -1
             else: self.treeview_services_curr_sel += dx
             all_child = self.treeview_services.get_children()
+            if len(all_child) == 0: return
             if self.treeview_services_curr_sel >= len(all_child):
                 self.treeview_services_curr_sel = 0
             elif self.treeview_services_curr_sel < 0: 
@@ -323,6 +325,7 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             if self.treeview_invoices_curr_sel is None: self.treeview_invoices_curr_sel = 0 if dx == 1 else -1
             else: self.treeview_invoices_curr_sel += dx
             all_child = self.treeview_invoices.get_children()
+            if len(all_child) == 0: return
             if self.treeview_invoices_curr_sel >= len(all_child):
                 self.treeview_invoices_curr_sel = 0
             elif self.treeview_invoices_curr_sel < 0: 
