@@ -4,6 +4,7 @@ from tkinter import ttk
 from tkinter.ttk import *
 from PatientRecords import initialize
 import InsuranceBillingGUI
+import Equipment
 
 def home_gui(user_id):
     user_id = int(user_id)
@@ -54,6 +55,10 @@ def home_gui(user_id):
     def enter_insurance_billing():
         root.destroy()
         InsuranceBillingGUI.init_gui(str(user_id))
+        
+    def enter_equipment():
+        root.destroy()
+        Equipment.runGui(str(user_id))
 
     #------ ALL BUTTONS -------#
     homeframe  = tk.Frame(mainframe, width = w, height = h)
@@ -64,7 +69,7 @@ def home_gui(user_id):
     lab_button = tk.Button(home_contentframe, text = 'Lab Order Tracking', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
     pharm_button = tk.Button(home_contentframe, text = 'Pharmacy Order Tracking', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
     insurance_button = tk.Button(home_contentframe, text = 'Insurance Billing', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25, command = enter_insurance_billing)
-    equipment_button = tk.Button(home_contentframe, text = 'Equipment Inventory/Maintenance', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
+    equipment_button = tk.Button(home_contentframe, text = 'Equipment Inventory/Maintenance', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25, command =enter_equipment )
 
     mainframe.pack(fill = 'both', expand = 1)
     homeframe.pack(fill = 'both', expand = 1)
