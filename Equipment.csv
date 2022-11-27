@@ -1,3 +1,5 @@
-Equipment ID,Equipment type,Equipment description,Department,Owned or Leased,Maintenance History
-2,Electric Bed,Hill-Rom VersaCare Hospital Bed,Physician,Owned,none
-5,Computer,IMAC 24,Pharmacy,Leased,none
+Equipment ID,Equipment type,Equipment description,Department,Status,Owned,Leased,Maintenance History
+2,Electric Bed,Hill-Rom VersaCare Hospital Bed,Physician,Owned,,,none
+5,Computer,IMAC 24,Pharmacy,Leased,,,none
+3,Wheel Chair,WC - 205,Nursing,Owned,Date Purchase: 08-31-2020 Warranty Serial Number : 0848213,none,Wheel Fixed
+4,PATIENT MONITOR,GT-9000,Physician,Owned,Date Purchase: 09-14-2020 Warranty Serial Number : 4568,none,none
