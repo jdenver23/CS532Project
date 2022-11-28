@@ -3,6 +3,8 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import *
 from PatientRecords import initialize
+import InsuranceBillingGUI
+import Equipment
 
 def home_gui(user_id):
     user_id = int(user_id)
@@ -14,7 +16,7 @@ def home_gui(user_id):
     h = 525
 
     #------ CENTER FORM ------#
-    root.overrideredirect(1) # removes border
+    # root.overrideredirect(1) # removes border
     ws = root.winfo_screenwidth()
     hs = root.winfo_screenheight()
     x = (ws - w) / 2
@@ -49,6 +51,14 @@ def home_gui(user_id):
         root.destroy()
         initialize(str(user_id))
         home_gui(str(user_id))
+        
+    def enter_insurance_billing():
+        root.destroy()
+        InsuranceBillingGUI.init_gui(str(user_id))
+        
+    def enter_equipment():
+        root.destroy()
+        Equipment.runGui(str(user_id))
 
     #------ ALL BUTTONS -------#
     homeframe  = tk.Frame(mainframe, width = w, height = h)
@@ -58,8 +68,8 @@ def home_gui(user_id):
     sched_button = tk.Button(home_contentframe, text = 'Physician Schedules', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
     lab_button = tk.Button(home_contentframe, text = 'Lab Order Tracking', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
     pharm_button = tk.Button(home_contentframe, text = 'Pharmacy Order Tracking', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
-    insurance_button = tk.Button(home_contentframe, text = 'Insurance Billing', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
-    equipment_button = tk.Button(home_contentframe, text = 'Equipment Inventory/Maintenance', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25)
+    insurance_button = tk.Button(home_contentframe, text = 'Insurance Billing', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25, command = enter_insurance_billing)
+    equipment_button = tk.Button(home_contentframe, text = 'Equipment Inventory/Maintenance', font = ('Verdana', 16), bg = '#2980b9', fg = '#fff', padx = 25, pady = 10, width = 25, command =enter_equipment )
 
     mainframe.pack(fill = 'both', expand = 1)
     homeframe.pack(fill = 'both', expand = 1)
