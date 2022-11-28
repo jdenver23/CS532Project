@@ -63,11 +63,12 @@ class PharmacyOrderTracking:
     def PO_print_prescriptions(self, p_list):
         self.pharm_order_accessor.print_prescriptions(p_list)
     
-    def PO_prescriptions_ordered_by_physician(self, user_ID, physician_name, start_time, end_time):
-        return self.pharm_order_accessor.prescriptions_ordered_by_physician(user_ID, physician_name, start_time, end_time)
+    def PO_prescriptions_ordered_by_physician_list(self, user_ID, physician_name, start_time, end_time):
+        return self.pharm_order_accessor.prescriptions_ordered_by_physician_list(user_ID, physician_name, start_time, end_time)
     
-    def PO_prescriptions_filled_for_patient(self, user_ID, patient_name, start_time, end_time):
-        return self.pharm_order_accessor.prescriptions_filled_for_patient(user_ID, patient_name, start_time, end_time)
+    # GUI done
+    def PO_prescriptions_filled_for_patient_list(self, user_ID, patient_name, start_time, end_time):
+        return self.pharm_order_accessor.prescriptions_filled_for_patient_list(user_ID, patient_name, start_time, end_time)
     
     def PO_number_of_prescriptions_by_medication_month_physician(self, user_ID):
         return self.pharm_order_accessor.number_of_prescriptions_by_medication_month_physician(user_ID)
@@ -272,7 +273,6 @@ def runGUI(POT_var):
         search_BNAM_button = Button(search_BNAM, text="Search Orders", command=execute_search_by_name_and_medication)
         search_BNAM_button.pack(padx=20, pady=20)
 
-
     # TODO: still needs a back button as well as alert user that entry must be filled. also needs error messages. 
     def execute_search_by_presc_id():
         presc_ID_entered = presc_ID_entry.get()
@@ -317,8 +317,122 @@ def runGUI(POT_var):
 
         for order in full_list:
             tree.insert('', tk.END, values=order)
-        
 
+
+    def report_prescriptions_filled_for_patient():
+        patient_name_entered = patient_name_entry.get()
+        start_date_entered = start_date_entry_patient.get()
+        end_date_entered = end_date_entry_patient.get()
+
+        # get rid of leading/trailing Spaces
+        patient_name_entered = patient_name_entered.strip()
+        start_date_entered = start_date_entered.strip()
+        end_date_entered = end_date_entered.strip()
+
+        # clear the search option box.
+        presc_patient.destroy()
+
+        # clear Tree view
+        for order in tree.get_children():
+            tree.delete(order)
+        
+        report_list = POT_var.PO_prescriptions_filled_for_patient_list(POT_var.user_ID, patient_name_entered, start_date_entered, end_date_entered)
+
+        for order in report_list:
+            tree.insert('', tk.END, values=order)
+
+
+    def prescriptions_filled_for_patient():
+        global presc_patient, patient_name_entry, start_date_entry_patient, end_date_entry_patient
+        presc_patient = Toplevel(root)
+        presc_patient.title("Prescriptions Filled For a Patient")
+        presc_patient.geometry("400x400")
+
+        label = Label(presc_patient, text="List of All Prescriptions FILLED For a Patient For a Specific Period of Time")
+        label.pack(padx=10, pady=10)
+        
+        patient_name_frame = LabelFrame(presc_patient, text="Patient Name")
+        patient_name_frame.pack(padx=10, pady=10)
+
+        patient_name_entry = Entry(patient_name_frame, font=("Helvetica", 10))
+        if user_ID_int >= 40000000:
+            # if the user is a patient, then only allow for their name to be an option 
+            # (i.e. the user can't access other people's records. )
+            patient_name_entry = Entry(patient_name_frame)
+            # default the Entry box to have the patient's name
+            patient_name_entry.insert(0, get_patient_name(POT_var.user_ID))
+            # make the textbox read-only so that the user can't change the name. 
+            patient_name_entry.config(state='readonly')
+        patient_name_entry.pack(pady=20, padx=20)
+
+        start_date_frame = LabelFrame(presc_patient, text="Start Date (MM/DD/YYYY)")
+        start_date_frame.pack(padx=10, pady=10)
+
+        start_date_entry_patient = Entry(start_date_frame, font=("Helvetica", 10))
+        start_date_entry_patient.pack(pady=20, padx=20)
+
+        end_date_frame = LabelFrame(presc_patient, text="End Date (MM/DD/YYYY)")
+        end_date_frame.pack(padx=10, pady=10)
+
+        end_date_entry_patient = Entry(end_date_frame, font=("Helvetica", 10))
+        end_date_entry_patient.pack(pady=20, padx=20)
+
+        report_prescriptions_filled_for_patient_button = Button(presc_patient, text="Create Report", command=report_prescriptions_filled_for_patient)
+        report_prescriptions_filled_for_patient_button.pack(padx=20, pady=20)
+
+    def report_prescriptions_filled_for_physician():
+        physician_name_entered = physician_name_entry.get()
+        start_date_entered = start_date_entry_physician.get()
+        end_date_entered = end_date_entry_physician.get()
+
+        # get rid of leading/trailing Spaces
+        physician_name_entered = physician_name_entered.strip()
+        start_date_entered = start_date_entered.strip()
+        end_date_entered = end_date_entered.strip()
+
+        # clear the search option box.
+        presc_physician.destroy()
+
+        # clear Tree view
+        for order in tree.get_children():
+            tree.delete(order)
+        
+        report_list = POT_var.PO_prescriptions_ordered_by_physician_list(POT_var.user_ID, physician_name_entered, start_date_entered, end_date_entered)
+
+        for order in report_list:
+            tree.insert('', tk.END, values=order)
+
+    def prescriptions_ordered_by_a_physician(): 
+        global presc_physician, physician_name_entry, start_date_entry_physician, end_date_entry_physician        
+        presc_physician = Toplevel(root)
+        presc_physician.title("Prescriptions Ordered By a Physician")
+        presc_physician.geometry("425x400")
+
+        label = Label(presc_physician, text="List of All Prescriptions ORDERED By a Physician For a Specific Period of Time")
+        label.pack(padx=10, pady=10)        
+
+        physician_name_frame = LabelFrame(presc_physician, text="Physician Name")
+        physician_name_frame.pack(padx=10, pady=10)
+
+        physician_name_entry = Entry(physician_name_frame, font=("Helvetica", 10))
+        physician_name_entry.pack(pady=20, padx=20)
+
+        start_date_frame = LabelFrame(presc_physician, text="Start Date (MM/DD/YYYY)")
+        start_date_frame.pack(padx=10, pady=10)
+
+        start_date_entry_physician = Entry(start_date_frame, font=("Helvetica", 10))
+        start_date_entry_physician.pack(pady=20, padx=20)
+
+        end_date_frame = LabelFrame(presc_physician, text="End Date (MM/DD/YYYY)")
+        end_date_frame.pack(padx=10, pady=10)
+
+        end_date_entry_physician = Entry(end_date_frame, font=("Helvetica", 10))
+        end_date_entry_physician.pack(pady=20, padx=20)
+
+        report_prescriptions_filled_for_physician_button = Button(presc_physician, text="Create Report", command=report_prescriptions_filled_for_physician)
+        report_prescriptions_filled_for_physician_button.pack(padx=20, pady=20)
+
+    # Add SEARCH menu options.
     search_menu_options = Menu(POT_menu, tearoff=0)
     POT_menu.add_cascade(label="Search", menu=search_menu_options)
 
@@ -327,6 +441,18 @@ def runGUI(POT_var):
     search_menu_options.add_command(label="Search By Prescription ID", command=search_by_presc_id)
     search_menu_options.add_separator()
     search_menu_options.add_command(label="Reset Search", command=reset_search)
+
+    # Add REPORTS menu opetions
+    report_menu_options = Menu(POT_menu, tearoff=0)
+    POT_menu.add_cascade(label="Reports", menu=report_menu_options)
+    
+    report_menu_options.add_command(label="Prescriptions Filled For a Patient", command=prescriptions_filled_for_patient)
+    report_menu_options.add_separator()
+    report_menu_options.add_command(label="Prescriptions Ordered By a Physician", command=prescriptions_ordered_by_a_physician)
+    report_menu_options.add_separator()
+    report_menu_options.add_command(label="Summary Report")
+    report_menu_options.add_separator()
+    report_menu_options.add_command(label="Reset Report", command=reset_search)
 
     root.mainloop()
 

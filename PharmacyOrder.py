@@ -49,19 +49,25 @@ class PharmacyOrder:
             print(presc)
 
     # Function to list all prescriptions ORDERED by a specific physician for a specific period of time 
-    def prescriptions_ordered_by_physician(self, user_ID, physician_name, start_time, end_time):
+    # user_ID: string; physician_name: string; start_time_str: string; end_time_string
+    # returns a list of dictionaries
+    def prescriptions_ordered_by_physician_dict(self, user_ID, physician_name, start_time_str, end_time_str):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
             # list to store all information of a match. 
             matching_prescriptions = list()
 
+            # need to convert date_filled from string to Date object. 
+            start_time = datetime.strptime(start_time_str, "%m/%d/%Y").date()
+            end_time = datetime.strptime(end_time_str, "%m/%d/%Y").date()
+
             user_ID_int = int(user_ID)
             # if user is an employee, then display all presciptions that match query.
             if user_ID_int >= 30000000 and user_ID_int < 40000000:
                 for row in reader:
                     # match with physician name and date ordered is not blank. 
-                    if row["Physician Name"] == physician_name and row["Date Ordered"] != "":
+                    if row["Physician Name"].upper() == physician_name.upper() and row["Date Ordered"] != "":
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
@@ -71,7 +77,7 @@ class PharmacyOrder:
             else:
                 for row in reader:
                     # match with physician name, user id, and date ordered is not blank. 
-                    if row["Patient ID"] == user_ID and row["Physician Name"] == physician_name and row["Date Ordered"] != "":
+                    if row["Patient ID"] == user_ID and row["Physician Name"].upper() == physician_name.upper() and row["Date Ordered"] != "":
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
@@ -81,21 +87,66 @@ class PharmacyOrder:
             # Return the list of matching prescriptions. if no match, then list is empty. 
             return matching_prescriptions
 
+    # Function to list all prescriptions ORDERED by a specific physician for a specific period of time 
+    # user_ID: string; physician_name: string; start_time_str: string; end_time_string
+    # returns a list of lists
+    def prescriptions_ordered_by_physician_list(self, user_ID, physician_name, start_time_str, end_time_str):
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+
+            # list to store all information of a match. 
+            matching_prescriptions = list()
+
+            # need to convert date_filled from string to Date object. 
+            start_time = datetime.strptime(start_time_str, "%m/%d/%Y").date()
+            end_time = datetime.strptime(end_time_str, "%m/%d/%Y").date()
+
+            user_ID_int = int(user_ID)
+            # if user is an employee, then display all presciptions that match query.
+            if user_ID_int >= 30000000 and user_ID_int < 40000000:
+                for row in reader:
+                    # match with physician name and date ordered is not blank. 
+                    if row["Physician Name"].upper() == physician_name.upper() and row["Date Ordered"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_dictionary = PharmacyOrder.get_all_row_info_list(row)
+                            matching_prescriptions.append(information_dictionary)
+            # if user is patient then only show that patient's prescriptions that match the query                
+            else:
+                for row in reader:
+                    # match with physician name, user id, and date ordered is not blank. 
+                    if row["Patient ID"] == user_ID and row["Physician Name"].upper() == physician_name.upper() and row["Date Ordered"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Ordered"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_dictionary = PharmacyOrder.get_all_row_info_list(row)
+                            matching_prescriptions.append(information_dictionary)
+            
+            # Return the list of matching prescriptions. if no match, then list is empty. 
+            return matching_prescriptions
+
     # Function to list all prescriptions FILLED for a patient for a specific period of time
-    # returns a list of matching prescriptions. otherwise, returns empty list. 
+    # start_time_str: string; end_time_str: string
+    # returns a list of dictionaries of matching prescriptions. otherwise, returns empty list. 
     # NOTE: if user is already a patient, then there should be some way that there is only one option for patient_name. 
-    def prescriptions_filled_for_patient(self, user_ID, patient_name, start_time, end_time):
+    def prescriptions_filled_for_patient_dict(self, user_ID, patient_name, start_time_str, end_time_str):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
             matching_prescriptions = list()
+
+            # need to convert date_filled from string to Date object. 
+            start_time = datetime.strptime(start_time_str, "%m/%d/%Y").date()
+            end_time = datetime.strptime(end_time_str, "%m/%d/%Y").date()
+
 
             user_ID_int = int(user_ID)
             # if user is an employee, then display all presciptions that match query.
             if user_ID_int >= 30000000 and user_ID_int < 40000000:
                 for row in reader:
                     # if Date filled != "", then that means, prescription has been filled by a pharmacist.
-                    if row["Patient Name"] == patient_name and row["Date Filled"] != "":
+                    if row["Patient Name"] == patient_name.upper() and row["Date Filled"] != "":
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
@@ -104,12 +155,50 @@ class PharmacyOrder:
             # if user is patient, then display only that user's prescriptions that match the query.
             else:
                 for row in reader:
-                    if row["Patient ID"] == user_ID and row["Patient Name"] == patient_name and row["Date Filled"] != "":
+                    if row["Patient ID"] == user_ID and row["Patient Name"] == patient_name.upper() and row["Date Filled"] != "":
                         # check that date is in range
                         date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
                         if date_object >= start_time and date_object <= end_time :
                             information_dictionary = PharmacyOrder.get_all_row_info_dict(row)
                             matching_prescriptions.append(information_dictionary)
+            
+            # Return the list of matching prescriptions. if no match, then list is empty. 
+            return matching_prescriptions
+
+    # Function to list all prescriptions FILLED for a patient for a specific period of time
+    # start_time_str: string; end_time_str: string
+    # returns a list of list of matching prescriptions. otherwise, returns empty list. 
+    # NOTE: if user is already a patient, then there should be some way that there is only one option for patient_name. 
+    def prescriptions_filled_for_patient_list(self, user_ID, patient_name, start_time_str, end_time_str):
+        with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
+            reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
+
+            matching_prescriptions = list()
+
+            # need to convert date_filled from string to Date object. 
+            start_time = datetime.strptime(start_time_str, "%m/%d/%Y").date()
+            end_time = datetime.strptime(end_time_str, "%m/%d/%Y").date()
+
+            user_ID_int = int(user_ID)
+            # if user is an employee, then display all presciptions that match query.
+            if user_ID_int >= 30000000 and user_ID_int < 40000000:
+                for row in reader:
+                    # if Date filled != "", then that means, prescription has been filled by a pharmacist.
+                    if row["Patient Name"] == patient_name.upper() and row["Date Filled"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_list = PharmacyOrder.get_all_row_info_list(row)
+                            matching_prescriptions.append(information_list)
+            # if user is patient, then display only that user's prescriptions that match the query.
+            else:
+                for row in reader:
+                    if row["Patient ID"] == user_ID and row["Patient Name"] == patient_name.upper() and row["Date Filled"] != "":
+                        # check that date is in range
+                        date_object = datetime.strptime(row["Date Filled"], "%m/%d/%Y").date()
+                        if date_object >= start_time and date_object <= end_time :
+                            information_list = PharmacyOrder.get_all_row_info_list(row)
+                            matching_prescriptions.append(information_list)
             
             # Return the list of matching prescriptions. if no match, then list is empty. 
             return matching_prescriptions
