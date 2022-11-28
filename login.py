@@ -317,6 +317,7 @@ def login_gui():
 
     #------ LOGIN FUNCTION ------#
     def validate_login():
+        logged_in = False
         email_in = email_entry.get().strip().lower()
         password_in = password_entry.get().strip()
         if len(email_in) > 0 and len(password_in) > 0:
@@ -328,13 +329,15 @@ def login_gui():
                         # get id from row here
                         id = row[0]
                         messagebox.showinfo('Login', 'Login successful.')
+                        logged_in = True
                         # take to homepage after logging in
                         root.destroy()
                         homepage.home_gui(id)
                     elif row[3] == email_in and row[4] != password_in:
                         messagebox.showinfo('Login', 'Incorrect password, please try again.')
-                messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
-                go_to_register()
+                if logged_in == False:
+                    messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
+                    go_to_register()
         else:
             messagebox.showwarning('Login', 'Please fill all fields.')
     
