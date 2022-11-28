@@ -276,9 +276,9 @@ class DataDisplayContainerEmployeeWidget(tk.Frame):
             elif self.active_treeview == "Invoices":
                 n_return = self.bill.generate_invoice(data['month'])
                 if n_return == -1:
-                    messagebox.showwarning("Warning", f"Could not generate new invoice (no services found in {data['mth_i']})")
+                    messagebox.showwarning("Warning", f"Could not generate invoice (no services found in {data['mth_i']} or all services were paid!)")
                 elif n_return == -2:
-                    messagebox.showwarning("Warning", f"Could not generate new invoice (no carriers found for {self.bill.user_name})")
+                    messagebox.showwarning("Warning", f"Could not generate invoice (no primary/non-primary carriers found for {self.bill.user_name})")
                 
                 if type(n_return) == InsuranceInvoice:
                     self.pull_from_db(refresh=False, renew_carriers=False, renew_services=False)

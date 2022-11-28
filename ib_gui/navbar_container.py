@@ -145,15 +145,11 @@ class NavbarContainerWidget(tk.Frame):
         if forced or messagebox.askyesno("Home", "Are you sure you want to go to home?"):
             self.master.destroy()
             homepage.home_gui(self.master.calls())
-            
-        self.focus_force()
     
     def logout(self, forced=False):
         if forced or messagebox.askyesno("Log out", "Are you sure you want to log out?"):
             self.master.destroy()
             login.login_gui()
-            
-        self.focus_force()
 
     def btn_on_mouse_enter(self, event=None):
         """ Show line selector and text widget when mouse enters buttons. """
