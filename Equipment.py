@@ -227,7 +227,7 @@ def runGui(user_id):
 
         result = Equipment.search_by_equipment_id(lookup_record1)
         
-        tree.insert("", "end", values=result)
+        tree.insert("", "end", values=list(result.values()))
 
 
             
@@ -263,16 +263,21 @@ def runGui(user_id):
         
         
     def delete(user_id):
-        tk = Tk()
-        tk.title('Delete Equipment')
-        tk.geometry ("400x200")
-        label1 = Label(tk,text='Equipment ID').grid(row=0, column=0)
-        entry1 = Entry(tk)
-        entry1.grid(row=0,column=1)
-        btn1 = Button(tk,text='Delete',bg='black',fg='black').grid(row=2,column=1)
+        global deletetk, entrydelete
+        deletetk = Tk()
+        deletetk.title('Delete Equipment')
+        deletetk.geometry ("400x200")
+        label1 = Label(deletetk,text='Equipment ID').grid(row=0, column=0)
+        entrydelete = Entry(deletetk)
+        entrydelete.grid(row=0,column=1)
+        btn1 = Button(deletetk,text='Delete',bg='black',fg='black').grid(row=2,column=1)
 
         tk.mainloop()
 
+    def delete_records():
+        lookup_record2 = entrydelete.get()
+        print(lookup_record2)
+        deletetk.destroy()
         
     def return_search_equipment():
         search(user_id)
