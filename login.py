@@ -17,33 +17,11 @@ def login_gui():
     h = 525
 
     #------ CENTER FORM ------#
-    #root.overrideredirect(1) # removes border
     ws = root.winfo_screenwidth()
     hs = root.winfo_screenheight()
     x = (ws - w) / 2
     y = (hs - h) / 2
     root.geometry("%dx%d+%d+%d" % (w, h, x, y))
-
-    #------ HEADER ------#
-    """ headerframe = tk.Frame(root, width = w, height = 50)
-    titleframe = tk.Frame(headerframe, padx = 1, pady = 1)
-    title_label = tk.Label(titleframe, text = '', padx = 20, pady = 5, font = ('Tahoma', 24))
-    close_button = tk.Button(headerframe, text = 'x', borderwidth = 1, relief = 'solid', font = ('Vaerdana', 12), bg = 'red')
-
-    headerframe.pack()
-    titleframe.pack()
-    title_label.pack()
-    close_button.pack()
-
-    titleframe.place(rely = 0.5, relx = 0.5, anchor = CENTER)
-    close_button.place(x = 410, y = 10) """
-
-    # closing the window
-    """ def close_window():
-        root.destroy()
-
-    close_button['command'] = close_window """
-    #------ END HEADER ------#
 
     mainframe = tk.Frame(root, width = w, height = h)
 
@@ -233,11 +211,13 @@ def login_gui():
             valid_pass = passwords_match(password, confirm_password)
             valid_dob = check_dob(dob)
             if valid_fname and valid_lname and valid_email and valid_phone and valid_pass and valid_dob:
-                with open("users.csv", mode = "a", newline = "") as f:
+                with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "a", newline = "") as f:
                     writer = csv.writer(f, delimiter = ",")
                     # make sure passwords match and then input all information to csv file/database of users
                     # displays a warning message if they don't match
-                    writer.writerow([id, fname, lname, email, password, phone, address, insurance_carrier, dob, gdr])
+                    rand_physician = randrange(1,6)
+                    physician = assign_physician(rand_physician)
+                    writer.writerow([id, fname, lname, email, password, phone, address, insurance_carrier, dob, gdr, physician])
                     messagebox.showinfo('Register', 'Your account has been created successfully and you can now log in. Here is your ID Number: ' + str(id) + '. Make sure to save it for any future use.')
                     go_to_login()
         # if it makes it here, there is at least one empty field
@@ -257,7 +237,7 @@ def login_gui():
         invalid_email = True
         new_email = True
         while(invalid_email and new_email):
-            with open("users.csv", mode = "r") as f:
+            with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "r") as f:
                 reader = csv.reader(f, delimiter = ",")
                 # this checks if email is already in use by another account
                 for row in reader:
@@ -284,7 +264,7 @@ def login_gui():
             else:
                 id_number = randrange(40000000, 100000000)
             num_found = False
-            with open("users.csv", mode = "r") as f:
+            with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "r") as f:
                 reader = csv.reader(f, delimiter = ",")
                 # this checks if the id number is already in use
                 # if it is, it will go through the loop again and generate a new one
@@ -319,6 +299,19 @@ def login_gui():
         except:
             messagebox.showwarning('Register', 'Please enter your date of birth in MM/DD/YYYY format.')
 
+    def assign_physician(num):
+        match num:
+            case 1:
+                return "BOB MCCOY"
+            case 2:
+                return "NOLA ALONA"
+            case 3:
+                return "JILLIAN GILLS"
+            case 4:
+                return "PETER MERT"
+            case 5:
+                return "STEWARD LETTLE"
+
     # clicking the register button will run the register function
     register_button['command'] = register
 
@@ -327,33 +320,25 @@ def login_gui():
         email_in = email_entry.get().strip().lower()
         password_in = password_entry.get().strip()
         if len(email_in) > 0 and len(password_in) > 0:
-            with open("users.csv", mode = "r") as f:
+            with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "r") as f:
                 reader = csv.reader(f, delimiter = ",")
                 # checks for email/password combo in database
                 for row in reader:
-                    if email_in == row[3] and password_in == row[4]: ### shouldnt be email_in in row[3] here :3
+                    if email_in in row[3] and password_in in row[4]:
                         # get id from row here
                         id = row[0]
                         messagebox.showinfo('Login', 'Login successful.')
                         # take to homepage after logging in
                         root.destroy()
                         homepage.home_gui(id)
-                        return
                     elif row[3] == email_in and row[4] != password_in:
                         messagebox.showinfo('Login', 'Incorrect password, please try again.')
-                        return
                 messagebox.showinfo('Login', 'That email does not exist, please register for an account.')
                 go_to_register()
         else:
             messagebox.showwarning('Login', 'Please fill all fields.')
     
-    def on_closing():
-        if messagebox.askyesno("Quit", "Do you want to quit?"):
-            root.destroy()
-            exit()
-
     login_button['command'] = validate_login
-    root.wm_protocol("WM_DELETE_WINDOW", on_closing)
 
     root.mainloop()
 
