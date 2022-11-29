@@ -20,6 +20,7 @@
 # https://www.youtube.com/watch?v=rtR5wHXPKZ4&list=PLCC34OHNcOtoC6GglhF3ncJ5rLwQrLGnV&index=117
 # https://github.com/flatplanet/Intro-To-TKinter-Youtube-Course
 # https://github.com/flatplanet/Intro-To-TKinter-Youtube-Course/blob/master/tree.py
+# https://www.geeksforgeeks.org/scrollable-listbox-in-python-tkinter/
 #-----------------------------------------------------
 
 import PharmacyOrder as PO
@@ -60,9 +61,11 @@ class PharmacyOrderTracking:
     def PO_delete_pharmacy_order(self, user_id, presc_ID):
         self.pharm_order_accessor.delete_pharmacy_order(user_id, presc_ID)
     
+    # might not be needed. 
     def PO_print_prescriptions(self, p_list):
         self.pharm_order_accessor.print_prescriptions(p_list)
     
+    # GUI Done
     def PO_prescriptions_ordered_by_physician_list(self, user_id, physician_name, start_time, end_time):
         return self.pharm_order_accessor.prescriptions_ordered_by_physician_list(user_id, physician_name, start_time, end_time)
     
@@ -74,9 +77,11 @@ class PharmacyOrderTracking:
     def PO_report_num_presc_by_medication_month_physician_list(self, user_id):
         return self.pharm_order_accessor.report_num_presc_by_medication_month_physician_list(user_id)
     
+    # NOT needed
     def PO_report_num_presc_by_medication_month_physician(self, dict_result):
         self.pharm_order_accessor.report_num_presc_by_medication_month_physician(dict_result)
     
+    # NOT needed
     def PO_print_search_by_prescription_id(self, dict_info, p_ID):
         self.pharm_order_accessor.print_search_by_prescription_id(dict_info, p_ID)
     
@@ -381,7 +386,7 @@ def runGUI(POT_var):
         report_prescriptions_filled_for_patient_button = Button(presc_patient, text="Create Report", command=report_prescriptions_filled_for_patient)
         report_prescriptions_filled_for_patient_button.pack(padx=20, pady=20)
 
-    def report_prescriptions_filled_for_physician():
+    def report_prescriptions_ordered_by_physician():
         physician_name_entered = physician_name_entry.get()
         start_date_entered = start_date_entry_physician.get()
         end_date_entered = end_date_entry_physician.get()
@@ -430,7 +435,7 @@ def runGUI(POT_var):
         end_date_entry_physician = Entry(end_date_frame, font=("Helvetica", 10))
         end_date_entry_physician.pack(pady=20, padx=20)
 
-        report_prescriptions_filled_for_physician_button = Button(presc_physician, text="Create Report", command=report_prescriptions_filled_for_physician)
+        report_prescriptions_filled_for_physician_button = Button(presc_physician, text="Create Report", command=report_prescriptions_ordered_by_physician)
         report_prescriptions_filled_for_physician_button.pack(padx=20, pady=20)
 
     def summary_report():
@@ -471,8 +476,9 @@ def runGUI(POT_var):
     report_menu_options.add_command(label="Prescriptions Filled For a Patient", command=prescriptions_filled_for_patient)
     report_menu_options.add_separator()
     report_menu_options.add_command(label="Prescriptions Ordered By a Physician", command=prescriptions_ordered_by_a_physician)
-    report_menu_options.add_separator()
-    report_menu_options.add_command(label="Summary Report", command=summary_report)
+    if int(POT_var.user_ID) >= 30000000 and int(POT_var.user_ID) < 40000000:
+        report_menu_options.add_separator()
+        report_menu_options.add_command(label="Summary Report", command=summary_report)
     report_menu_options.add_separator()
     report_menu_options.add_command(label="Reset Report", command=reset_search)
 
