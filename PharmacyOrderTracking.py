@@ -193,7 +193,7 @@ def runGUI(POT_var):
 
     home_button = ttk.Button(top, text='Home', command = return_home)
     # home_button.pack(in_=top, side=LEFT)
-    home_button.grid(row=0, column=0, sticky='ew')
+    home_button.grid(row=0, column=1, sticky='ew')
 
 
     # NOW add COMPLETE ORDER option to top toolbar
@@ -218,9 +218,9 @@ def runGUI(POT_var):
 
     user_ID_int = int(POT_var.user_ID)
     if user_ID_int >= 30000000 and user_ID_int < 40000000:
-        complete_order_button = ttk.Button(top, text='Complete Order', command = complete_order)
+        complete_order_button = ttk.Button(top, text='Complete Selected Order', command = complete_order)
         # edit_button.pack(in_=top, side=LEFT)
-        complete_order_button.grid(row=1, column=1, sticky='w')
+        complete_order_button.grid(row=1, column=2, sticky='w')
     
     def add_order():
         add_order_run_GUI(POT_var.user_ID, POT_var, root)
@@ -229,6 +229,74 @@ def runGUI(POT_var):
         add_order_button = ttk.Button(top, text='Add New Order', command = add_order)
         # edit_button.pack(in_=top, side=LEFT)
         add_order_button.grid(row=1, column=0, sticky='w')
+
+    def close_delete_window():
+        delete_order_confirmation.destroy()
+
+    def delete_action():
+        delete_order_confirmation.destroy()
+
+        POT_var.PO_delete_pharmacy_order(POT_var.user_ID, to_be_deleted_presc_id)
+
+        # clear Tree view
+        for order in tree.get_children():
+            tree.delete(order)
+
+        # get updated prescription list
+        PO_list_updated = POT_var.PO_show_prescription_orders_list(POT_var.user_ID)
+
+        # insert them back to the treeview
+        for order in PO_list_updated:
+            tree.insert('', tk.END, values=order)
+
+    
+    def delete_order_confirmation_GUI(sel_list):
+        global delete_order_confirmation, to_be_deleted_presc_id
+        delete_order_confirmation = Toplevel(root)
+        delete_order_confirmation.title("Delete Order Confirmation")
+        delete_order_confirmation.geometry("400x200")
+
+        to_be_deleted_presc_id = sel_list[0]
+
+        label = Label(delete_order_confirmation, text="Are you sure you want to delete Pharmacy Order with ID #"+sel_list[0]+"?")
+        label.pack(padx=10, pady=10)
+
+        # presc_ID_frame =LabelFrame(delete_order_confirmation, text="Prescription ID")
+        # presc_ID_frame.pack(padx=10, pady=10)
+
+        # presc_ID_entry = Entry(presc_ID_frame, font=("Helvetica", 10))
+        # presc_ID_entry.pack(pady=20, padx=20)
+
+        Yes_button = Button(delete_order_confirmation, text="YES, I want to Delete", command=delete_action)
+        Yes_button.pack(padx=5, pady=5)
+
+        No_button = Button(delete_order_confirmation, text="NO, this was a mistake", command=close_delete_window)
+        No_button.pack(padx=5, pady=5)
+        pass    
+
+    def delete_order():
+        # multiple_selection is only used to make sure that only one row is selected
+        multiple_selection = tree.selection()
+        if len(multiple_selection) == 0:
+            # TODO: needs to be changed later
+            print("ERROR: Must select an order before clicking Delete Order")
+            return
+        elif len(multiple_selection) >= 2:
+            # TODO: needs to be changed later
+            print("ERROR: Only one order can be deleted at a time.")
+            return
+        else:
+            selected = tree.focus()
+            # NOTE: not sure what "values" does
+            selected_list = tree.item(selected, "values")
+            delete_order_confirmation_GUI(selected_list)
+        
+        # root.destroy()
+
+    if user_ID_int >= 30000000 and user_ID_int < 40000000:
+        delete_order_button = ttk.Button(top, text='Delete Selected Order', command = delete_order)
+        # edit_button.pack(in_=top, side=LEFT)
+        delete_order_button.grid(row=1, column=1, sticky='w')
 
     
     # NOW add MENU option to root.

@@ -502,11 +502,13 @@ class PharmacyOrder:
             return matches_list
 
     # Function to delete pharmacy order by prescription ID. presc_ID is an integer value.
+    # user_ID: string; presc_ID_str: string
     # if user is patient, they don't have delete capabilities
     # if user is employee, then they have delete capabilities.  
-    def delete_pharmacy_order(self, user_ID, presc_ID):
+    def delete_pharmacy_order(self, user_ID, presc_ID_str):
         # if user is patient, return with error messages and don't delete
         user_id_int = int(user_ID)
+        presc_ID = int(presc_ID_str)
         if user_id_int >= 40000000:
             print("ERROR: Patient does not have Delete Pharmacy Order Permissions")
             return
