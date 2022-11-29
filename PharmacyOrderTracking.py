@@ -55,8 +55,8 @@ class PharmacyOrderTracking:
         self.user_ID = user_ID
         pass
     
-    def PO_add_order(self, user_id, prescription_id, patient_name, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
-        self.pharm_order_accessor.add_order(user_id, prescription_id, patient_name, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist)
+    def PO_add_order(self, user_id, prescription_id, patient_name, patient_id, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
+        self.pharm_order_accessor.add_order(user_id, prescription_id, patient_name, patient_id, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist)
     
     def PO_delete_pharmacy_order(self, user_id, presc_ID):
         self.pharm_order_accessor.delete_pharmacy_order(user_id, presc_ID)
@@ -193,7 +193,8 @@ def runGUI(POT_var):
 
     home_button = ttk.Button(top, text='Home', command = return_home)
     # home_button.pack(in_=top, side=LEFT)
-    home_button.grid(row=0, column=0, sticky='ns')
+    home_button.grid(row=0, column=0, sticky='ew')
+
 
     # NOW add COMPLETE ORDER option to top toolbar
     def complete_order():
@@ -219,7 +220,15 @@ def runGUI(POT_var):
     if user_ID_int >= 30000000 and user_ID_int < 40000000:
         complete_order_button = ttk.Button(top, text='Complete Order', command = complete_order)
         # edit_button.pack(in_=top, side=LEFT)
-        complete_order_button.grid(row=1, column=0, sticky='w')
+        complete_order_button.grid(row=1, column=1, sticky='w')
+    
+    def add_order():
+        add_order_run_GUI(POT_var.user_ID, POT_var, root)
+
+    if user_ID_int >= 30000000 and user_ID_int < 40000000:
+        add_order_button = ttk.Button(top, text='Add New Order', command = add_order)
+        # edit_button.pack(in_=top, side=LEFT)
+        add_order_button.grid(row=1, column=0, sticky='w')
 
     
     # NOW add MENU option to root.
@@ -489,6 +498,96 @@ def initialize(passed_user_id):
     # create Pharmacy Order Tracking (POT) instance with provided user ID. 
     POT_instance = PharmacyOrderTracking(passed_user_id)
     runGUI(POT_instance)
+
+
+def add_order_run_GUI(passed_user_id, POT_var, root_window):
+    AO_root = tk.Tk()
+    AO_root.title("Add New Pharmacy Order")
+
+    AO_root.geometry("400x350")
+
+    def exit_entry():
+        AO_root.destroy()
+        root_window.destroy()
+        initialize(passed_user_id)
+
+    exit_button = tk.Button(AO_root, text='Back', command = exit_entry)
+    exit_button.grid(row = 0, column = 0, pady = 5)
+
+    prescription_id_var = tk.StringVar()
+    patient_name_var = tk.StringVar()
+    patient_id_var = tk.StringVar()
+    physician_name_var = tk.StringVar()
+    prescribed_med_var = tk.StringVar()
+    medication_id_var = tk.StringVar()
+    dosage_var = tk.StringVar()
+    frequency_med_var = tk.StringVar()
+    date_ordered_var = tk.StringVar()
+    date_filled_var = tk.StringVar()
+    pharmacist_var = tk.StringVar()
+
+
+    def add_new_order():
+        POT_var.PO_add_order(passed_user_id, presc_ID_entry.get(), patient_name_entry.get(), patient_ID_entry.get(), physician_name_entry.get(), presc_med_entry.get(), med_ID_entry.get(), dosage_entry.get(), freq_entry.get(), date_ordered_entry.get(), date_filled_entry.get(), pharmacist_entry.get())
+        AO_root.destroy()
+        root_window.destroy()
+        initialize(passed_user_id)
+    
+    presc_ID_label = tk.Label(AO_root, text = "Prescription ID: ", font=('calibre',10, 'bold'))
+    presc_ID_entry = tk.Entry(AO_root, textvariable=prescription_id_var, font=('calibre',10,'normal'))
+    patient_name_label = tk.Label(AO_root, text = "Patient Name: ", font=('calibre',10, 'bold'))
+    patient_name_entry = tk.Entry(AO_root, textvariable=patient_name_var, font=('calibre',10,'normal'))
+    patient_ID_label = tk.Label(AO_root, text = "Patient ID: ", font=('calibre',10, 'bold'))
+    patient_ID_entry = tk.Entry(AO_root, textvariable=patient_id_var, font=('calibre',10,'normal'))
+    physician_name_label = tk.Label(AO_root, text = "Physician Name: ", font=('calibre',10, 'bold'))
+    physician_name_entry = tk.Entry(AO_root, textvariable=physician_name_var, font=('calibre',10,'normal'))
+    presc_med_label = tk.Label(AO_root, text = "Prescribed Medication: ", font=('calibre',10, 'bold'))
+    presc_med_entry = tk.Entry(AO_root, textvariable=prescribed_med_var, font=('calibre',10,'normal'))
+    med_ID_label = tk.Label(AO_root, text = "Medication ID: ", font=('calibre',10, 'bold'))
+    med_ID_entry = tk.Entry(AO_root, textvariable=medication_id_var, font=('calibre',10,'normal'))
+    dosage_label = tk.Label(AO_root, text = "Dosage: ", font=('calibre',10, 'bold'))
+    dosage_entry = tk.Entry(AO_root, textvariable=dosage_var, font=('calibre',10,'normal'))
+    freq_label = tk.Label(AO_root, text = "Medication Frequency: ", font=('calibre',10, 'bold'))
+    freq_entry = tk.Entry(AO_root, textvariable=frequency_med_var, font=('calibre',10,'normal'))
+    date_ordered_label = tk.Label(AO_root, text = "Date Ordered (MM/DD/YYYY): ", font=('calibre',10, 'bold'))
+    date_ordered_entry = tk.Entry(AO_root, textvariable=date_ordered_var, font=('calibre',10,'normal'))
+    date_filled_label = tk.Label(AO_root, text = "Date Filled (MM/DD/YYYY): ", font=('calibre',10, 'bold'))
+    date_filled_entry = tk.Entry(AO_root, textvariable=date_filled_var, font=('calibre',10,'normal'))
+    pharmacist_label =tk.Label(AO_root, text = "Pharmacist: ", font=('calibre',10, 'bold'))
+    pharmacist_entry = tk.Entry(AO_root, textvariable=pharmacist_var, font=('calibre',10,'normal'))
+
+    submit_button = tk.Button(AO_root, text="Submit", command = add_new_order)
+
+    # TODO: need to check if prescription is already filled. 
+    # TODO: need to create pop-ups/messages for errors.
+
+    presc_ID_label.grid(row = 1, column = 0, pady = 5)
+    presc_ID_entry.grid(row = 1, column = 1, pady = 5, sticky=W)
+    patient_name_label.grid(row = 2, column = 0)
+    patient_name_entry.grid(row = 2, column = 1, sticky=W)
+    patient_ID_label.grid(row = 3, column = 0)
+    patient_ID_entry.grid(row = 3, column = 1, sticky=W)
+    physician_name_label.grid(row = 4, column = 0)
+    physician_name_entry.grid(row = 4, column = 1, sticky=W)
+    presc_med_label.grid(row=5, column=0)
+    presc_med_entry.grid(row=5, column=1, sticky=W)
+    med_ID_label.grid(row=6, column=0)
+    med_ID_entry.grid(row=6, column=1, sticky=W)
+    dosage_label.grid(row=7, column=0)
+    dosage_entry.grid(row=7, column=1, sticky=W)
+    freq_label.grid(row=8, column=0)
+    freq_entry.grid(row=8, column=1, sticky=W)
+    date_ordered_label.grid(row=9, column=0)
+    date_ordered_entry.grid(row=9, column=1, sticky=W)
+    date_filled_label.grid(row=10, column=0)
+    date_filled_entry.grid(row=10, column=1, sticky=W)
+    pharmacist_label.grid(row=11, column=0)
+    pharmacist_entry.grid(row=11, column=1, sticky=W)
+
+    submit_button.grid(row = 12, column = 0)
+
+    AO_root.mainloop()
+
 
 # TODO: still some todos that need to be completed in here
 def CO_run_GUI(passed_user_id, passed_order_list, POT_var, root_window):
