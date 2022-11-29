@@ -203,9 +203,24 @@ class PharmacyOrder:
             # Return the list of matching prescriptions. if no match, then list is empty. 
             return matching_prescriptions
 
+
+    # TODO: needs documenting and testing
+    def report_num_presc_by_medication_month_physician_list(self, user_id):
+        dict_result = PharmacyOrder.number_of_prescriptions_by_medication_month_physician(user_id)
+
+        result_list = list()
+
+        for key in dict_result:
+            result_str = "In " + self.month_name(str(key[1])) + " " + str(key[2]) + ", " + key[3].upper() + " had " + str(dict_result[key]) + " prescriptions of " + key[0] + " filled."
+            result_list.append(result_str)
+        
+        return result_list
+
     # Function to provide a summary report by medication showing number of prescriptions filled by month and year filled and by physician. 
     # this should only be allowed to be accessed by employee. 
-    def number_of_prescriptions_by_medication_month_physician(self, user_ID):
+    # this called via report_num_presc_by_medication_month_physician_list()
+    # NOTE: this function does not have the self argument because it is only accessed via the aforementioned function.
+    def number_of_prescriptions_by_medication_month_physician(user_ID):
         with open(PharmacyOrder.csv_filename, mode = "r", newline = "") as f:
             reader = csv.DictReader(f, fieldnames=PharmacyOrder.field_names)
 
@@ -214,6 +229,7 @@ class PharmacyOrder:
 
             # make sure userID is not a patient. 
             user_ID_int = int(user_ID)
+            # TODO: need to test for this!!
             # if user is a patient then return empty dictionary. 
             if user_ID_int >= 40000000:
                 return num_presc_dict
@@ -733,6 +749,7 @@ invalid_med = "Vitamin Z"
 # presc_ordered_list = pharm_order.prescriptions_ordered_by_physician("50523230", "dr. guzman", s_date, e_date)
 # pharm_order.print_prescriptions(presc_ordered_list)
 
+# TODO: these tests need to be updated because the function is now only accessed from other functions. no longer has self parameter. 
 # Test 5 for number_of_prescriptions_report_by_medication_month_physician
 # 5.1 Test given verified employee who has access this data.
 # filtered_dict = pharm_order.number_of_prescriptions_by_medication_month_physician("30323230")

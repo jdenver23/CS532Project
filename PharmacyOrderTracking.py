@@ -54,24 +54,25 @@ class PharmacyOrderTracking:
         self.user_ID = user_ID
         pass
     
-    def PO_add_order(self, user_ID, prescription_id, patient_name, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
-        self.pharm_order_accessor.add_order(user_ID, prescription_id, patient_name, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist)
+    def PO_add_order(self, user_id, prescription_id, patient_name, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist):
+        self.pharm_order_accessor.add_order(user_id, prescription_id, patient_name, physician_name, medication, medication_id, dosage, medication_frequency, date_ordered, date_filled, pharmacist)
     
-    def PO_delete_pharmacy_order(self, user_ID, presc_ID):
-        self.pharm_order_accessor.delete_pharmacy_order(user_ID, presc_ID)
+    def PO_delete_pharmacy_order(self, user_id, presc_ID):
+        self.pharm_order_accessor.delete_pharmacy_order(user_id, presc_ID)
     
     def PO_print_prescriptions(self, p_list):
         self.pharm_order_accessor.print_prescriptions(p_list)
     
-    def PO_prescriptions_ordered_by_physician_list(self, user_ID, physician_name, start_time, end_time):
-        return self.pharm_order_accessor.prescriptions_ordered_by_physician_list(user_ID, physician_name, start_time, end_time)
+    def PO_prescriptions_ordered_by_physician_list(self, user_id, physician_name, start_time, end_time):
+        return self.pharm_order_accessor.prescriptions_ordered_by_physician_list(user_id, physician_name, start_time, end_time)
     
     # GUI done
-    def PO_prescriptions_filled_for_patient_list(self, user_ID, patient_name, start_time, end_time):
-        return self.pharm_order_accessor.prescriptions_filled_for_patient_list(user_ID, patient_name, start_time, end_time)
+    def PO_prescriptions_filled_for_patient_list(self, user_id, patient_name, start_time, end_time):
+        return self.pharm_order_accessor.prescriptions_filled_for_patient_list(user_id, patient_name, start_time, end_time)
     
-    def PO_number_of_prescriptions_by_medication_month_physician(self, user_ID):
-        return self.pharm_order_accessor.number_of_prescriptions_by_medication_month_physician(user_ID)
+    # GUI DONE
+    def PO_report_num_presc_by_medication_month_physician_list(self, user_id):
+        return self.pharm_order_accessor.report_num_presc_by_medication_month_physician_list(user_id)
     
     def PO_report_num_presc_by_medication_month_physician(self, dict_result):
         self.pharm_order_accessor.report_num_presc_by_medication_month_physician(dict_result)
@@ -80,30 +81,30 @@ class PharmacyOrderTracking:
         self.pharm_order_accessor.print_search_by_prescription_id(dict_info, p_ID)
     
     # GUI Done
-    def PO_search_by_prescription_id_list(self, user_ID, prescription_id):
-        return self.pharm_order_accessor.search_by_prescription_id_list(user_ID, prescription_id)
+    def PO_search_by_prescription_id_list(self, user_id, prescription_id):
+        return self.pharm_order_accessor.search_by_prescription_id_list(user_id, prescription_id)
 
     # MIGHT NOT BE NEEDED.
     def PO_print_search_by_patient_name_and_medication(self, list_info, p_name, med):
         self.pharm_order_accessor.print_search_by_patient_name_and_medication(list_info, p_name, med)
     
     # GUI done
-    def PO_search_by_patient_name_and_medication_list(self, user_ID, patient_name, prescribed_medication):
-        return self.pharm_order_accessor.search_by_patient_name_and_medication_list(user_ID, patient_name, prescribed_medication)
+    def PO_search_by_patient_name_and_medication_list(self, user_id, patient_name, prescribed_medication):
+        return self.pharm_order_accessor.search_by_patient_name_and_medication_list(user_id, patient_name, prescribed_medication)
     
-    def PO_orders_to_be_filled(self, user_ID):
-        return self.pharm_order_accessor.orders_to_be_filled(user_ID)
+    def PO_orders_to_be_filled(self, user_id):
+        return self.pharm_order_accessor.orders_to_be_filled(user_id)
     
-    def PO_orders_to_be_filled(self, user_ID):
-        return self.pharm_order_accessor.orders_filled(user_ID)
+    def PO_orders_to_be_filled(self, user_id):
+        return self.pharm_order_accessor.orders_filled(user_id)
 
     # GUI done
-    def PO_show_prescription_orders_list(self, user_ID):
-        return self.pharm_order_accessor.show_prescription_orders_list(user_ID)
+    def PO_show_prescription_orders_list(self, user_id):
+        return self.pharm_order_accessor.show_prescription_orders_list(user_id)
     
     # GUI done
-    def PO_complete_order(self, user_ID, presc_ID, pharmacist_name, date_filled):
-        return self.pharm_order_accessor.complete_order(user_ID, presc_ID, pharmacist_name, date_filled)
+    def PO_complete_order(self, user_id, presc_ID, pharmacist_name, date_filled):
+        return self.pharm_order_accessor.complete_order(user_id, presc_ID, pharmacist_name, date_filled)
 
 
 # get_patient_name takes a user Id and returns the user's full name from information gathere
@@ -432,6 +433,27 @@ def runGUI(POT_var):
         report_prescriptions_filled_for_physician_button = Button(presc_physician, text="Create Report", command=report_prescriptions_filled_for_physician)
         report_prescriptions_filled_for_physician_button.pack(padx=20, pady=20)
 
+    def summary_report():
+        report = Toplevel(root)
+        report.title("Summary Report")
+        report.geometry("450x400")
+
+        listbox = Listbox(report, width=70)
+        listbox.pack(side = LEFT, fill = BOTH)
+        scrollbar =Scrollbar(report)
+        scrollbar.pack(side=RIGHT, fill=BOTH)
+
+        report_result_list = POT_var.PO_report_num_presc_by_medication_month_physician_list(POT_var.user_ID)
+
+        for single_line in report_result_list:
+            listbox.insert(END, single_line)
+
+        listbox.config(yscrollcommand=scrollbar.set)
+
+        scrollbar.config(command=listbox.yview)
+
+        report.mainloop()
+
     # Add SEARCH menu options.
     search_menu_options = Menu(POT_menu, tearoff=0)
     POT_menu.add_cascade(label="Search", menu=search_menu_options)
@@ -450,7 +472,7 @@ def runGUI(POT_var):
     report_menu_options.add_separator()
     report_menu_options.add_command(label="Prescriptions Ordered By a Physician", command=prescriptions_ordered_by_a_physician)
     report_menu_options.add_separator()
-    report_menu_options.add_command(label="Summary Report")
+    report_menu_options.add_command(label="Summary Report", command=summary_report)
     report_menu_options.add_separator()
     report_menu_options.add_command(label="Reset Report", command=reset_search)
 
