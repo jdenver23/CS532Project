@@ -239,8 +239,8 @@ def runGui(user_id):
 
         result = EquipmentVendor.search_by_vendor_id(lookup_record1)
         
-        tree.insert("", "end", values=result)
-        
+        tree.insert("", "end", values=list(result.values()))
+
     def add(user_id):
         tk = Tk()
         tk.title('ADD Equipment Vendor')
