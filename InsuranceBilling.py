@@ -919,7 +919,7 @@ class InsuranceBilling:
 # ---------------
 #   REPORTS
 # ---------------
-def generate_delinquent_reports(user_id: str or int=None, carrier_name: str = None, carrier_address: str = None) -> str:
+def generate_delinquent_reports(user_id: str or int=None, carrier_name: str = "", carrier_address: str = "") -> str:
     """ 
         Generate reports of delinquent invoices either by `user_id` or `carrier`.
 
@@ -937,7 +937,7 @@ def generate_delinquent_reports(user_id: str or int=None, carrier_name: str = No
     if user_id is not None and str(user_id).isnumeric():
         check_ids.append(user_id)
     
-    elif None not in [carrier_name, carrier_address]:
+    elif "" not in [carrier_name, carrier_address]:
         all_ids: list[str] = []
         if Path(IB_DB_DIR).is_dir():
             for file in os.listdir(IB_DB_DIR):

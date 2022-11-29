@@ -103,16 +103,17 @@ class CarrierAddEditToplvlWidget(tk.Toplevel):
         self.focus_force()
 
     def primary_entry_upd(self, event=None):
-        if not self.c_carrier.primary and self.entry_primary.get() == "PRIMARY":
-            x, y = event.widget.winfo_x(), event.widget.winfo_y()
-            self.lb_warning.configure(text="Warning: by setting this to PRIMARY will modify all other\ncarriers primary status to NON-PRIMARY.")
-            self.lb_warning.place(x=x*1.7, y=y+80)
-        elif self.c_carrier.primary and self.entry_primary.get() == "NON-PRIMARY":
-            x, y = event.widget.winfo_x(), event.widget.winfo_y()
-            self.lb_warning.configure(text="Warning: by setting this to NON-PRIMARY will assign the most\nrecent carrier primary status to PRIMARY.")
-            self.lb_warning.place(x=x*1.5, y=y+80)
-        else:
-            self.lb_warning.place_forget()
+        if self.c_carrier is not None:
+            if self.entry_primary.get() == "PRIMARY":
+                x, y = event.widget.winfo_x(), event.widget.winfo_y()
+                self.lb_warning.configure(text="Warning: by setting this to PRIMARY will modify all other\ncarriers primary status to NON-PRIMARY.")
+                self.lb_warning.place(x=x*1.7, y=y+80)
+            elif self.entry_primary.get() == "NON-PRIMARY":
+                x, y = event.widget.winfo_x(), event.widget.winfo_y()
+                self.lb_warning.configure(text="Warning: by setting this to NON-PRIMARY will assign the most\nrecent carrier primary status to PRIMARY.")
+                self.lb_warning.place(x=x*1.5, y=y+80)
+            else:
+                self.lb_warning.place_forget()
 
     def form_submit(self):
         data = {'name': self.entry_name.get(),
