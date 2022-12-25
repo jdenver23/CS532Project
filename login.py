@@ -211,7 +211,7 @@ def login_gui():
             valid_pass = passwords_match(password, confirm_password)
             valid_dob = check_dob(dob)
             if valid_fname and valid_lname and valid_email and valid_phone and valid_pass and valid_dob:
-                with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "a", newline = "") as f:
+                with open("users.csv", mode = "a", newline = "") as f:
                     writer = csv.writer(f, delimiter = ",")
                     # make sure passwords match and then input all information to csv file/database of users
                     # displays a warning message if they don't match
@@ -237,7 +237,7 @@ def login_gui():
         invalid_email = True
         new_email = True
         while(invalid_email and new_email):
-            with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "r") as f:
+            with open("users.csv", mode = "r") as f:
                 reader = csv.reader(f, delimiter = ",")
                 # this checks if email is already in use by another account
                 for row in reader:
@@ -264,7 +264,7 @@ def login_gui():
             else:
                 id_number = randrange(40000000, 100000000)
             num_found = False
-            with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "r") as f:
+            with open("users.csv", mode = "r") as f:
                 reader = csv.reader(f, delimiter = ",")
                 # this checks if the id number is already in use
                 # if it is, it will go through the loop again and generate a new one
@@ -321,7 +321,7 @@ def login_gui():
         email_in = email_entry.get().strip().lower()
         password_in = password_entry.get().strip()
         if len(email_in) > 0 and len(password_in) > 0:
-            with open("C:/Users/linds/OneDrive/Documents/GitHub/CS532Project/users.csv", mode = "r") as f:
+            with open("users.csv", mode = "r") as f:
                 reader = csv.reader(f, delimiter = ",")
                 # checks for email/password combo in database
                 for row in reader:

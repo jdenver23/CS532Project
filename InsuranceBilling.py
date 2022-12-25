@@ -448,7 +448,7 @@ class InsuranceBilling:
                 if r_invoice.due_date not in NONE and r_invoice.date_paid in NONE:
                     r_invoice.days_overdue = datetime.now(
                     ) - r_invoice.due_date if datetime.now() > r_invoice.due_date else 0
-                    if r_invoice.days_overdue > 0:
+                    if r_invoice.days_overdue > timedelta(days=0):
                         r_invoice.status = PaymentStatus.DELINQUENT
 
                 self.invoices.append(r_invoice)
